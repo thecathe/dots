@@ -1,5 +1,7 @@
 {
-  "scripts": [],
+  "scripts": [
+    "tut_systemd_boot.sh"
+  ],
   "configs": [
     "~/.config/awesome/rc.lua",
     "~/.config/flameshot/flameshot.ini"
