@@ -145,10 +145,10 @@ class mgr():
       with open("_dotmgr.sh","r") as file:
         default_lines = file.readlines()
         print(f"default lines: {default_lines}")
-        # assert 'maintainerPath=$"maintain.py"' in default_lines
+        assert 'maintainerPath=$"maintain.py"\n' in default_lines
 
         for l in default_lines:
-          if l=='maintainerPath=$"maintain.py"':
+          if l=='maintainerPath=$"maintain.py"\n':
             new_lines.append(f"maintainerPath=$\"{self.__cwd}maintain.py\"")
           else:
             new_lines.append(l)

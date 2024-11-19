@@ -2,8 +2,7 @@
 
 # adapted from: https://unix.stackexchange.com/a/505342
 
-maintainerPath=$"maintain.py"
-
+maintainerPath=$"/home/cathe/Documents/git/thecathe/dotsmaintain.py"
 helpFunction()
 {
    echo ""
