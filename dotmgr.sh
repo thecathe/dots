@@ -19,7 +19,7 @@ helpFunction()
 
 # default, if no flags then just run backup
 if (( $# == 0 )); then
-    echo "python $maintainerPath backup"
+    python "$maintainerPath" $"backup"
     exit 0
 fi
 
