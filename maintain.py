@@ -158,7 +158,7 @@ class mgr():
 
       # move
       # print(f"test: {f"mv {self.__cwd}_dotmgr.sh ~/bin/dotmgr.sh"}")
-      os.system(f"mv {self.__cwd}_dotmgr.sh ~/bin/dotmgr.sh")
+      os.system(f"mv {self.__cwd}/_dotmgr.sh ~/bin/dotmgr.sh")
 
     if self.__do_rebase:
       print(f"rebasing repo.")
