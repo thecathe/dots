@@ -1,0 +1,11 @@
+{
+  "scripts": [],
+  "configs": ["~/awesome/rc.lua"],
+  "backups": [
+    {
+      "path": "./etc/lightdm/lightdm.conf",
+      "keep_local": true,
+      "cache_global": true
+    }
+  ]
+}
