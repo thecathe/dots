@@ -208,7 +208,7 @@ class mgr():
 
       print(f"\nbacking up backups to: {self.__cwd}/backups...")
       for b in self.__db["backups"]:
-        if b.get("ignore",False):
+        if b.get("ignore",False) or b.get("never_backup",False):
           print(f"(ignoring: {b["path"]})")
         else:
           assert "path" in b.keys()

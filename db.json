@@ -17,6 +17,13 @@
       "keep_local": true,
       "cache_global": true,
       "ignore": true
+    },
+    {
+      "path": "~/bin/dotmgr.sh",
+      "keep_local": true,
+      "cache_global": true,
+      "ignore": true,
+      "never_backup": true
     }
   ]
 }
