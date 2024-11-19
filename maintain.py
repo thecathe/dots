@@ -120,7 +120,7 @@ class mgr():
 
     print("\nfinished validating dirs.\n")
 
-  # #
+  # TODO: add mechanism to stop backing things up and to, when necessary, delete files from this repo automatically
   # def process_tbd(self):
   #   tbd = self.get_tbd()
 
