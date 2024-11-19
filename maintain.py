@@ -17,6 +17,14 @@ def default_do_rebase():
 def default_do_refresh():
   return False
 
+#
+def default_do_setup():
+  return False
+
+#
+def default_do_not_push():
+  return False
+
 # object for managing the db.json file
 class mgr():
 
@@ -36,6 +44,8 @@ class mgr():
   __do_backup = default_do_backup()
   __do_rebase = default_do_rebase()
   __do_refresh = default_do_refresh()
+  __do_setup = default_do_setup()
+  __do_not_push = default_do_not_push()
 
   #
   def get_db(self):
@@ -77,13 +87,15 @@ class mgr():
     self.__do_backup = args.get("backup", default_do_backup())
     self.__do_rebase = args.get("rebase", default_do_rebase())
     self.__do_refresh = args.get("refresh", default_do_refresh())
+    self.__do_setup = args.get("setup", default_do_setup())
+    self.__do_not_push = args.get("dontpush", default_do_not_push())
 
     # sanity check -- this would be pointless
     assert not (self.__do_backup and self.__do_refresh)
 
   #
   def to_string(self):
-    return f"do backup: {self.__do_backup}; do rebase: {self.__do_rebase}; do refresh: {self.__do_refresh}\ntbd: {self.get_tbd()};\ndb: {json.dumps(self.get_db(),sort_keys=True,indent=2)}.\n"
+    return f"do backup: {self.__do_backup}; do rebase: {self.__do_rebase}; do refresh: {self.__do_refresh}; do setup: {self.__do_setup};\ntbd: {self.get_tbd()};\ndb: {json.dumps(self.get_db(),sort_keys=True,indent=2)}.\n"
 
   #
   def validate_dirs(self):
@@ -121,6 +133,32 @@ class mgr():
 
   #
   def run(self):
+
+    if self.__do_setup:
+      print(f"setting up script to allow maintenance of this repo to be more easily handled.")
+
+      # copy first
+      os.system(f"cp ./dotmgr.sh ./_dotmgr.sh")
+      new_lines = []
+
+      # alter line to point back to here
+      with open("_dotmgr.sh","r") as file:
+        default_lines = file.readlines()
+        print(f"default lines: {default_lines}")
+        # assert 'maintainerPath=$"maintain.py"' in default_lines
+
+        for l in default_lines:
+          if l=='maintainerPath=$"maintain.py"':
+            new_lines.append(f"maintainerPath=$\"{self.__cwd}maintain.py\"")
+          else:
+            new_lines.append(l)
+
+      with open("_dotmgr.sh","w") as file:
+        file.writelines(new_lines)
+
+      # move
+      print(f"test: {f"mv {self.__cwd}_dotmgr.sh ~/bin/dotmgr.sh"}")
+      # os.system(f"mv {self.__cwd}_dotmgr.sh ~/bin/dotmgr.sh")
 
     if self.__do_rebase:
       print(f"rebasing repo.")
@@ -186,11 +224,15 @@ class mgr():
 
       print("\nfinished running backup. (configs, backups, scripts)\n")
 
-      # push to git
-      os.system(f"git add -A && git commit -m \"automatic backup during maintenance.\"")
+      if self.__do_not_push:
+        print("warning, nothing has been pushed to git. this will all be undone if run again with rebase.")
 
-      input("\npress any key to push...")
-      os.system(f"git push --tags origin main")
+      else:
+        # push to git
+        os.system(f"git add -A && git commit -m \"automatic backup during maintenance.\"")
+
+        input("\npress any key to push...")
+        os.system(f"git push --tags origin main")
 
 
       print("\nfinished pushing changes to git.\n")
@@ -198,7 +240,7 @@ class mgr():
 
 #
 def default_args():
-  return {"backup":default_do_backup(),"rebase":default_do_rebase(),"refresh":default_do_refresh()}
+  return {"backup":default_do_backup(),"rebase":default_do_rebase(),"refresh":default_do_refresh(),"setup":default_do_setup(),"dontpush":default_do_not_push()}
 
 
 
