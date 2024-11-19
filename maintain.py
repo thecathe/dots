@@ -187,7 +187,11 @@ class mgr():
       print("\nfinished running backup. (configs, backups, scripts)\n")
 
       # push to git
-      os.system(f"git add -A && git commit -m \"automatic backup during maintenance.\"; git push --tags origin main")
+      os.system(f"git add -A && git commit -m \"automatic backup during maintenance.\"")
+
+      input("\npress any key to push...")
+      os.system(f"git push --tags origin main")
+
 
       print("\nfinished pushing changes to git.\n")
 
