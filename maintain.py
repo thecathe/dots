@@ -138,9 +138,20 @@ class mgr():
         assert c[0:10]=="~/.config/"
         local_path = f"{c}"
         backup_path = f"{self.__cwd}/configs{c[9:]}"
-        print(f":: cp {local_path} {backup_path}")
-        # os.system(f"cp {local_path} {backup_path}")
+        os.system(f"cp {local_path} {backup_path}")
 
+      for b in self.__db["backups"]:
+        assert "path" in b.keys()
+        local_path = f"{b["path"]}"
+        backup_path = f"{self.__cwd}/backups{b["path"][1:] if b["path"][0:1] in [".","~"] else b["path"]}"
+        os.system(f"cp {local_path} {backup_path}")
+
+      for s in self.__db["scripts"]:
+        local_path = f"~/bin/{s}"
+        backup_path = f"{self.__cwd}/scripts/{s}"
+        os.system(f"cp {local_path} {backup_path}")
+
+      print("\nfinished running backup. (configs, backups, scripts)\n")
 
 
 #
