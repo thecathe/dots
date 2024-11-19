@@ -1,9 +1,17 @@
 {
   "scripts": [],
-  "configs": ["~/awesome/rc.lua"],
+  "configs": [
+    "~/.config/awesome/rc.lua",
+    "~/.config/flameshot/flameshot.ini"
+  ],
   "backups": [
     {
       "path": "./etc/lightdm/lightdm.conf",
+      "keep_local": true,
+      "cache_global": true
+    },
+    {
+      "path": "~/.xinitrc",
       "keep_local": true,
       "cache_global": true
     }
