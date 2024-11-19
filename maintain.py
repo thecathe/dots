@@ -128,30 +128,68 @@ class mgr():
 
     # from repo -> to system
     if self.__do_refresh:
-      print(f"refreshing system using copies in: {self.__cwd}.")
+
+      print(f"\nrefreshing system configs with those in: {self.__cwd}/configs...")
+      for c in self.__db["configs"]:
+        assert c[0:10]=="~/.config/"
+        local_path = f"{c}"
+        if pathlib.Path.exists(local_path):
+          backup_path = f"{self.__cwd}/configs{c[9:]}"
+          os.system(f"cp {backup_path} {local_path}")
+        else:
+          print(f"(configs) not found, untouched: {local_path}.")
+
+      print(f"\nrefreshing system backups with those in: {self.__cwd}/backups...")
+      for b in self.__db["backups"]:
+        assert "path" in b.keys()
+        local_path = f"{b["path"]}"
+        if pathlib.Path.exists(local_path):
+          backup_path = f"{self.__cwd}/backups{b["path"][1:] if b["path"][0:1] in [".","~"] else b["path"]}"
+          os.system(f"cp {backup_path} {local_path}")
+        else:
+          print(f"(backups) not found, untouched: {local_path}.")
+
+      print(f"\nrefreshing system scripts with those in: {self.__cwd}/scripts...")
+      for s in self.__db["scripts"]:
+        local_path = f"~/bin/{s}"
+        backup_path = f"{self.__cwd}/scripts/{s}"
+        os.system(f"cp {backup_path} {local_path}")
+
+      print("\nfinished running backup. (configs, backups, scripts)\n")
+
 
     # from system -> to repo
     if self.__do_backup:
-      print(f"backing up to: {self.__cwd}.")
 
+      print(f"\nbacking up configs to: {self.__cwd}/configs...")
       for c in self.__db["configs"]:
         assert c[0:10]=="~/.config/"
         local_path = f"{c}"
         backup_path = f"{self.__cwd}/configs{c[9:]}"
         os.system(f"cp {local_path} {backup_path}")
 
+      print(f"\nbacking up backups to: {self.__cwd}/backups...")
       for b in self.__db["backups"]:
-        assert "path" in b.keys()
-        local_path = f"{b["path"]}"
-        backup_path = f"{self.__cwd}/backups{b["path"][1:] if b["path"][0:1] in [".","~"] else b["path"]}"
-        os.system(f"cp {local_path} {backup_path}")
+        if b.get("ignore",False):
+          print(f"(ignoring: {b["path"]})")
+        else:
+          assert "path" in b.keys()
+          local_path = f"{b["path"]}"
+          backup_path = f"{self.__cwd}/backups{b["path"][1:] if b["path"][0:1] in [".","~"] else b["path"]}"
+          os.system(f"cp {local_path} {backup_path}")
 
+      print(f"\nbacking up scripts to: {self.__cwd}/scripts...")
       for s in self.__db["scripts"]:
         local_path = f"~/bin/{s}"
         backup_path = f"{self.__cwd}/scripts/{s}"
         os.system(f"cp {local_path} {backup_path}")
 
       print("\nfinished running backup. (configs, backups, scripts)\n")
+
+      # push to git
+      os.system(f"git add -A && git commit -m \"automatic backup during maintenance.\"; git push --tags origin main")
+
+      print("\nfinished pushing changes to git.\n")
 
 
 #

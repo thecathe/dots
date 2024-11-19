@@ -13,7 +13,8 @@
     {
       "path": "~/.xinitrc",
       "keep_local": true,
-      "cache_global": true
+      "cache_global": true,
+      "ignore": true
     }
   ]
 }
