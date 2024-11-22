@@ -5,6 +5,10 @@
   "configs": [
     "~/.config/awesome/rc.lua",
     "~/.config/awesome/xrandr.lua",
+    "~/.config/awesome/awful/hotkeys_popup/keys/init.lua",
+    "~/.config/awesome/awful/hotkeys_popup/keys/tags.lua",
+    "~/.config/awesome/awful/hotkeys_popup/keys/tmux.lua",
+    "~/.config/awesome/awful/hotkeys_popup/keys/firefox.lua",
     "~/.config/flameshot/flameshot.ini",
     "~/.config/alacritty/alacritty.toml"
   ],
@@ -19,6 +23,13 @@
       "keep_local": true,
       "cache_global": true,
       "ignore": false
+    },
+    {
+      "path": "~/.config/awesome/device_spec.lua",
+      "keep_local": true,
+      "cache_global": true,
+      "ignore": false,
+      "never_refresh": true
     },
     {
       "path": "~/.zshrc",
