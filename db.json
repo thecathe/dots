@@ -5,13 +5,26 @@
   "configs": [
     "~/.config/awesome/rc.lua",
     "~/.config/awesome/xrandr.lua",
-    "~/.config/flameshot/flameshot.ini"
+    "~/.config/flameshot/flameshot.ini",
+    "~/.config/alacritty/alacritty.toml"
   ],
   "backups": [
     {
       "path": "./etc/lightdm/lightdm.conf",
       "keep_local": true,
       "cache_global": true
+    },
+    {
+      "path": "~/.tmux.conf",
+      "keep_local": true,
+      "cache_global": true,
+      "ignore": false
+    },
+    {
+      "path": "~/.zshrc",
+      "keep_local": true,
+      "cache_global": true,
+      "ignore": false
     },
     {
       "path": "~/.xinitrc",

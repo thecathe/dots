@@ -1,0 +1,13 @@
+# see: https://alacritty.org/releases/0.14.0/config-alacritty.html
+
+[window]
+padding = { x = 3, y = 3 }
+opacity = 0.92
+blur = true
+dynamic_padding = true
+decorations = "None"
+
+
+[shell]
+program = "/bin/zsh"
+args = []

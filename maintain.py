@@ -157,7 +157,7 @@ class mgr():
         for l in default_lines:
           if l=='maintainerPath=$"maintain.py"\n':
             new_lines.append(f"## last updated: {datetime.datetime.now()}\n")
-            new_lines.append(f"maintainerPath=$\"{self.__cwd}maintain.py\"\n")
+            new_lines.append(f"maintainerPath=$\"{self.__cwd}/maintain.py\"\n")
           else:
             new_lines.append(l)
 
@@ -251,9 +251,13 @@ class mgr():
         print("warning, nothing has been pushed to git. this will all be undone if run again with rebase.")
 
       else:
-        # push to git
-        os.system(f"cd {self.__cwd}; git add -A && git commit -m \"automatic backup during maintenance.\"")
+        commit_input = input("\n(optional) enter commit message: ")
+        commit_msg = "(auto) maintenance backup." if (commit_input=="") else f"{commit_input}"
+        print("\n")
 
+        os.system(f"cd {self.__cwd}; git add -A && git commit -m \"{commit_msg}\"")
+
+        # push to git
         input("\npress any key to push...")
         os.system(f"cd {self.__cwd}; git push --tags origin main")
 
