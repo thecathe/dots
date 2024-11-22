@@ -3,7 +3,11 @@
 import os
 import sys
 import pathlib
+import datetime
 import json
+
+# https://stackoverflow.com/a/18489147
+from inspect import getsourcefile
 
 #
 def default_do_backup():
@@ -19,7 +23,7 @@ def default_do_refresh():
 
 #
 def default_do_setup():
-  return False
+  return True
 
 #
 def default_do_not_push():
@@ -39,7 +43,7 @@ class mgr():
   __db = {}
   __tbd = []
 
-  __cwd = os.getcwd()
+  __cwd = os.path.split(os.path.abspath(getsourcefile(lambda:0)))[0] #os.getcwd()
 
   __do_backup = default_do_backup()
   __do_rebase = default_do_rebase()
@@ -49,26 +53,27 @@ class mgr():
 
   #
   def get_db(self):
+    print(f"cwd: {self.__cwd}.")
     assert "db.json" in os.listdir(self.__cwd)
-    with open("db.json", "r") as file:
+    with open(os.path.join(self.__cwd,"db.json"), "r") as file:
       self.__db = json.load(file)
 
     return self.__db
 
   #
   def write_db(self):
-    with open("db.json", "w") as file:
+    with open(os.path.join(self.__cwd,"db.json"), "w") as file:
       file.write(self.get_db())
 
   #
   def get_tbd(self):
     if "tbd.json" in os.listdir(self.__cwd):
       # check for any to be deleted
-      with open("tbd.json", "r") as file:
+      with open(os.path.join(self.__cwd,"tbd.json"), "r") as file:
         self.__tbd = json.load(file)
     else:
       # create default, empty file
-      with open("tbd.json", "w") as file:
+      with open(os.path.join(self.__cwd,"tbd.json"), "w") as file:
         file.write("[]")
       self.__tbd = []
 
@@ -135,25 +140,28 @@ class mgr():
   def run(self):
 
     if self.__do_setup:
+
       print(f"setting up script to allow maintenance of this repo to be more easily handled.")
+      input("\npress any key to continue...")
 
       # copy first
-      os.system(f"cp ./dotmgr.sh ./_dotmgr.sh")
+      os.system(f"cp {self.__cwd}/dotmgr.sh {self.__cwd}/_dotmgr.sh")
       new_lines = []
 
       # alter line to point back to here
-      with open("_dotmgr.sh","r") as file:
+      with open(os.path.join(self.__cwd,"_dotmgr.sh"),"r") as file:
         default_lines = file.readlines()
         print(f"default lines: {default_lines}")
         assert 'maintainerPath=$"maintain.py"\n' in default_lines
 
         for l in default_lines:
           if l=='maintainerPath=$"maintain.py"\n':
-            new_lines.append(f"maintainerPath=$\"{self.__cwd}maintain.py\"")
+            new_lines.append(f"## last updated: {datetime.datetime.now()}\n")
+            new_lines.append(f"maintainerPath=$\"{self.__cwd}maintain.py\"\n")
           else:
             new_lines.append(l)
 
-      with open("_dotmgr.sh","w") as file:
+      with open(os.path.join(self.__cwd,"_dotmgr.sh"),"w") as file:
         file.writelines(new_lines)
 
       # move
@@ -161,13 +169,18 @@ class mgr():
       os.system(f"mv {self.__cwd}/_dotmgr.sh ~/bin/dotmgr.sh")
 
     if self.__do_rebase:
+
       print(f"rebasing repo.")
-      os.system("git config pull.rebase true; git pull --tags origin main")
+      input("\npress any key to continue...")
+
+      os.system(f"cd {self.__cwd}; git config pull.rebase true; git pull --tags origin main")
 
     # from repo -> to system
     if self.__do_refresh:
 
       print(f"\nrefreshing system configs with those in: {self.__cwd}/configs...")
+      input("\npress any key to continue...")
+
       for c in self.__db["configs"]:
         assert c[0:10]=="~/.config/"
         local_path = f"{c}"
@@ -178,6 +191,8 @@ class mgr():
           print(f"(configs) not found, untouched: {local_path}.")
 
       print(f"\nrefreshing system backups with those in: {self.__cwd}/backups...")
+      input("\npress any key to continue...")
+
       for b in self.__db["backups"]:
         assert "path" in b.keys()
         local_path = f"{b["path"]}"
@@ -188,6 +203,8 @@ class mgr():
           print(f"(backups) not found, untouched: {local_path}.")
 
       print(f"\nrefreshing system scripts with those in: {self.__cwd}/scripts...")
+      input("\npress any key to continue...")
+
       for s in self.__db["scripts"]:
         local_path = f"~/bin/{s}"
         backup_path = f"{self.__cwd}/scripts/{s}"
@@ -200,6 +217,8 @@ class mgr():
     if self.__do_backup:
 
       print(f"\nbacking up configs to: {self.__cwd}/configs...")
+      input("\npress any key to continue...")
+
       for c in self.__db["configs"]:
         assert c[0:10]=="~/.config/"
         local_path = f"{c}"
@@ -207,6 +226,8 @@ class mgr():
         os.system(f"cp {local_path} {backup_path}")
 
       print(f"\nbacking up backups to: {self.__cwd}/backups...")
+      input("\npress any key to continue...")
+
       for b in self.__db["backups"]:
         if b.get("ignore",False) or b.get("never_backup",False):
           print(f"(ignoring: {b["path"]})")
@@ -217,6 +238,8 @@ class mgr():
           os.system(f"cp {local_path} {backup_path}")
 
       print(f"\nbacking up scripts to: {self.__cwd}/scripts...")
+      input("\npress any key to continue...")
+
       for s in self.__db["scripts"]:
         local_path = f"~/bin/{s}"
         backup_path = f"{self.__cwd}/scripts/{s}"
@@ -229,10 +252,10 @@ class mgr():
 
       else:
         # push to git
-        os.system(f"git add -A && git commit -m \"automatic backup during maintenance.\"")
+        os.system(f"cd {self.__cwd}; git add -A && git commit -m \"automatic backup during maintenance.\"")
 
         input("\npress any key to push...")
-        os.system(f"git push --tags origin main")
+        os.system(f"cd {self.__cwd}; git push --tags origin main")
 
 
       print("\nfinished pushing changes to git.\n")

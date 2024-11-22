@@ -18,6 +18,8 @@ local hotkeys_popup = require("awful.hotkeys_popup")
 -- when client with a matching name is opened:
 require("awful.hotkeys_popup.keys")
 
+-- handle multiple monitors
+local xrandr = require("xrandr")
 
 local volume_widget = require('awesome-wm-widgets.volume-widget.volume') -- https://github.com/streetturtle/awesome-wm-widgets/tree/master/volume-widget
 -- local battery_widget = require('awesome-wm-widgets.battery-widget.battery') -- https://github.com/streetturtle/awesome-wm-widgets/tree/master/battery-widget
@@ -183,7 +185,7 @@ mykeyboardlayout = awful.widget.keyboardlayout()
     --     notification_status:buttons(),
     --     awful.button({}, 1, function ()  end)
     -- ))
-    notification_status:connect_signal("button::press", function (c) 
+    notification_status:connect_signal("button::press", function (c)
         -- naughty.toggle()
         if naughty.is_suspended() then
             c.checked = true
@@ -373,7 +375,7 @@ mykeyboardlayout = awful.widget.keyboardlayout()
                 {description = "restore minimized", group = "client"}),
 
         -- Prompt
-        awful.key({ modkey },            "r",     function () awful.screen.focused().mypromptbox:run() end, -- < --default -- function () awful.util.spawn("dmenu_run") end, 
+        awful.key({ modkey },            "r",     function () awful.screen.focused().mypromptbox:run() end, -- < --default -- function () awful.util.spawn("dmenu_run") end,
                 {description = "run prompt", group = "launcher"}),
 
         awful.key({ modkey },            "b",     function () awful.util.spawn("firefox") end, -- firefox
@@ -408,13 +410,19 @@ mykeyboardlayout = awful.widget.keyboardlayout()
                                                         awful.spawn.easy_async_with_shell(inc,
                                                         function(stdout, stderr, reason, exit_code)
                                                             naughty.notify { text = "Brightness: "..stdout, ontop = true, timeout = 2, urgency="low", height = 24 }
-                                                        end) end),
+                                                        end) end
+                                                        -- ,
+                                                        -- {description="brighter", group = "screen brightness"}
+                                                        ),
         awful.key({}, "XF86MonBrightnessDown", function ()
                                                         local dec = "xbacklight -dec 3 ; sleep 0.1 ; xbacklight -get"
-                                                        awful.spawn.easy_async_with_shell(dec, 
+                                                        awful.spawn.easy_async_with_shell(dec,
                                                         function(stdout, stderr, reason, exit_code)
                                                             naughty.notify { text = "Brightness: "..stdout, ontop = true, timeout = 2, urgency="low", height = 24 }
-                                                        end) end),
+                                                        end) end
+                                                        -- ,
+                                                        -- {description="dimmer", group = "screen brightness"}
+                                                      ),
 
         -- brightness hotkeys (mid-point snaps)
         awful.key({ modkey, "Shift" }, "XF86MonBrightnessUp", function ()
@@ -422,13 +430,15 @@ mykeyboardlayout = awful.widget.keyboardlayout()
                                                         local inc = 'xbacklight -set '..inc_val
                                                         awful.spawn.easy_async_with_shell(inc, function(stdout, stderr, reason, exit_code)
                                                             naughty.notify { text = "Brightness: "..inc_val, ontop = true, timeout = 2, urgency="low", height = 24 }
-                                                        end) end),
+                                                        end) end,
+                                                        {description="bright", group = "screen brightness"}),
         awful.key({ modkey, "Shift" }, "XF86MonBrightnessDown", function ()
                                                         local dec_val = 33
                                                         local dec = "xbacklight -set "..dec_val
                                                         awful.spawn.easy_async_with_shell(dec, function(stdout, stderr, reason, exit_code)
                                                             naughty.notify { text = "Brightness: "..dec_val, ontop = true, timeout = 2, urgency="low", height = 24 }
-                                                        end) end),
+                                                        end) end,
+                                                        {description="dim", group = "screen brightness"}),
 
         -- brightness hotkeys (max-point snaps)
         awful.key({ modkey, "Control" }, "XF86MonBrightnessUp", function ()
@@ -436,13 +446,15 @@ mykeyboardlayout = awful.widget.keyboardlayout()
                                                         local inc = 'xbacklight -set '..inc_val
                                                         awful.spawn.easy_async_with_shell(inc, function(stdout, stderr, reason, exit_code)
                                                             naughty.notify { text = "Brightness: "..inc_val, ontop = true, timeout = 2, urgency="low", height = 24 }
-                                                        end) end),
+                                                        end) end,
+                                                        {description="brightest", group = "screen brightness"}),
         awful.key({ modkey, "Control" }, "XF86MonBrightnessDown", function ()
                                                         local dec_val = 1
                                                         local dec = "xbacklight -set "..dec_val
                                                         awful.spawn.easy_async_with_shell(dec, function(stdout, stderr, reason, exit_code)
                                                             naughty.notify { text = "Brightness: "..dec_val, ontop = true, timeout = 2, urgency="low", height = 24 }
-                                                        end) end),
+                                                        end) end,
+                                                        {description="dimmest", group = "screen brightness"}),
 
         -- temperature hotkeys (toggle color warmth)
         awful.key({ modkey, "Control" }, "Right", function ()
@@ -450,12 +462,14 @@ mykeyboardlayout = awful.widget.keyboardlayout()
                                                         local redshift = "redshift -P -O "..redshift_val
                                                         awful.spawn.easy_async_with_shell(redshift, function(stdout, stderr, reason, exit_code)
                                                             naughty.notify { text = "Redshift: "..redshift_val, ontop = true, timeout = 2, urgency="low", height = 24 }
-                                                        end) end),
+                                                        end) end,
+                                                        {description="low color temp.", group = "color temp."}),
         awful.key({ modkey, "Control" }, "Left", function ()
                                                         local redshift = "redshift -x"
                                                         awful.spawn.easy_async_with_shell(redshift, function(stdout, stderr, reason, exit_code)
                                                             naughty.notify { text = "Redshift Off", ontop = true, timeout = 2, urgency="low", height = 24 }
-                                                        end) end),
+                                                        end) end,
+                                                        {description="turn off color temp.", group = "color temp."}),
 
         -- temperature hotkeys (inc/dec color warmth)
         awful.key({ modkey, "Control" }, "Up", function ()
@@ -463,13 +477,15 @@ mykeyboardlayout = awful.widget.keyboardlayout()
                                                         local redshift = "redshift -P -O "..redshift_val
                                                         awful.spawn.easy_async_with_shell(redshift, function(stdout, stderr, reason, exit_code)
                                                             naughty.notify { text = "Redshift: "..redshift_val, ontop = true, timeout = 2, urgency="low", height = 24 }
-                                                        end) end),
+                                                        end) end,
+                                                        {description="mid color temp.", group = "color temp."}),
         awful.key({ modkey, "Control" }, "Down", function ()
                                                         local redshift_val = 1600
                                                         local redshift = "redshift -P -O "..redshift_val
                                                         awful.spawn.easy_async_with_shell(redshift, function(stdout, stderr, reason, exit_code)
                                                             naughty.notify { text = "Redshift: "..redshift_val, ontop = true, timeout = 2, urgency="low", height = 24 }
-                                                        end) end),
+                                                        end) end,
+                                                        {description="high color temp.", group = "color temp."}),
 
         -- toggle notifications
         awful.key({ modkey } , "q", function()
@@ -495,9 +511,13 @@ mykeyboardlayout = awful.widget.keyboardlayout()
                             }
                         end
                     end,
-                    {description = "toggle notifications", group = "hotkeys"}),
+                    {description = "toggle notifications", group = "notifications"}),
         awful.key({ modkey, "Control" } , "q", function() naughty.destroy_all_notifications() end,
-                    {description = "destroy all notifications", group = "hotkeys"})
+                    {description = "destroy all notifications", group = "notifications"}),
+
+        -- multiple monitors
+        awful.key({ modkey, "Control" } , "s", function() xrandr.xrandr() end, {description="cycle through xrandr configs", group = "screen"}),
+        awful.key({ modkey, "Shift", "Control" } , "s", function () awful.spawn("arandr") end, {description="open arandr", group = "screen"})
     )
 
     clientkeys = gears.table.join(

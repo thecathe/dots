@@ -4,6 +4,7 @@
   ],
   "configs": [
     "~/.config/awesome/rc.lua",
+    "~/.config/awesome/xrandr.lua",
     "~/.config/flameshot/flameshot.ini"
   ],
   "backups": [
