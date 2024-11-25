@@ -12,3 +12,9 @@ fi
 if [[ -e /usr/share/zsh/manjaro-zsh-prompt ]]; then
   source /usr/share/zsh/manjaro-zsh-prompt
 fi
+
+
+# script aliases
+alias vscode="bash ~/bin/launch_vscode_workspace.sh"
+alias dots="bash ~/bin/run_dot_manager.sh"
+alias reload="source ~/.zshrc"

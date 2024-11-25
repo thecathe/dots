@@ -1,6 +1,7 @@
 {
   "scripts": [
-    "tut_systemd_boot.sh"
+    "tut_systemd_boot.sh",
+    "launch_vscode_workspace.sh"
   ],
   "configs": [
     "~/.config/awesome/rc.lua",
@@ -32,6 +33,12 @@
       "never_refresh": true
     },
     {
+      "path": "~/.bashrc",
+      "keep_local": true,
+      "cache_global": true,
+      "ignore": false
+    },
+    {
       "path": "~/.zshrc",
       "keep_local": true,
       "cache_global": true,
@@ -44,7 +51,7 @@
       "ignore": true
     },
     {
-      "path": "~/bin/dotmgr.sh",
+      "path": "~/bin/run_dot_manager.sh",
       "keep_local": true,
       "cache_global": true,
       "ignore": true,

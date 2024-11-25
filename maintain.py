@@ -145,11 +145,11 @@ class mgr():
       input("\npress any key to continue...")
 
       # copy first
-      os.system(f"cp {self.__cwd}/dotmgr.sh {self.__cwd}/_dotmgr.sh")
+      os.system(f"cp {self.__cwd}/run_dot_manager.sh {self.__cwd}/_run_dot_manager.sh")
       new_lines = []
 
       # alter line to point back to here
-      with open(os.path.join(self.__cwd,"_dotmgr.sh"),"r") as file:
+      with open(os.path.join(self.__cwd,"_run_dot_manager.sh"),"r") as file:
         default_lines = file.readlines()
         print(f"default lines: {default_lines}")
         assert 'maintainerPath=$"maintain.py"\n' in default_lines
@@ -161,12 +161,11 @@ class mgr():
           else:
             new_lines.append(l)
 
-      with open(os.path.join(self.__cwd,"_dotmgr.sh"),"w") as file:
+      with open(os.path.join(self.__cwd,"_run_dot_manager.sh"),"w") as file:
         file.writelines(new_lines)
 
       # move
-      # print(f"test: {f"mv {self.__cwd}_dotmgr.sh ~/bin/dotmgr.sh"}")
-      os.system(f"mv {self.__cwd}/_dotmgr.sh ~/bin/dotmgr.sh")
+      os.system(f"mv {self.__cwd}/_run_dot_manager.sh ~/bin/run_dot_manager.sh")
 
     if self.__do_rebase:
 

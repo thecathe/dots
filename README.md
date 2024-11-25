@@ -13,4 +13,4 @@
 
 # todo in general
 -[ ] overhaul rc.lua
--[ ] figure out how to export (?) `dotmgr.sh` for easier backups.
+-[ ] figure out how to export (?) `run_dot_manager.sh` for easier backups.
