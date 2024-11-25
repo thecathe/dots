@@ -18,3 +18,12 @@ fi
 alias vscode="bash ~/bin/launch_vscode_workspace.sh"
 alias dots="bash ~/bin/run_dot_manager.sh"
 alias reload="source ~/.zshrc"
+
+# >>> juliaup initialize >>>
+
+# !! Contents within this block are managed by juliaup !!
+
+path=('/home/cathe/.juliaup/bin' $path)
+export PATH
+
+# <<< juliaup initialize <<<
