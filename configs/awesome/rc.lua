@@ -182,8 +182,9 @@ local function set_wallpaper(s)
 end
 
 -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
-screen.connect_signal("property::geometry", set_wallpaper)
-
+if (device_spec.show_wallpaper) then
+  screen.connect_signal("property::geometry", set_wallpaper) -- ! disabling wallpapers because they stretch
+end
 
 -- ! notification status
 local notification_status = wibox.widget {
@@ -226,7 +227,9 @@ local wibox_sep = wibox.widget.textbox(" ")
 
 awful.screen.connect_for_each_screen(function(s)
   -- Wallpaper
-  set_wallpaper(s)
+  if (device_spec.show_wallpaper) then
+    set_wallpaper(s) -- ! disabling wallpapers because they stretch
+  end
 
   -- Each screen has its own tag table.
   awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])

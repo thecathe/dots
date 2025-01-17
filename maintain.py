@@ -136,6 +136,7 @@ class mgr():
   #     pass
   #   print("mgr.process_tbd, unfinished: warning, skipped.")
 
+  #
   def backup_dir(self,_dir_path:str,_backup_path:str):
     _dir_path = f"{f"{pathlib.Path.home()}{_dir_path[1:]}"if _dir_path[0]=="~" else _dir_path}{""if _dir_path[-1]=="/" else "/"}"
 
@@ -143,14 +144,12 @@ class mgr():
       for entry in it:
         system_path = f"{entry.path}"
         backup_path = f"{_backup_path}{entry.name}"
-        print(f"backup_dir - - - -\n\t_dir_path :: {_dir_path}\n\tsystem_path :: {system_path}\n\n\t_backup_path :: {_backup_path}\n\tbackup_path :: {backup_path}\n\n\n")
         if entry.is_file():
           os.system(f"cp {system_path} {backup_path}")
         else:
           backup_path = f"{backup_path}/"
           pathlib.Path(backup_path).mkdir(parents=True, exist_ok=True)
           self.backup_dir(system_path,backup_path)
-
 
   #
   def run(self):
