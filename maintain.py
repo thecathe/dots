@@ -136,6 +136,22 @@ class mgr():
   #     pass
   #   print("mgr.process_tbd, unfinished: warning, skipped.")
 
+  def backup_dir(self,_dir_path:str,_backup_path:str):
+    _dir_path = f"{f"{pathlib.Path.home()}{_dir_path[1:]}"if _dir_path[0]=="~" else _dir_path}{""if _dir_path[-1]=="/" else "/"}"
+
+    with os.scandir(_dir_path) as it:
+      for entry in it:
+        system_path = f"{entry.path}"
+        backup_path = f"{_backup_path}{entry.name}"
+        print(f"backup_dir - - - -\n\t_dir_path :: {_dir_path}\n\tsystem_path :: {system_path}\n\n\t_backup_path :: {_backup_path}\n\tbackup_path :: {backup_path}\n\n\n")
+        if entry.is_file():
+          os.system(f"cp {system_path} {backup_path}")
+        else:
+          backup_path = f"{backup_path}/"
+          pathlib.Path(backup_path).mkdir(parents=True, exist_ok=True)
+          self.backup_dir(system_path,backup_path)
+
+
   #
   def run(self):
 
@@ -182,32 +198,32 @@ class mgr():
 
       for c in self.__db["configs"]:
         assert c[0:10]=="~/.config/"
-        local_path = f"{c}"
-        if pathlib.Path.exists(local_path):
+        system_path = f"{c}"
+        if pathlib.Path.exists(system_path):
           backup_path = f"{self.__cwd}/configs{c[9:]}"
-          os.system(f"cp {backup_path} {local_path}")
+          os.system(f"cp {backup_path} {system_path}")
         else:
-          print(f"(configs) not found, untouched: {local_path}.")
+          print(f"(configs) not found, untouched: {system_path}.")
 
       print(f"\nrefreshing system backups with those in: {self.__cwd}/backups...")
       input("\npress any key to continue...")
 
       for b in self.__db["backups"]:
         assert "path" in b.keys()
-        local_path = f"{b["path"]}"
-        if pathlib.Path.exists(local_path):
+        system_path = f"{b["path"]}"
+        if pathlib.Path.exists(system_path):
           backup_path = f"{self.__cwd}/backups{b["path"][1:] if b["path"][0:1] in [".","~"] else b["path"]}"
-          os.system(f"cp {backup_path} {local_path}")
+          os.system(f"cp {backup_path} {system_path}")
         else:
-          print(f"(backups) not found, untouched: {local_path}.")
+          print(f"(backups) not found, untouched: {system_path}.")
 
       print(f"\nrefreshing system scripts with those in: {self.__cwd}/scripts...")
       input("\npress any key to continue...")
 
       for s in self.__db["scripts"]:
-        local_path = f"~/bin/{s}"
+        system_path = f"~/bin/{s}"
         backup_path = f"{self.__cwd}/scripts/{s}"
-        os.system(f"cp {backup_path} {local_path}")
+        os.system(f"cp {backup_path} {system_path}")
 
       print("\nfinished running backup. (configs, backups, scripts)\n")
 
@@ -220,9 +236,9 @@ class mgr():
 
       for c in self.__db["configs"]:
         assert c[0:10]=="~/.config/"
-        local_path = f"{c}"
+        system_path = f"{c}"
         backup_path = f"{self.__cwd}/configs{c[9:]}"
-        os.system(f"cp {local_path} {backup_path}")
+        os.system(f"cp {system_path} {backup_path}")
 
       print(f"\nbacking up backups to: {self.__cwd}/backups...")
       input("\npress any key to continue...")
@@ -232,17 +248,22 @@ class mgr():
           print(f"(ignoring: {b["path"]})")
         else:
           assert "path" in b.keys()
-          local_path = f"{b["path"]}"
-          backup_path = f"{self.__cwd}/backups{b["path"][1:] if b["path"][0:1] in [".","~"] else b["path"]}"
-          os.system(f"cp {local_path} {backup_path}")
+          if b.get("is_directory",False):
+            system_path = f"{b["path"]}"
+            backup_path = f"{self.__cwd}/backups{b["path"][1:] if b["path"][0:1] in [".","~"] else b["path"]}"
+            self.backup_dir(system_path,backup_path)
+          else:
+            system_path = f"{b["path"]}"
+            backup_path = f"{self.__cwd}/backups{b["path"][1:] if b["path"][0:1] in [".","~"] else b["path"]}"
+            os.system(f"cp {system_path} {backup_path}")
 
       print(f"\nbacking up scripts to: {self.__cwd}/scripts...")
       input("\npress any key to continue...")
 
       for s in self.__db["scripts"]:
-        local_path = f"~/bin/{s}"
+        system_path = f"~/bin/{s}"
         backup_path = f"{self.__cwd}/scripts/{s}"
-        os.system(f"cp {local_path} {backup_path}")
+        os.system(f"cp {system_path} {backup_path}")
 
       print("\nfinished running backup. (configs, backups, scripts)\n")
 

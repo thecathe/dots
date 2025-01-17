@@ -56,6 +56,13 @@
       "cache_global": true,
       "ignore": true,
       "never_backup": true
+    },
+    {
+      "path": "~/.screenlayout/",
+      "is_directory": true,
+      "keep_local": true,
+      "cache_global": true,
+      "ignore": false
     }
   ]
 }
