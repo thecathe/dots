@@ -15,7 +15,7 @@
   ],
   "backups": [
     {
-      "path": "./etc/lightdm/lightdm.conf",
+      "path": "/etc/lightdm/lightdm.conf",
       "keep_local": true,
       "cache_global": true
     },
