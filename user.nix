@@ -1,6 +1,6 @@
 { pkgs, ... }:
 
-let name = "";
+let name = "test";
   username= "";
   email =""; in
 {
