@@ -1,0 +1,1 @@
+/home/cathe/.config/home-manager/home.nix
