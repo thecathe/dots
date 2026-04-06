@@ -2,4 +2,4 @@
 .vscode
 
 # private info
-.config/home-manager/firefox/_priv.nix
+.config/home-manager/firefox/priv.nix
