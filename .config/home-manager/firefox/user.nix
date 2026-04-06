@@ -12,7 +12,7 @@ in
     name = name;
     isDefault = true;
     settings = {
-      "extensions.autoDisableScopes" = 0;
+      # "extensions.autoDisableScopes" = 0;
     };
     # extensions = {
     #   packages = with pkgs.nur.repos.rycee.firefox-addons; [
