@@ -6,12 +6,17 @@
 
 let
   thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
+  thehyprland = import (thenixuser.home + "/dots/nixos/programs/hyprland.nix") { };
 in
 {
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = thenixuser.username;
   home.homeDirectory = thenixuser.home;
+
+  # Need to disable systemd integration if hyprland is enabled: https://wiki.nixos.org/wiki/Hyprland#
+  wayland.windowManager.hyprland.systemd.enable = !thehyprland.withUWSM;
+  # wayland.windowManager.hyprland.systemd.enable = false;
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release

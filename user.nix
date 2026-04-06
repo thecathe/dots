@@ -63,13 +63,24 @@ in
         gh
 
         flatpak
-        lutris
         libappimage
+
+        # lutris
+
         #      wine64Packages.stableFull_11
+
+        # for battlenet: https://wiki.nixos.org/wiki/Battle.net
+        (wineWow64Packages.full.override {
+          wineRelease = "staging";
+          mingwSupport = true;
+        })
         winetricks
+
         wine64
         wine64Packages.wayland
-        bottles
+        # bottles
+
+        protontricks
 
         nix
         #  nix-search-cli

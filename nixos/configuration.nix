@@ -13,6 +13,7 @@
 
 let
   thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
+  thenixprograms = import (thenixuser.home + "/dots/nixos/programs.nix") { inherit pkgs; };
   thenvidia = import (thenixuser.home + "/dots/nixos/nvidia.nix") { inherit config; };
 in
 {
@@ -21,6 +22,7 @@ in
     ./hardware-configuration.nix
     <home-manager/nixos>
     thenixuser.user
+    thenixprograms
 
     #      <nixos-hardware/common/cpu/amd>
     #      <nixos-hardware/common/gpu/nvidia/ada-lovelace>
@@ -127,12 +129,6 @@ in
     enableZshIntegration = true;
   };
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  # users.users."${thenixuser.username}" = thenixuser.submodule;
-
-  # Install firefox.
-  programs.firefox.enable = true;
-
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
@@ -150,7 +146,7 @@ in
     gh
     nix
     #  nix-search-cli
-    #   nix-index
+    nix-index
     #    nix-diff
     ntfs3g
 
@@ -158,6 +154,7 @@ in
     #nvidia-settings
 
     wine64
+    wine-staging
     winetricks
     protonup-qt
 
@@ -166,168 +163,10 @@ in
     egl-wayland
   ];
 
-  # Git
-  programs.git = {
-    enable = true;
-    lfs.enable = true;
-    config.init.defaultBranch = "main";
-  };
-
-  # Zsh
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    enableBashCompletion = true;
-    autosuggestions.enable = true;
-    syntaxHighlighting.enable = true;
-
-    ohMyZsh = {
-      enable = true;
-      plugins = [ "git" ];
-      #   preLoaded = "sudo -i";
-      #  theme = "agnoster";
-    };
-
-    shellAliases = {
-      update = "sudo nixos-rebuild test";
-      upgrade = "sudo nixos-rebuild switch";
-      refresh = "home-manager switch";
-    };
-  };
-  users.defaultUserShell = pkgs.zsh;
-  #system.userActivationScripts.zshrc = "touch .zshrc";
-  environment.shells = with pkgs; [ zsh ];
-
-  # Neovim
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    #    coc = {
-    #      enable = true;
-    #    };
-  };
-
-  #    programs.neovim.coc.enable = true;
-  #  programs.neovim.coc = {
-  #    enable = true;
-  #  };
-
-  # Steam
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-  };
-
-  # Hyprland
-  programs.hyprland = {
-    enable = true;
-  };
-
   # Powerline
   #  programs.powerline-go = {
   #    enable = true;
   #  };
-
-  # Opam
-  # programs.opam = {
-  #   enabled = true;
-  #   enableZshIntegration = true;
-  #};
-
-  #  users.users."${thenixuser.username}" = {
-  #     isNormalUser = true;
-  #     description = thenixuser.name;
-  #     extraGroups = [
-  #       "networkmanager"
-  #       "wheel"
-  #     ];
-  #     packages = with pkgs; [
-  #       wget
-
-  #       linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
-  #       # linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
-  #       egl-wayland
-
-  #       zsh
-  #       fzf
-  #       neovim
-  #       #    vimPlugins.coc-nvim
-  #       powerline
-  #       powerline-go
-  #       powerline-fonts
-  #       powerline-symbols
-
-  #       tmux
-  #       abduco
-  #       dvtm
-
-  #       git
-  #       gh
-
-  #       flatpak
-  #       lutris
-  #       libappimage
-  #       #      wine64Packages.stableFull_11
-  #       winetricks
-  #       wine64
-  #       wine64Packages.wayland
-  #       bottles
-
-  #       nix
-  #       #  nix-search-cli
-  #       #  nix-index
-  #       #  nix-diff
-  #       # ocaml
-  #       # opam
-  #       # racket
-  #       # postgresql
-  #       # go
-  #       # python3
-  #       # beam28Packages.erlang
-  #       # erlang-language-platform
-  #       # jdk8
-  #       # ghc
-
-  #       # miktex
-  #       ansi
-
-  #       alacritty
-  #       hyprland
-  #       sway
-  #       swaylock
-  #       waylock
-  #       quickshell
-  #       mutagen
-  #       slurp
-  #       eww
-
-  #       discord
-  #       obsidian
-
-  #       #      steam
-  #       #      steamcmd
-  #       #     steam-run
-  #       # haskellPackages.battlenet
-
-  #       ffmpeg
-  #       obs-studio
-  #       satty
-
-  #       kittysay
-  #       # neofetch
-  #       fastfetch
-  #       # hyfetch
-  #       # honeyfetch
-
-  #       #teams
-  #       vscode
-  #       onedrive
-
-  #       rmpc
-
-  #     ];
-  #   };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
