@@ -9,6 +9,10 @@ let
   thehyprland = import (thenixuser.home + "/dots/nixos/programs/hyprland.nix") { };
 in
 {
+  imports = [
+    ./firefox
+  ];
+
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = thenixuser.username;
