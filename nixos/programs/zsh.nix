@@ -12,8 +12,6 @@
     ohMyZsh = {
       enable = true;
       plugins = [ "git" ];
-      #   preLoaded = "sudo -i";
-      #  theme = "agnoster";
     };
 
     shellAliases = {
