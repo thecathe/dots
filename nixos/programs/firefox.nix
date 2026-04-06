@@ -1,10 +1,26 @@
 { ... }:
 {
   # https://mynixos.com/options/programs.firefox
+  # https://wiki.nixos.org/wiki/Firefox
   programs.firefox = {
     enable = true;
     policies = {
       DisabelTelemetry = true;
+      DontCheckDefaultBrowser = true;
+      HardwareAcceleration = true;
+      ExtensionSettings =
+        let
+          moz = short: "https://addons.mozilla.org/firefox/downloads/latest/${short}/latest.xpi";
+        in
+        {
+          "*".installation_mode = "blocked";
+
+          "uBlock0@raymondhill.net" = {
+            install_url = moz "ublock-origin";
+            installation_mode = "force_installed";
+            updates_disabled = true;
+          };
+        };
     };
     preferences = {
       # see pdf options: https://github.com/mozilla/pdf.js/blob/master/extensions/chromium/options/options.html
