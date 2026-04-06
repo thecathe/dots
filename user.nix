@@ -5,12 +5,14 @@ let
   name = userJSON.name;
   username = userJSON.username;
   email = userJSON.email;
+  hostname = userJSON.hostname;
   home = "/home/" + username;
 in
 {
   name = name;
   username = username;
   email = email;
+  hostname = hostname;
   home = home;
 
   configs = {
