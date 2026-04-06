@@ -12,21 +12,21 @@
 }:
 
 let
-  thenixuser = import /home/cathe/dots/user-config.nix { inherit pkgs; };
+  thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
   thenvidia = import (thenixuser.home + "/dots/nixos/nvidia.nix") { inherit config; };
 in
 {
   imports = [
     # Include the results of the hardware scan.
-    #      <nixos-hardware/common/cpu/amd>
-    #      <nixos-hardware/common/gpu/nvidia/ada-lovelace>
     ./hardware-configuration.nix
     <home-manager/nixos>
     thenixuser.user
 
+    #      <nixos-hardware/common/cpu/amd>
+    #      <nixos-hardware/common/gpu/nvidia/ada-lovelace>
   ];
 
-  # Bootloader.
+  # Bootloader
   boot.loader.systemd-boot = {
     enable = true;
     configurationLimit = 15;

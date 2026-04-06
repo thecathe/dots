@@ -1,25 +1,17 @@
 {
   config,
   pkgs,
-  # thenixuser ? import /home/cathe/dots/user.nix
   ...
 }:
 
 let
-  # thenixuser = builtins.fromJSON (builtins.readFile "/home/${config.home.username}/dots/user.json");
-  # thenixuser = builtins.readFile "/home/${config.home.username}/dots/user.nix";
   thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
 in
 {
-
-  # NOTE: this is symlinked so theres one less ../
-  # thenixuser = import "${../../dots/user.nix}" {inherit pkgs;};
-  # thenixuser = import "/home/${config.home.username}/dots/user.nix" {inherit pkgs;};
-
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = thenixuser.username;
-  home.homeDirectory = "/home/${thenixuser.username}";
+  home.homeDirectory = thenixuser.home;
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -137,16 +129,7 @@ in
       path = "$HOME/.zsh_history";
     };
 
-    setOptions = [
-      "HIST_IGNORE_DUPS"
-      "HIST_IGNORE_ALL_DUPS"
-      "HIST_SAVE_NO_DUPS"
-      "HIST_FIND_NO_DUPS"
-      "HIST_IGNORE_SPACE"
-      "APPENDHISTORY"
-      "SHARE_HISTORY"
-      "HIST_FCNTL_LOCK"
-    ];
+    setOptions = thenixuser.configs.zsh.options;
 
     #    shellAliases = {
     #      ll = "ls -l";
@@ -157,7 +140,7 @@ in
   programs.zsh.oh-my-zsh = {
     enable = true;
     plugins = [ "git" ];
-    theme = thenixuser.theme.zsh;
+    theme = thenixuser.configs.zsh.theme;
   };
 
   #  programs.steam.enable = true;
@@ -168,9 +151,5 @@ in
     defaultEditor = true;
     coc.enable = true;
   };
-
-  #  programs.neovim.coc = {
-  #    enable = true;
-  #  };
 
 }

@@ -1,22 +1,34 @@
 { pkgs, ... }:
 
 let
-  userJSON = builtins.fromJSON (builtins.readFile "./user.json");
-in
-let
+  userJSON = builtins.fromJSON (builtins.readFile "/home/cathe/dots/user.json");
   name = userJSON.name;
   username = userJSON.username;
   email = userJSON.email;
+  home = "/home/" + username;
 in
 {
-
   name = name;
   username = username;
   email = email;
-  home = "/home/" + thenixuser.username;
-  theme = {
-    zsh = "agnoster";
+  home = home;
+
+  configs = {
+    zsh = {
+      theme = "agnoster";
+      options = [
+        "HIST_IGNORE_DUPS"
+        "HIST_IGNORE_ALL_DUPS"
+        "HIST_SAVE_NO_DUPS"
+        "HIST_FIND_NO_DUPS"
+        "HIST_IGNORE_SPACE"
+        "APPENDHISTORY"
+        "SHARE_HISTORY"
+        "HIST_FCNTL_LOCK"
+      ];
+    };
   };
+
   user = {
     users.users."${username}" = {
       isNormalUser = true;
