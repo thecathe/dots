@@ -1,105 +1,115 @@
 { pkgs, ... }:
 
-let name = "test";
-  username= "";
-  email =""; in
+let
+  userJSON = builtins.fromJSON (builtins.readFile "./user.json");
+in
+let
+  name = userJSON.name;
+  username = userJSON.username;
+  email = userJSON.email;
+in
 {
 
-  name= name;
-  username= username;
-  email =email;
-  theme= {
-    zsh= "agnoster";
+  name = name;
+  username = username;
+  email = email;
+  home = "/home/" + thenixuser.username;
+  theme = {
+    zsh = "agnoster";
   };
-submodule= {
-    isNormalUser = true;
-    description = name;
-    extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [
-    wget
+  user = {
+    users.users."${username}" = {
+      isNormalUser = true;
+      description = name;
+      extraGroups = [
+        "networkmanager"
+        "wheel"
+      ];
+      packages = with pkgs; [
+        wget
 
-linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
-# linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
-egl-wayland
+        linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
+        # linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
+        egl-wayland
 
-      zsh
-      fzf
-    neovim
-#    vimPlugins.coc-nvim
-    powerline
-    powerline-go
-    powerline-fonts
-    powerline-symbols
-      
-      tmux
-      abduco
-      dvtm
+        zsh
+        fzf
+        neovim
+        #    vimPlugins.coc-nvim
+        powerline
+        powerline-go
+        powerline-fonts
+        powerline-symbols
 
-      git
-      gh
+        tmux
+        abduco
+        dvtm
 
-      flatpak
-      lutris
-      libappimage
-#      wine64Packages.stableFull_11
-winetricks
-wine64
-wine64Packages.wayland
-      bottles
+        git
+        gh
 
-  nix
-#  nix-search-cli
-#  nix-index
-#  nix-diff
-    # ocaml
-    # opam
-    # racket
-    # postgresql
-    # go
-    # python3
-    # beam28Packages.erlang
-    # erlang-language-platform
-    # jdk8
-    # ghc
+        flatpak
+        lutris
+        libappimage
+        #      wine64Packages.stableFull_11
+        winetricks
+        wine64
+        wine64Packages.wayland
+        bottles
 
-    # miktex
-    ansi
+        nix
+        #  nix-search-cli
+        #  nix-index
+        #  nix-diff
+        # ocaml
+        # opam
+        # racket
+        # postgresql
+        # go
+        # python3
+        # beam28Packages.erlang
+        # erlang-language-platform
+        # jdk8
+        # ghc
 
-    alacritty
-      hyprland
-      sway
-      swaylock
-      waylock
-      quickshell
-      mutagen
-      slurp
-      eww
+        # miktex
+        ansi
 
-      discord
-      obsidian
+        alacritty
+        hyprland
+        sway
+        swaylock
+        waylock
+        quickshell
+        mutagen
+        slurp
+        eww
 
-#      steam
-#      steamcmd
- #     steam-run
-     # haskellPackages.battlenet
+        discord
+        obsidian
 
- ffmpeg
- obs-studio
- satty
+        #      steam
+        #      steamcmd
+        #     steam-run
+        # haskellPackages.battlenet
 
- kittysay
-# neofetch
-fastfetch
-# hyfetch
-# honeyfetch
+        ffmpeg
+        obs-studio
+        satty
 
- #teams
- vscode
- onedrive
+        kittysay
+        # neofetch
+        fastfetch
+        # hyfetch
+        # honeyfetch
 
- rmpc
+        #teams
+        vscode
+        onedrive
 
+        rmpc
 
-    ];
-};
-  }
+      ];
+    };
+  };
+}

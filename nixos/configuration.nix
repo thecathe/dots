@@ -12,10 +12,8 @@
 }:
 
 let
-  thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
-  homedir = "/home/" + thenixuser.username;
-  thenvidia = import (homedir + "/dots/nixos/nvidia.nix") { inherit config; };
-
+  thenixuser = import /home/cathe/dots/user-config.nix { inherit pkgs; };
+  thenvidia = import (thenixuser.home + "/dots/nixos/nvidia.nix") { inherit config; };
 in
 {
   imports = [
