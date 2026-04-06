@@ -1,2 +1,5 @@
 # workspace configs
 .vscode
+
+# private info
+.config/home-manager/firefox/_priv.nix
