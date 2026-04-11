@@ -12,9 +12,7 @@ in
 {
   imports = [
     ./firefox
-    ./ashell
-    ./rofi
-    ./hyprland
+    # ./hyprland
     # ./direnv
     # ./battlenet
   ];
@@ -176,7 +174,7 @@ in
       "sha256-VgOpt0rukW0+rSkLFoF9O0xO/qgwieAchAev1vjaqPE="
       "ArcMidnight-Cursors";
 
-  services.easyeffects.enable = true;
+  # services.easyeffects.enable = true;
 
   gtk = {
     enable = true;

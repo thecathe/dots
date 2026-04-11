@@ -5,6 +5,11 @@ let
   withUWSM = false;
 in
 {
+  imports = [
+    ./ashell
+    ./rofi
+  ];
+
   # https://mynixos.com/options/programs.hyprland
   wayland.windowManager.hyprland = {
     enable = enabled;
