@@ -1,26 +1,28 @@
 {
   config,
   pkgs,
+  input,
   ...
 }:
 
 let
   thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
-  thehyprland = import (thenixuser.home + "/dots/nixos/programs/hyprland.nix") { };
+  # thehyprland = import (thenixuser.home + "/dots/nixos/programs/hyprland.nix") { };
 in
 {
   imports = [
     ./firefox
+    ./ashell
+    ./rofi
+    ./hyprland
+    # ./direnv
+    # ./battlenet
   ];
 
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = thenixuser.username;
   home.homeDirectory = thenixuser.home;
-
-  # Need to disable systemd integration if hyprland is enabled: https://wiki.nixos.org/wiki/Hyprland#
-  wayland.windowManager.hyprland.systemd.enable = !thehyprland.withUWSM;
-  # wayland.windowManager.hyprland.systemd.enable = false;
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -62,13 +64,47 @@ in
     #   nix-diff
     #   neovim
     #vimPlugins.coc-nvim
-    alacritty
-    hyprland
-    ags
-    #   sway
-    #    swaylock
-    #steam
+
     prismlauncher
+
+    egl-wayland
+    alacritty
+    kitty
+    hyprland
+    waybar
+    waybar-lyric
+    hyprpaper
+    ags
+    sway
+    swaylock
+    hypridle
+
+    expat # required by fontconfig?
+    fontconfig # required by hyprland?
+
+    hyprlandPlugins.hy3
+    # hyprlandPlugins.hyprbars # err
+    hyprlandPlugins.hyprsplit
+    # hyprlandPlugins.hyprspace # err
+    # hyprlandPlugins.hyprfocus # err
+    # hyprlandPlugins.hyprtrails # err
+    hyprlandPlugins.hypr-dynamic-cursors
+
+    # waylock
+    # quickshell ## replace waybar
+    mutagen
+    slurp
+    eww
+    rofi
+
+    qt6.qtmultimedia
+    qt6.qt5compat
+    qt6.qtwebsockets
+    gtk3
+
+    ## https://github.com/ilyamiro/nixos-configuration/blob/master/home.nix
+    adwaita-icon-theme
+    adw-gtk3
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -116,6 +152,61 @@ in
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
+  # set cursor
+  ## https://github.com/ilyamiro/nixos-configuration/blob/master/home.nix
+  home.pointerCursor =
+    let
+      getFrom = url: hash: name: {
+        gtk.enable = true;
+        x11.enable = true;
+        name = name;
+        size = 24;
+        package = pkgs.runCommand "moveUp" { } ''
+          mkdir -p $out/share/icons
+          ln -s ${
+            pkgs.fetchzip {
+              url = url;
+              hash = hash;
+            }
+          }/dist $out/share/icons/${name}
+        '';
+      };
+    in
+    getFrom "https://github.com/yeyushengfan258/ArcMidnight-Cursors/archive/refs/heads/main.zip"
+      "sha256-VgOpt0rukW0+rSkLFoF9O0xO/qgwieAchAev1vjaqPE="
+      "ArcMidnight-Cursors";
+
+  services.easyeffects.enable = true;
+
+  gtk = {
+    enable = true;
+
+    # Global `theme` block has been entirely removed to protect GTK4 apps.
+
+    # Target GTK3 specifically
+    gtk3.extraConfig = {
+      gtk-application-prefer-dark-theme = 1;
+      gtk-theme-name = "adw-gtk3-dark";
+    };
+
+    # Keep GTK4 native but ensure it requests the dark preference
+    gtk4.extraConfig = {
+      gtk-application-prefer-dark-theme = 1;
+    };
+  };
+
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-gtk
+    ];
+    config.common.default = "*";
+  };
+
+  fonts.fontconfig.enable = true;
+
+  #######
+
   # git config
   programs.git = {
     enable = true;
@@ -161,4 +252,7 @@ in
     coc.enable = true;
   };
 
+  ## https://github.com/CurryFavour/NixDotfiles/blob/main/modules/home.nix
+  services.hyprpaper.enable = true;
+  programs.prismlauncher.enable = true;
 }

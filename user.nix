@@ -38,6 +38,7 @@ in
       extraGroups = [
         "networkmanager"
         "wheel"
+        "samba"
       ];
       packages = with pkgs; [
         wget
@@ -77,7 +78,6 @@ in
         winetricks
 
         wine64
-        wine64Packages.wayland
         # bottles
 
         protontricks

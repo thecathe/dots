@@ -13,7 +13,6 @@
 
 let
   thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
-  thenixprograms = import (thenixuser.home + "/dots/nixos/programs.nix") { inherit pkgs; };
   thenvidia = import (thenixuser.home + "/dots/nixos/nvidia.nix") { inherit config; };
 in
 {
@@ -22,11 +21,16 @@ in
     ./hardware-configuration.nix
     <home-manager/nixos>
     thenixuser.user
-    thenixprograms
+    ./programs
+    # ./modules/network-sharing
+    ./modules/thumbnails
 
     #      <nixos-hardware/common/cpu/amd>
     #      <nixos-hardware/common/gpu/nvidia/ada-lovelace>
   ];
+
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
 
   # Bootloader
   boot.loader.systemd-boot = {
@@ -137,30 +141,91 @@ in
   environment.systemPackages = with pkgs; [
     # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
+    ntfs3g
+    autoconf
+
     neovim
     # vimPlugins.coc-nvim
+
     git
     zsh
+    zsh-nix-shell
     tmux
+    xplr
+    rmpc
+
     fzf
     gh
-    nix
-    #  nix-search-cli
-    nix-index
-    #    nix-diff
-    ntfs3g
 
-    #nvidia-x11
-    #nvidia-settings
+    nix
+    nixfmt
+    nix-search-cli
+    nix-index
+    # direnv
+
+    flatpak
+    libappimage
 
     wine64
+    wine64Packages.wayland
     wine-staging
     winetricks
     protonup-qt
+    protontricks
+
+    ffmpeg
+    vlc
+    samba
+    avahi
 
     linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
     # linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
+
     egl-wayland
+    alacritty
+    kitty
+    hyprland
+    # waybar
+    # waybar-lyric
+    hyprpaper
+    ags
+    sway
+    swaylock
+    hypridle
+
+    expat # required by fontconfig?
+    fontconfig # required by hyprland?
+
+    hyprlandPlugins.hy3
+    # hyprlandPlugins.hyprbars # err
+    hyprlandPlugins.hyprsplit
+    # hyprlandPlugins.hyprspace # err
+    # hyprlandPlugins.hyprfocus # err
+    # hyprlandPlugins.hyprtrails # err
+    hyprlandPlugins.hypr-dynamic-cursors
+
+    # waylock
+    # quickshell ## replace waybar
+    mutagen
+    slurp
+    eww
+    rofi
+
+    ## https://wiki.hypr.land/Useful-Utilities/Must-have/
+    swaynotificationcenter
+    wireplumber
+    noto-fonts
+
+    ## for thumnails
+    ffmpeg-headless
+    ffmpegthumbnailer
+    gdk-pixbuf
+  ];
+  # programs.direnv.enable = true;
+
+  # https://wiki.nixos.org/wiki/Thumbnails
+  environment.pathsToLink = [
+    "share/thumbnailers"
   ];
 
   # Powerline
