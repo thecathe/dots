@@ -12,6 +12,9 @@
 }:
 
 let
+  # home-manager-tar = builtins.fetchTarBall "https://github.com/nix-community/home-manager/archive/master.tar.gz";
+  home-manager-tar = builtins.fetchTarBall "https://github.com/nix-community/home-manager/archive/release-25.11.tar.gz";
+  home-manager = import "${home-manager-tar}";
   thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
   thenvidia = import (thenixuser.home + "/dots/nixos/nvidia.nix") { inherit config; };
 in
@@ -31,6 +34,7 @@ in
 
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
+  home-manager.backupFileExtension = "backup";
 
   # Bootloader
   boot.loader.systemd-boot = {
