@@ -24,6 +24,7 @@ in
     ./hardware-configuration.nix
     <home-manager/nixos>
     thenixuser.user
+    ./modules/fonts
     ./programs
     # ./modules/network-sharing
     ./modules/thumbnails

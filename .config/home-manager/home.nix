@@ -11,6 +11,7 @@ let
 in
 {
   imports = [
+    ./zsh
     ./firefox
     # ./hyprland
     # ./direnv
@@ -205,6 +206,11 @@ in
 
   #######
 
+  programs.gh = {
+    enable = true;
+    gitCredentialHelper.enable = true;
+  };
+
   # git config
   programs.git = {
     enable = true;
@@ -215,31 +221,7 @@ in
     };
   };
 
-  # Zsh config
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
-
-    history = {
-      size = 10000;
-      path = "$HOME/.zsh_history";
-    };
-
-    setOptions = thenixuser.configs.zsh.options;
-
-    #    shellAliases = {
-    #      ll = "ls -l";
-    #      update = "sudo nixos-rebuild switch";
-    #    };
-  };
-
-  programs.zsh.oh-my-zsh = {
-    enable = true;
-    plugins = [ "git" ];
-    theme = thenixuser.configs.zsh.theme;
-  };
+  
 
   #  programs.steam.enable = true;
 
