@@ -12,9 +12,10 @@ in
 {
   imports = [
     ./zsh
+    ./direnv
+    ./starship
     ./firefox
     # ./hyprland
-    # ./direnv
     # ./battlenet
   ];
 
@@ -104,6 +105,9 @@ in
     ## https://github.com/ilyamiro/nixos-configuration/blob/master/home.nix
     adwaita-icon-theme
     adw-gtk3
+
+    pomodoro
+
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -220,8 +224,6 @@ in
       email = thenixuser.email;
     };
   };
-
-  
 
   #  programs.steam.enable = true;
 

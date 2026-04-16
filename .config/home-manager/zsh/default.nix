@@ -19,7 +19,7 @@ in
       update = "sudo nixos-rebuild test";
       upgrade = "sudo nixos-rebuild switch";
       refresh = "home-manager switch";
-      nix-shell = "nix-shell --run $SHELL";
+      # nix-shell = "nix-shell --run $SHELL";
     };
   };
 
