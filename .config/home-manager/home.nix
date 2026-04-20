@@ -107,6 +107,13 @@ in
     adw-gtk3
 
     pomodoro
+    # musicus
+    # musicpod
+    # resonance
+    # recordbox
+    # amarok
+
+    gource
 
   ];
 
