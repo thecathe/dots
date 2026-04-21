@@ -225,6 +225,8 @@ in
     ffmpeg-headless
     ffmpegthumbnailer
     gdk-pixbuf
+
+    teams-for-linux
   ];
   # programs.direnv.enable = true;
 
