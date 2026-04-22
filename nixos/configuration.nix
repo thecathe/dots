@@ -25,6 +25,7 @@ in
     <home-manager/nixos>
     thenixuser.user
     ./modules/fonts
+    ./modules/gnome
     ./programs
     # ./modules/network-sharing
     ./modules/thumbnails
@@ -92,10 +93,6 @@ in
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
-
-  # Enable the GNOME Desktop Environment.
-  services.displayManager.gdm.enable = true;
-  services.desktopManager.gnome.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
