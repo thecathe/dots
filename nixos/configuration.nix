@@ -43,7 +43,17 @@ in
     configurationLimit = 15;
   };
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.supportedFilesystems = [ "ntfs" ];
+  # boot.supportedFilesystems = [ "ntfs" ];
+  fileSystems =
+    let
+      ntfs-drives = [
+        "/mnt/data"
+        "/mnt/archive"
+      ];
+    in
+    lib.genAttrs ntfs-drives (path: {
+      options = [ "uid=1000" ];
+    });
 
   # Garbage Collection
   nix.gc = {

@@ -25,6 +25,7 @@
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
+  boot.supportedFilesystems = [ "ntfs" ];
 
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/80acd108-6382-4fef-b428-d834a8027c94";
@@ -44,17 +45,37 @@
     { device = "/dev/disk/by-uuid/759794c7-2c5b-4b95-b400-41243154961e"; }
   ];
 
-  #  fileSystems."mnt/data" =
-  #    { device = "/dev/disk/by-uuid/6EDA6CCADA6C905F";
-  #      fsType = "ntfs-3g";
-  #       options = [ "rw" "uid=1000" "nofail"  "x-systemd.mount-timeout=180" ];
-  #    };
+  fileSystems."/mnt/data" = {
+    device = "/dev/disk/by-uuid/6EDA6CCADA6C905F";
+    fsType = "ntfs-3g";
+    options = [
+      # "rw"
+      "uid=1000"
+      # "nofail"
+      # "x-systemd.mount-timeout=180"
+    ];
+  };
 
-  #  fileSystems."mnt/archive" =
-  #    { device = "/dev/disk/by-uuid/6EDA6CCADA6C905F";
-  #      fsType = "ntfs-3g";
-  #       options = [ "rw" "uid=1000" "nofail" "x-systemd.mount-timeout=180" ];
-  #    };
+  fileSystems."/mnt/archive" = {
+    device = "/dev/disk/by-uuid/BE685FF8685FADC1";
+    fsType = "ntfs-3g";
+    options = [
+      # "rw"
+      "uid=1000"
+      # "nofail"
+      # "x-systemd.mount-timeout=180"
+    ];
+  };
+
+  fileSystems."/mnt/mini" = {
+    device = "/dev/disk/by-uuid/3e3fec8c-e472-4732-8c07-e595c4eba2ab";
+    fsType = "ext4";
+    # options = [
+    #   # "rw"
+    #   # "nofail"
+    #   # "x-systemd.mount-timeout=180"
+    # ];
+  };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
