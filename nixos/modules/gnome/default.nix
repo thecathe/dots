@@ -3,21 +3,32 @@
   # Enable the GNOME Desktop Environment.
   services.displayManager.gdm.enable = true;
   services.desktopManager.gnome.enable = true;
+  services.gnome.core-apps.enable = true;
   environment.gnome.excludePackages = with pkgs; [
+    gnome-weather
+    gnome-maps
+    gnome-connections
+    gnome-contacts
+    gnome-logs
+    gnome-text-editor
+    gnome-music # # never works
+    gnome-photos
     gnome-tour
     gnome-user-docs
+    showtime
+    epiphany
+    geary
   ];
-  services.gnome.core-apps.enable = false;
   environment.systemPackages =
     with pkgs;
     with gnomeExtensions;
     [
-      tracker3
-      blur-my-shell
-      just-perfection
+      # blur-my-shell ## breaks with folders
+      # just-perfection ## does nothing?
       # arc-menu
-      dynamic-panel
-      dynamic-music-pill
+      # dynamic-panel ## does nothing?
+      dynamic-music-pill # # does nothing?
     ];
-  programs.geary.enable = false;
+  # programs.geary.enable = false;
+  # programs.epiphany.enable = false;
 }
