@@ -4,8 +4,9 @@
   # https://wiki.nixos.org/wiki/Firefox
   programs.firefox = {
     enable = true;
+    # configPath = "${config.xdg.configHome}/mozilla/firefox";
     policies = {
-      DisabelTelemetry = true;
+      # DisableTelemetry = true;
       DontCheckDefaultBrowser = true;
       HardwareAcceleration = true;
       # ExtensionSettings =

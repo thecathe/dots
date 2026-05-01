@@ -18,7 +18,8 @@ in
     shellAliases = {
       update = "sudo nixos-rebuild test";
       upgrade = "sudo nixos-rebuild switch";
-      refresh = "home-manager switch";
+      upboot = "sudo nixos-rebuild boot";
+      refresh = "home-manager switch -b backup";
       # nix-shell = "nix-shell --run $SHELL";
     };
   };

@@ -29,7 +29,7 @@ in
     ./programs
     # ./modules/network-sharing
     ./modules/thumbnails
-
+    ./modules/nix-gaming
     #      <nixos-hardware/common/cpu/amd>
     #      <nixos-hardware/common/gpu/nvidia/ada-lovelace>
   ];
@@ -144,6 +144,7 @@ in
     enable = true;
     enableZshIntegration = true;
   };
+  programs.command-not-found.enable = false;
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -233,7 +234,8 @@ in
     ffmpegthumbnailer
     gdk-pixbuf
 
-    teams-for-linux
+    # teams-for-linux
+
   ];
   # programs.direnv.enable = true;
 
