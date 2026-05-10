@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Usage: new-project myproject [site e.g. cathe.dev]
 
 NAME=$1

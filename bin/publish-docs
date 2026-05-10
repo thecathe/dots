@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Usage: publish-docs [html|markdown] [site e.g. cathe.dev]
 
 TYPE=${1:-html}
@@ -23,6 +23,13 @@ fi
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "Error: uncommitted changes, please commit or stash first"
   exit 1
+fi
+
+if [ "$DRY_RUN" = true ]; then
+  echo "[dry run] Would create: cathe-org/$REPO_NAME from $TEMPLATE"
+  echo "[dry run] Would set SITE=$SITE on cathe-org/$REPO_NAME"
+  echo "[dry run] Would replace ./docs with submodule"
+  exit 0
 fi
 
 echo "Creating $ORG/$REPO_NAME from $TEMPLATE..."
