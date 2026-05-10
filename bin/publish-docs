@@ -1,0 +1,49 @@
+#!/bin/bash
+# Usage: publish-docs [html|markdown] [site e.g. cathe.dev]
+
+TYPE=${1:-html}
+SITE=${2:-cathe.dev}
+ORG="cathe-org"
+PROJECT_NAME="$(basename $(git rev-parse --show-toplevel))"
+REPO_NAME="$PROJECT_NAME-docs"
+
+# Pick template
+if [ "$TYPE" = "markdown" ]; then
+  TEMPLATE="$ORG/template-docs-markdown"
+else
+  TEMPLATE="$ORG/template-docs-html"
+fi
+
+# Sanity checks
+if [ ! -d "$(git rev-parse --show-toplevel)/docs" ]; then
+  echo "Error: no ./docs directory found"
+  exit 1
+fi
+
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "Error: uncommitted changes, please commit or stash first"
+  exit 1
+fi
+
+echo "Creating $ORG/$REPO_NAME from $TEMPLATE..."
+gh repo create $ORG/$REPO_NAME \
+  --template $TEMPLATE \
+  --public
+
+sleep 2
+
+# Set the SITE variable so the workflow knows where to deploy
+gh variable set SITE --body "$SITE" --repo $ORG/$REPO_NAME
+
+# Replace ./docs with the submodule
+cd $(git rev-parse --show-toplevel)
+git rm -r docs
+git submodule add git@github.com:$ORG/$REPO_NAME.git docs
+git commit -m "Convert docs to submodule ($ORG/$REPO_NAME)"
+
+echo ""
+echo "Done."
+echo "Docs repo: github.com/$ORG/$REPO_NAME"
+echo "Will deploy to: $PROJECT_NAME.$SITE"
+echo ""
+echo "Next: cd docs && git add . && git commit -m 'Initial docs' && git push"

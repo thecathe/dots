@@ -1,0 +1,35 @@
+#!/bin/bash
+# Usage: new-project myproject [site e.g. cathe.dev]
+
+NAME=$1
+SITE=${2:-cathe.dev}
+ORG="cathe-org"
+
+if [ -z "$NAME" ]; then
+  echo "Error: please provide a project name"
+  echo "Usage: new-project myproject [site]"
+  exit 1
+fi
+
+echo "Creating $ORG/$NAME..."
+
+gh repo create $ORG/$NAME \
+  --template $ORG/template-site \
+  --public \
+  --clone
+
+sleep 2
+
+# Set the SITE variable so deploy-site.yml knows where to deploy
+gh variable set SITE --body "$SITE" --repo $ORG/$NAME
+
+cd $NAME
+
+git add .
+git commit -m "Initial commit" --allow-empty
+git push -u origin main
+
+echo ""
+echo "Done."
+echo "Repo:    github.com/$ORG/$NAME"
+echo "Deploys: /var/www/$SITE"
