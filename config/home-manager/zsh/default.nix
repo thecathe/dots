@@ -15,6 +15,10 @@ in
     };
     setOptions = thenixuser.configs.zsh.options;
 
+    initExtra = ''
+      export PATH="$HOME/dots/bin:$PATH"
+    '';
+
     shellAliases = {
       update = "sudo nixos-rebuild test";
       upgrade = "sudo nixos-rebuild switch";
