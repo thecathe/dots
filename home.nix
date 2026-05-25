@@ -147,6 +147,13 @@
         jre8
         jre21_minimal
         jre25_minimal
+        zulu
+        zulu21
+        zulu25
+        # jre
+        # jre8
+        # jre21_minimal
+        # jre25_minimal
       ];
     })
   ];
