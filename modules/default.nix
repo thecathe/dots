@@ -12,7 +12,6 @@
 {
   imports = [
     ./git.nix
-    ./direnv
     ./shell
     ./firefox
   ];
