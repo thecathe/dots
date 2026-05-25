@@ -5,19 +5,17 @@
   ...
 }:
 
-let
-  thenixuser = import /home/cathe/dots/user.nix { };
-  # thehyprland = import (thenixuser.home + "/dots/nixos/programs/hyprland.nix") { };
-in
+# let
+#   thenixuser = import /home/cathe/dots/user.nix { };
+#   # thehyprland = import (thenixuser.home + "/dots/nixos/programs/hyprland.nix") { };
+# in
 {
   imports = [
-    ./zsh
-    ./kitty
-    ./direnv
-    ./starship
-    ./firefox
-    # ./hyprland
-    # ./battlenet
+    ./config/kitty
+    ./config/direnv
+    ./modules/shell
+    ./config/firefox
+    # ./config/hyprland
   ];
 
   nixpkgs = {
@@ -29,8 +27,8 @@ in
 
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
-  home.username = thenixuser.username;
-  home.homeDirectory = thenixuser.home;
+  home.username = "cathe";
+  home.homeDirectory = "/home/cathe";
 
   home.sessionPath = [ "$HOME/dots/bin" ];
 
