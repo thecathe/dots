@@ -27,10 +27,11 @@
           }
           ./configuration.nix
 
-          home-manager.nixosModules.home-manager {
+          home-manager.nixosModules.home-manager
+          {
             home-manager.useGlobalPkgs = true;
             home-manager.userUserPackages = true;
-            home-manager.users.cathe = import ./home.nix
+            home-manager.users.cathe = import ./home.nix;
           }
         ];
       };

@@ -11,11 +11,11 @@
 # in
 {
   imports = [
-    ./config/kitty
-    ./config/direnv
+    ./modules/kitty
+    ./modules/direnv
     ./modules/shell
-    ./config/firefox
-    # ./config/hyprland
+    ./modules/firefox
+    # ./modules/hyprland
   ];
 
   nixpkgs = {

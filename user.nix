@@ -24,101 +24,102 @@ in
         "wheel"
         "samba"
       ];
-      # packages = with pkgs; [
-      #   wget
-
-      #   linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
-      #   # linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
-      #   egl-wayland
-
-      #   zsh
-      #   fzf
-      #   neovim
-      #   #    vimPlugins.coc-nvim
-      #   powerline
-      #   powerline-go
-      #   powerline-fonts
-      #   powerline-symbols
-
-      #   tmux
-      #   abduco
-      #   dvtm
-
-      #   git
-      #   gh
-
-      #   flatpak
-      #   libappimage
-
-      #   # lutris
-
-      #   #      wine64Packages.stableFull_11
-
-      #   # for battlenet: https://wiki.nixos.org/wiki/Battle.net
-      #   (wineWow64Packages.full.override {
-      #     wineRelease = "staging";
-      #     mingwSupport = true;
-      #   })
-      #   winetricks
-
-      #   wine64
-      #   # bottles
-
-      #   protontricks
-
-      #   nix
-      #   #  nix-search-cli
-      #   #  nix-index
-      #   #  nix-diff
-      #   # ocaml
-      #   # opam
-      #   # racket
-      #   # postgresql
-      #   # go
-      #   # python3
-      #   # beam28Packages.erlang
-      #   # erlang-language-platform
-      #   # jdk8
-      #   # ghc
-
-      #   # miktex
-      #   ansi
-
-      #   kitty
-      #   hyprland
-      #   sway
-      #   swaylock
-      #   waylock
-      #   quickshell
-      #   mutagen
-      #   slurp
-      #   eww
-
-      #   discord
-      #   obsidian
-
-      #   #      steam
-      #   #      steamcmd
-      #   #     steam-run
-      #   # haskellPackages.battlenet
-
-      #   ffmpeg
-      #   obs-studio
-      #   satty
-
-      #   kittysay
-      #   # neofetch
-      #   fastfetch
-      #   # hyfetch
-      #   # honeyfetch
-
-      #   #teams
-      #   vscode
-      #   onedrive
-
-      #   rmpc
-
-      # ];
     };
+    # packages = with pkgs; [
+    #   wget
+
+    #   linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
+    #   # linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
+    #   egl-wayland
+
+    #   zsh
+    #   fzf
+    #   neovim
+    #   #    vimPlugins.coc-nvim
+    #   powerline
+    #   powerline-go
+    #   powerline-fonts
+    #   powerline-symbols
+
+    #   tmux
+    #   abduco
+    #   dvtm
+
+    #   git
+    #   gh
+
+    #   flatpak
+    #   libappimage
+
+    #   # lutris
+
+    #   #      wine64Packages.stableFull_11
+
+    #   # for battlenet: https://wiki.nixos.org/wiki/Battle.net
+    #   (wineWow64Packages.full.override {
+    #     wineRelease = "staging";
+    #     mingwSupport = true;
+    #   })
+    #   winetricks
+
+    #   wine64
+    #   # bottles
+
+    #   protontricks
+
+    #   nix
+    #   #  nix-search-cli
+    #   #  nix-index
+    #   #  nix-diff
+    #   # ocaml
+    #   # opam
+    #   # racket
+    #   # postgresql
+    #   # go
+    #   # python3
+    #   # beam28Packages.erlang
+    #   # erlang-language-platform
+    #   # jdk8
+    #   # ghc
+
+    #   # miktex
+    #   ansi
+
+    #   kitty
+    #   hyprland
+    #   sway
+    #   swaylock
+    #   waylock
+    #   quickshell
+    #   mutagen
+    #   slurp
+    #   eww
+
+    #   discord
+    #   obsidian
+
+    #   #      steam
+    #   #      steamcmd
+    #   #     steam-run
+    #   # haskellPackages.battlenet
+
+    #   ffmpeg
+    #   obs-studio
+    #   satty
+
+    #   kittysay
+    #   # neofetch
+    #   fastfetch
+    #   # hyfetch
+    #   # honeyfetch
+
+    #   #teams
+    #   vscode
+    #   onedrive
+
+    #   rmpc
+
+    # ];
+    # };
   };
 }
