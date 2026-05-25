@@ -1,9 +1,5 @@
 { ... }:
 
-let
-  enabled = true;
-  withUWSM = false;
-in
 {
   # https://mynixos.com/options/programs.hyprland
   # wayland.windowManager.hyprland = {

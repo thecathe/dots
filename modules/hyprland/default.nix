@@ -17,7 +17,7 @@
       with pkgs;
       with hyprlandPlugins;
       [
-        hy3
+        # hy3
         # hyprbars
         # hyprsplit
         # hyprspace
