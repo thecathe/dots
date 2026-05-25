@@ -1,22 +1,12 @@
-{ pkgs, input, ... }:
+{ pkgs, ... }:
 
-# let
-#   enabled = true;
-#   withUWSM = false;
-# in
 {
   imports = [
     ./ashell
     ./rofi
   ];
-  # programs.hyprland = {
-  #   enable = enabled;
-  #   withUWSM = withUWSM;
-  #   xwayland.enable = enabled;
-  #   # TODO:
-  # };
   ## https://github.com/CurryFavour/NixDotfiles/blob/main/modules/home.nix
-  services.hyprpaper.enable = true;
+  services.hyprpaper.enable = false;
   # https://mynixos.com/options/programs.hyprland
   wayland.windowManager.hyprland = {
     enable = true;
@@ -28,7 +18,6 @@
       with hyprlandPlugins;
       [
         hy3
-        ashell
         # hyprbars
         # hyprsplit
         # hyprspace
@@ -110,6 +99,5 @@
       ];
     };
   };
-  home.sessionVariables.NIXOS_OZONE_WL = # ? feels shitty
-    if enabled then "1" else null;
+  home.sessionVariables.NIXOS_OZONE_WL = "1";
 }

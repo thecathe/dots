@@ -1,7 +1,7 @@
 {
   config,
   pkgs,
-  input,
+  inputs,
   ...
 }:
 
@@ -14,5 +14,6 @@
     ./git.nix
     ./shell
     ./firefox
+    # ./hyprland
   ];
 }

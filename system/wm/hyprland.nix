@@ -26,7 +26,7 @@ in
   programs.hyprland = {
     enable = true;
     # withUWSM = withUWSM;
-    # xwayland.enable = enabled;
+    xwayland.enable = true;
     # TODO:
   };
 }

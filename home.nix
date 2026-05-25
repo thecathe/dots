@@ -1,7 +1,7 @@
 {
   config,
   pkgs,
-  input,
+  inputs,
   ...
 }:
 
@@ -88,14 +88,14 @@
     fontconfig # required by hyprland?
 
     ##### hyprland
-    waybar-lyric
-    slurp
-    mutagen
-    quickshell # # replace waybar
-    ags
-    sway
-    swaylock
-    waylock
+    # waybar-lyric
+    # slurp
+    # mutagen
+    # quickshell # # replace waybar
+    # ags
+    # sway
+    # swaylock
+    # waylock
 
     qt6.qtmultimedia
     qt6.qt5compat
