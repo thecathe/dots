@@ -14,6 +14,6 @@
     ./git.nix
     ./shell
     ./firefox
-    # ./hyprland
+    ./hyprland
   ];
 }
