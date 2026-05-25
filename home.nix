@@ -11,7 +11,7 @@
 # in
 {
   imports = [
-    ./modules/kitty
+    ./modules/git
     ./modules/direnv
     ./modules/shell
     ./modules/firefox
@@ -279,21 +279,6 @@
   fonts.fontconfig.enable = true;
 
   #######
-
-  programs.gh = {
-    enable = true;
-    gitCredentialHelper.enable = true;
-  };
-
-  # git config
-  programs.git = {
-    enable = true;
-    lfs.enable = true;
-    settings.user = {
-      name = thenixuser.username;
-      email = thenixuser.email;
-    };
-  };
 
   #  programs.steam.enable = true;
 

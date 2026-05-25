@@ -25,13 +25,13 @@ in
     # <home-manager/nixos>
     # thenixuser.user
     ./system
-    ./modules/gnome
+    # ./modules/gnome
     # ./programs
-    ./modules/docker
+    # ./modules/docker
     # ./modules/network-sharing
-    ./modules/thumbnails
-    ./modules/nix-gaming
-    ./modules/nvidia
+    # ./modules/thumbnails
+    # ./modules/nix-gaming
+    # ./modules/nvidia
     #      <nixos-hardware/common/cpu/amd>
     #      <nixos-hardware/common/gpu/nvidia/ada-lovelace>
   ];

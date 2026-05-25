@@ -1,24 +1,25 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 
-let
-  ## https://github.com/fufexan/nix-gaming#nix-stable
-  nix-gaming = import (
-    builtins.fetchTarball "https://github.com/fufexan/nix-gaming/archive/master.tar.gz"
-  );
-in
+# let
+#   ## https://github.com/fufexan/nix-gaming#nix-stable
+#   nix-gaming = import (
+#     builtins.fetchTarball "https://github.com/fufexan/nix-gaming/archive/master.tar.gz"
+#   );
+# in
 {
   nix.settings = {
     substituters = [ "https://nix-gaming.cachix.org" ];
     trusted-public-keys = [ "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4=" ];
   };
-  imports = [
-    nix-gaming.nixosModules.wine
-    nix-gaming.nixosModules.pipewireLowLatency
-    nix-gaming.nixosModules.platformOptimizations
+  imports = with inputs.nix-gaming.nixosModules; [
+    wine
+    pipewireLowLatency
+    platformOptimizations
   ];
   environment.systemPackages =
     with pkgs;
-    with nix-gaming.packages.${pkgs.stdenv.hostPlatform.system};
+    # with nix-gaming.packages.${pkgs.stdenv.hostPlatform.system};
+    with inputs.nix-gaming.packages.${pkgs.stdenv.hostPlatform.system};
     [
       wine
       mo2installer

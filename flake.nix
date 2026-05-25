@@ -11,13 +11,23 @@
       # to avoid problems caused by different versions of nixpkgs.
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # nix-gaming
+    nix-gaming.url = "github:fufexan/nix-gaming";
   };
 
   outputs =
-    inputs@{ nixpkgs, home-manager, ... }:
+    {
+      self,
+      nixpkgs,
+      home-manager,
+      nix-gaming,
+      ...
+    }@inputs:
     {
 
       nixosConfigurations.nixos = inputs.nixpkgs.lib.nixosSystem {
+        specialArgs = { inherit inputs; };
         modules = [
           {
             nix.settings.experimental-features = [
@@ -30,7 +40,7 @@
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
-            home-manager.userUserPackages = true;
+            home-manager.useUserPackages = true;
             home-manager.users.cathe = import ./home.nix;
           }
         ];

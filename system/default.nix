@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 
 {
   imports = [
@@ -11,5 +11,6 @@
     ./thumbnails
     ./docker
     ./nix-gaming
+    ./firefox
   ];
 }
