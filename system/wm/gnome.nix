@@ -5,7 +5,7 @@
   services.desktopManager.gnome.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
-  services.xserver.libinput.enable = true;
+  services.libinput.enable = true;
 
   services.gnome.core-apps.enable = true;
   environment.gnome.excludePackages = with pkgs; [
