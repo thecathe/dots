@@ -64,9 +64,6 @@
 
     nix
     nixfmt
-
-    kitty
-    zsh
     # -powerlevel9k
     ansi
 
@@ -83,11 +80,6 @@
 
     git
     gh
-    #    nix
-    #    nix-index
-    #   nix-diff
-    #   neovim
-    #vimPlugins.coc-nvim
 
     discord
     obsidian
@@ -96,28 +88,14 @@
     fontconfig # required by hyprland?
 
     ##### hyprland
-    hyprland
-    waybar
     waybar-lyric
-    hyprpaper
+    slurp
+    mutagen
+    quickshell # # replace waybar
     ags
     sway
     swaylock
     waylock
-    hypridle
-    quickshell # # replace waybar
-    mutagen
-    slurp
-    eww
-    rofi
-
-    hyprlandPlugins.hy3
-    # hyprlandPlugins.hyprbars # err
-    hyprlandPlugins.hyprsplit
-    # hyprlandPlugins.hyprspace # err
-    # hyprlandPlugins.hyprfocus # err
-    # hyprlandPlugins.hyprtrails # err
-    # hyprlandPlugins.hypr-dynamic-cursors
 
     qt6.qtmultimedia
     qt6.qt5compat
@@ -282,7 +260,4 @@
     defaultEditor = true;
     coc.enable = true;
   };
-
-  ## https://github.com/CurryFavour/NixDotfiles/blob/main/modules/home.nix
-  services.hyprpaper.enable = true;
 }

@@ -24,9 +24,9 @@ in
   #     ];
   # };
   programs.hyprland = {
-    enable = enabled;
-    withUWSM = withUWSM;
-    xwayland.enable = enabled;
+    enable = true;
+    # withUWSM = withUWSM;
+    # xwayland.enable = enabled;
     # TODO:
   };
 }

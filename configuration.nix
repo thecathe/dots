@@ -106,48 +106,11 @@ in
     LC_TIME = "en_GB.UTF-8";
   };
 
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "gb";
-    variant = "";
-  };
-
-  # Configure console keymap
-  console.keyMap = "uk";
-
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
-
-  # Enable sound with pipewire.
-  services.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
-
-    # use the example session manager (no others are packaged yet so this is enabled by default,
-    # no need to redefine it in your config for now)
-    #media-session.enable = true;
-  };
-
   # Internal Drives
   services.udisks2.enable = true;
 
   # Enable OpenGL
   hardware.graphics.enable = true;
-
-  # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = [
-    "modesetting"
-    "nvidia"
-  ];
 
   hardware.nvidia = {
     videoAcceleration = true;
@@ -189,8 +152,43 @@ in
     package = config.boot.kernelPackages.nvidiaPackages.vulkan_beta;
   };
 
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
+  # Enable the X11 windowing system.
+  services.xserver = {
+    enable = true;
+    # Configure keymap in X11
+    xkb = {
+      layout = "gb";
+      variant = "";
+    };
+
+    # Load nvidia driver for Xorg and Wayland
+    videoDrivers = [
+      "modesetting"
+      "nvidia"
+    ];
+  };
+
+  # Configure console keymap
+  console.keyMap = "uk";
+
+  # Enable CUPS to print documents.
+  services.printing.enable = true;
+
+  # Enable sound with pipewire.
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # If you want to use JACK applications, uncomment this
+    #jack.enable = true;
+
+    # use the example session manager (no others are packaged yet so this is enabled by default,
+    # no need to redefine it in your config for now)
+    #media-session.enable = true;
+  };
 
   # nix
   nix.settings.experimental-features = [
@@ -213,10 +211,6 @@ in
     wget
     ntfs3g
     autoconf
-
-    # neovim
-    # vimPlugins.coc-nvim
-
     git
     zsh
     zsh-nix-shell
@@ -231,7 +225,6 @@ in
     nixfmt
     nix-search-cli
     nix-index
-    # direnv
 
     flatpak
     libappimage
@@ -250,8 +243,6 @@ in
 
     linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
     # linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
-
-    mutagen
 
     ## https://wiki.hypr.land/Useful-Utilities/Must-have/
     # swaynotificationcenter

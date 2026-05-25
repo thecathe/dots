@@ -3,6 +3,10 @@
   # Enable the GNOME Desktop Environment.
   services.displayManager.gdm.enable = true;
   services.desktopManager.gnome.enable = true;
+
+  # Enable touchpad support (enabled default in most desktopManager).
+  services.xserver.libinput.enable = true;
+
   services.gnome.core-apps.enable = true;
   environment.gnome.excludePackages = with pkgs; [
     gnome-weather
@@ -27,7 +31,7 @@
       # just-perfection ## does nothing?
       # arc-menu
       # dynamic-panel ## does nothing?
-      dynamic-music-pill # # does nothing?
+      # dynamic-music-pill # # does nothing?
     ];
   # programs.geary.enable = false;
   # programs.epiphany.enable = false;

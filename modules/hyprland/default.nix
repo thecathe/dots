@@ -1,26 +1,27 @@
 { pkgs, input, ... }:
 
-let
-  enabled = true;
-  withUWSM = false;
-in
+# let
+#   enabled = true;
+#   withUWSM = false;
+# in
 {
   imports = [
     ./ashell
     ./rofi
   ];
-  programs.hyprland = {
-    enable = enabled;
-    withUWSM = withUWSM;
-    xwayland.enable = enabled;
-    # TODO:
-  };
-
+  # programs.hyprland = {
+  #   enable = enabled;
+  #   withUWSM = withUWSM;
+  #   xwayland.enable = enabled;
+  #   # TODO:
+  # };
+  ## https://github.com/CurryFavour/NixDotfiles/blob/main/modules/home.nix
+  services.hyprpaper.enable = true;
   # https://mynixos.com/options/programs.hyprland
   wayland.windowManager.hyprland = {
-    enable = enabled;
+    enable = true;
     # Need to disable systemd integration if hyprland is enabled: https://wiki.nixos.org/wiki/Hyprland
-    systemd.enable = !withUWSM;
+    systemd.enable = false;
     xwayland.enable = true;
     plugins =
       with pkgs;
@@ -29,11 +30,11 @@ in
         hy3
         ashell
         # hyprbars
-        hyprsplit
+        # hyprsplit
         # hyprspace
         # hyprfocus
         # hyprtrails
-        hypr-dynamic-cursors
+        # hypr-dynamic-cursors
       ];
     settings = {
       input = {
@@ -109,12 +110,6 @@ in
       ];
     };
   };
-  # programs.hyprland = {
-  #   enable = enabled;
-  #   withUWSM = withUWSM;
-  #   xwayland.enable = enabled;
-  #   # TODO:
-  # };
   home.sessionVariables.NIXOS_OZONE_WL = # ? feels shitty
     if enabled then "1" else null;
 }
