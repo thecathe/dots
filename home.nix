@@ -92,8 +92,10 @@
     discord
     obsidian
 
+    expat # required by fontconfig?
+    fontconfig # required by hyprland?
+
     ##### hyprland
-    egl-wayland
     hyprland
     waybar
     waybar-lyric
@@ -103,15 +105,11 @@
     swaylock
     waylock
     hypridle
-    # waylock
     quickshell # # replace waybar
     mutagen
     slurp
     eww
     rofi
-
-    expat # required by fontconfig?
-    fontconfig # required by hyprland?
 
     hyprlandPlugins.hy3
     # hyprlandPlugins.hyprbars # err
@@ -119,7 +117,7 @@
     # hyprlandPlugins.hyprspace # err
     # hyprlandPlugins.hyprfocus # err
     # hyprlandPlugins.hyprtrails # err
-    hyprlandPlugins.hypr-dynamic-cursors
+    # hyprlandPlugins.hypr-dynamic-cursors
 
     qt6.qtmultimedia
     qt6.qt5compat
