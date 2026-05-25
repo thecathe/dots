@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Usage: init-docs [ocaml|ocaml-md]
+TYPE=${1:-ocaml}
+
+gh api repos/cathe-org/actions/contents/.github/templates/deploy-docs-$TYPE.yml \
+  --jq '.content' | base64 -d > .github/workflows/deploy-docs.yml
+
+git add .github/workflows/deploy-docs.yml
+git commit -m "Add docs deploy workflow"
+git push

@@ -22,14 +22,22 @@ in
     [
       wine
       mo2installer
+      mangohud
+      protonup-ng
     ];
+  environment.sessionVariables = {
+    STEAM_EXTRA_COMPAT_TOOLS_PATHS = "/home/cathe/.steam/root/compatibilitytools.d";
+  };
   # https://mynixos.com/options/programs.steam
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
     platformOptimizations.enable = true;
+    gamescopeSession.enable = true;
+    extraCompatPackages = [ pkgs.proton-ge-bin ];
   };
+  programs.gamemode.enable = true;
   services.pipewire = {
     enable = true;
     alsa.enable = true;

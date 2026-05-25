@@ -47,7 +47,7 @@ in
       bind = [
         ## apps
         "$mod, B, exec, firefox -p cathe"
-        "$mod, Return, exec, alacritty"
+        "$mod, Return, exec, kitty"
         "$mod, E, exec, $fileManager"
         "$mod SHIFT, C, killactive"
         ## focus

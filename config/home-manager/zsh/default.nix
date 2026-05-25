@@ -1,8 +1,5 @@
 { pkgs, ... }:
 
-let
-  thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
-in
 {
   programs.zsh = {
     enable = true;
@@ -13,7 +10,16 @@ in
       size = 10000;
       path = "$HOME/.zsh_history";
     };
-    setOptions = thenixuser.configs.zsh.options;
+    setOptions = [
+      "HIST_IGNORE_DUPS"
+      "HIST_IGNORE_ALL_DUPS"
+      "HIST_SAVE_NO_DUPS"
+      "HIST_FIND_NO_DUPS"
+      "HIST_IGNORE_SPACE"
+      "APPENDHISTORY"
+      "SHARE_HISTORY"
+      "HIST_FCNTL_LOCK"
+    ];
 
     initExtra = ''
       export PATH="$HOME/dots/bin:$PATH"
@@ -40,7 +46,7 @@ in
       "vscode"
       "web-search" # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/web-search
     ];
-    theme = thenixuser.configs.zsh.theme;
+    theme = "agnoster";
     # custom = "/home/cathe/dots/.config/home-manager/zsh/custom/";
   };
 }

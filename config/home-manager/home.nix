@@ -6,18 +6,26 @@
 }:
 
 let
-  thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
+  thenixuser = import /home/cathe/dots/user.nix { };
   # thehyprland = import (thenixuser.home + "/dots/nixos/programs/hyprland.nix") { };
 in
 {
   imports = [
     ./zsh
+    ./kitty
     ./direnv
     ./starship
     ./firefox
     # ./hyprland
     # ./battlenet
   ];
+
+  nixpkgs = {
+    config = {
+      allowUnfree = true;
+      allowUnfreePredicate = (_: true);
+    };
+  };
 
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
@@ -55,10 +63,30 @@ in
     #   echo "Hello, ${config.home.username}!"
     # '')
 
+    wget
+    linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
+
+    fzf
+
+    nix
     nixfmt
 
-    zsh # -powerlevel9k
+    kitty
+    zsh
+    # -powerlevel9k
+    ansi
+
     powerline
+    powerline-go
+    powerline-fonts
+    powerline-symbols
+
+    # neovim
+
+    tmux
+    abduco
+    dvtm
+
     git
     gh
     #    nix
@@ -67,11 +95,11 @@ in
     #   neovim
     #vimPlugins.coc-nvim
 
-    prismlauncher
+    discord
+    obsidian
 
+    ##### hyprland
     egl-wayland
-    alacritty
-    kitty
     hyprland
     waybar
     waybar-lyric
@@ -79,7 +107,14 @@ in
     ags
     sway
     swaylock
+    waylock
     hypridle
+    # waylock
+    quickshell # # replace waybar
+    mutagen
+    slurp
+    eww
+    rofi
 
     expat # required by fontconfig?
     fontconfig # required by hyprland?
@@ -91,13 +126,6 @@ in
     # hyprlandPlugins.hyprfocus # err
     # hyprlandPlugins.hyprtrails # err
     hyprlandPlugins.hypr-dynamic-cursors
-
-    # waylock
-    # quickshell ## replace waybar
-    mutagen
-    slurp
-    eww
-    rofi
 
     qt6.qtmultimedia
     qt6.qt5compat
@@ -117,6 +145,37 @@ in
 
     gource
 
+    flatpak
+    libappimage
+
+    # for battlenet: https://wiki.nixos.org/wiki/Battle.net
+    # (wineWow64Packages.full.override {
+    #   wineRelease = "staging";
+    #   mingwSupport = true;
+    # })
+    winetricks
+
+    wine64
+    protontricks
+
+    ffmpeg
+    obs-studio
+    satty
+
+    kittysay
+    fastfetch
+
+    vscode
+    onedrive
+
+    rmpc
+
+    # minecraft launcher
+    (prismlauncher.override {
+      jdks = [
+        jre25_minimal
+      ];
+    })
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -159,6 +218,10 @@ in
   programs.nix-index = {
     enable = true;
     enableZshIntegration = true;
+  };
+
+  programs.lazydocker = {
+    enable = true;
   };
 
   # Let Home Manager install and manage itself.
@@ -245,5 +308,4 @@ in
 
   ## https://github.com/CurryFavour/NixDotfiles/blob/main/modules/home.nix
   services.hyprpaper.enable = true;
-  programs.prismlauncher.enable = true;
 }

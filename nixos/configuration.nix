@@ -27,6 +27,7 @@ in
     ./modules/fonts
     ./modules/gnome
     ./programs
+    ./modules/docker
     # ./modules/network-sharing
     ./modules/thumbnails
     ./modules/nix-gaming
@@ -34,9 +35,12 @@ in
     #      <nixos-hardware/common/gpu/nvidia/ada-lovelace>
   ];
 
-  home-manager.useGlobalPkgs = true;
-  home-manager.useUserPackages = true;
-  home-manager.backupFileExtension = "backup";
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    backupFileExtension = "backup";
+    # inputs.nixpkgs.follows = "nixpkgs";
+  };
 
   # Bootloader
   boot.loader.systemd-boot = {
@@ -157,7 +161,7 @@ in
     ntfs3g
     autoconf
 
-    neovim
+    # neovim
     # vimPlugins.coc-nvim
 
     git
@@ -195,7 +199,6 @@ in
     # linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
 
     egl-wayland
-    alacritty
     kitty
     hyprland
     # waybar

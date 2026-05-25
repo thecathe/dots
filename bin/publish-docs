@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
-# Usage: publish-docs [html|markdown] [site e.g. cathe.dev]
+# Usage: publish-docs [html|md] [site e.g. cathe.dev]
 
 TYPE=${1:-html}
 SITE=${2:-cathe.dev}
 ORG="cathe-org"
-PROJECT_NAME="$(basename $(git rev-parse --show-toplevel))"
+REPO_DIR="$(git rev-parse --show-toplevel)"
+PROJECT_NAME="$(basename $REPO_DIR)"
 REPO_NAME="$PROJECT_NAME-docs"
+DOCS_DIR="$REPO_DIR/docs"
 
 # Pick template
-if [ "$TYPE" = "markdown" ]; then
-  TEMPLATE="$ORG/template-docs-markdown"
+if [ "$TYPE" = "md" ]; then
+  TEMPLATE="$ORG/template-docs-md"
 else
   TEMPLATE="$ORG/template-docs-html"
 fi
 
 # Sanity checks
-if [ ! -d "$(git rev-parse --show-toplevel)/docs" ]; then
+if [ ! -d "$DOCS_DIR" ]; then
   echo "Error: no ./docs directory found"
   exit 1
 fi
@@ -25,6 +27,7 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 1
 fi
 
+# Dry run
 if [ "$DRY_RUN" = true ]; then
   echo "[dry run] Would create: cathe-org/$REPO_NAME from $TEMPLATE"
   echo "[dry run] Would set SITE=$SITE on cathe-org/$REPO_NAME"
@@ -32,25 +35,67 @@ if [ "$DRY_RUN" = true ]; then
   exit 0
 fi
 
-echo "Creating $ORG/$REPO_NAME from $TEMPLATE..."
-gh repo create $ORG/$REPO_NAME \
-  --template $TEMPLATE \
-  --public
+# Save existing docs content
+TEMP=$(mktemp -d)
+cp -r "$DOCS_DIR/." "$TEMP/"
 
-sleep 2
+if gh repo view $ORG/$REPO_NAME &>/dev/null; then
+  # Repo already exists — check if submodule is already wired up
+  echo "$ORG/$REPO_NAME already exists, pushing updated docs..."
 
-# Set the SITE variable so the workflow knows where to deploy
-gh variable set SITE --body "$SITE" --repo $ORG/$REPO_NAME
+  if ! git -C "$REPO_DIR" config --file .gitmodules --get-regexp "url" 2>/dev/null | grep -q "$REPO_NAME"; then
+  # if [ ! -f "$REPO_DIR/.gitmodules" ] || ! grep -q "$REPO_NAME" "$REPO_DIR/.gitmodules"; then
+    # Exists on GitHub but not wired as submodule locally — add it
+    echo "adding to .gitmodules"
+    cd $REPO_DIR
+    git rm -r docs
+    git submodule add git@github.com:$ORG/$REPO_NAME.git docs
+    git submodule update --init
+  else 
+    echo "docs already appears in .gitmodules"
+  fi
+else
+  # Repo doesn't exist — create from template
+  echo "Creating $ORG/$REPO_NAME from $TEMPLATE..."
+  gh repo create $ORG/$REPO_NAME \
+    --template $TEMPLATE \
+    --public
 
-# Replace ./docs with the submodule
-cd $(git rev-parse --show-toplevel)
-git rm -r docs
-git submodule add git@github.com:$ORG/$REPO_NAME.git docs
-git commit -m "Convert docs to submodule ($ORG/$REPO_NAME)"
+  if [ $? -ne 0 ]; then
+    echo "Error: failed to create repo. Aborting."
+    rm -rf "$TEMP"
+    exit 1
+  fi
+
+  sleep 2
+  gh variable set SITE --body "$SITE" --repo $ORG/$REPO_NAME
+
+  cd $REPO_DIR
+  git rm -r docs
+  git submodule add git@github.com:$ORG/$REPO_NAME.git docs
+  git submodule update --init
+fi
+
+# Copy docs content into submodule and push
+if [ "$TYPE" = "markdown" ]; then
+  mkdir -p docs/docs
+  cp -r "$TEMP/." docs/docs/
+else
+  cp -r "$TEMP/." docs/
+fi
+rm -rf "$TEMP"
+
+cd docs
+git add .
+git commit -m "Update docs"
+git push
+
+# Update submodule pointer in parent repo
+cd ..
+git add .gitmodules docs
+git commit -m "Update docs submodule ($ORG/$REPO_NAME)"
 
 echo ""
 echo "Done."
 echo "Docs repo: github.com/$ORG/$REPO_NAME"
 echo "Will deploy to: $PROJECT_NAME.$SITE"
-echo ""
-echo "Next: cd docs && git add . && git commit -m 'Initial docs' && git push"

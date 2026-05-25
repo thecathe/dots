@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ ... }:
 
 let
   userJSON = builtins.fromJSON (builtins.readFile "/home/cathe/dots/user.json");
@@ -15,22 +15,6 @@ in
   hostname = hostname;
   home = home;
 
-  configs = {
-    zsh = {
-      theme = "agnoster";
-      options = [
-        "HIST_IGNORE_DUPS"
-        "HIST_IGNORE_ALL_DUPS"
-        "HIST_SAVE_NO_DUPS"
-        "HIST_FIND_NO_DUPS"
-        "HIST_IGNORE_SPACE"
-        "APPENDHISTORY"
-        "SHARE_HISTORY"
-        "HIST_FCNTL_LOCK"
-      ];
-    };
-  };
-
   user = {
     users.users."${username}" = {
       isNormalUser = true;
@@ -40,101 +24,101 @@ in
         "wheel"
         "samba"
       ];
-      packages = with pkgs; [
-        wget
+      # packages = with pkgs; [
+      #   wget
 
-        linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
-        # linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
-        egl-wayland
+      #   linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
+      #   # linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
+      #   egl-wayland
 
-        zsh
-        fzf
-        neovim
-        #    vimPlugins.coc-nvim
-        powerline
-        powerline-go
-        powerline-fonts
-        powerline-symbols
+      #   zsh
+      #   fzf
+      #   neovim
+      #   #    vimPlugins.coc-nvim
+      #   powerline
+      #   powerline-go
+      #   powerline-fonts
+      #   powerline-symbols
 
-        tmux
-        abduco
-        dvtm
+      #   tmux
+      #   abduco
+      #   dvtm
 
-        git
-        gh
+      #   git
+      #   gh
 
-        flatpak
-        libappimage
+      #   flatpak
+      #   libappimage
 
-        # lutris
+      #   # lutris
 
-        #      wine64Packages.stableFull_11
+      #   #      wine64Packages.stableFull_11
 
-        # for battlenet: https://wiki.nixos.org/wiki/Battle.net
-        (wineWow64Packages.full.override {
-          wineRelease = "staging";
-          mingwSupport = true;
-        })
-        winetricks
+      #   # for battlenet: https://wiki.nixos.org/wiki/Battle.net
+      #   (wineWow64Packages.full.override {
+      #     wineRelease = "staging";
+      #     mingwSupport = true;
+      #   })
+      #   winetricks
 
-        wine64
-        # bottles
+      #   wine64
+      #   # bottles
 
-        protontricks
+      #   protontricks
 
-        nix
-        #  nix-search-cli
-        #  nix-index
-        #  nix-diff
-        # ocaml
-        # opam
-        # racket
-        # postgresql
-        # go
-        # python3
-        # beam28Packages.erlang
-        # erlang-language-platform
-        # jdk8
-        # ghc
+      #   nix
+      #   #  nix-search-cli
+      #   #  nix-index
+      #   #  nix-diff
+      #   # ocaml
+      #   # opam
+      #   # racket
+      #   # postgresql
+      #   # go
+      #   # python3
+      #   # beam28Packages.erlang
+      #   # erlang-language-platform
+      #   # jdk8
+      #   # ghc
 
-        # miktex
-        ansi
+      #   # miktex
+      #   ansi
 
-        alacritty
-        hyprland
-        sway
-        swaylock
-        waylock
-        quickshell
-        mutagen
-        slurp
-        eww
+      #   kitty
+      #   hyprland
+      #   sway
+      #   swaylock
+      #   waylock
+      #   quickshell
+      #   mutagen
+      #   slurp
+      #   eww
 
-        discord
-        obsidian
+      #   discord
+      #   obsidian
 
-        #      steam
-        #      steamcmd
-        #     steam-run
-        # haskellPackages.battlenet
+      #   #      steam
+      #   #      steamcmd
+      #   #     steam-run
+      #   # haskellPackages.battlenet
 
-        ffmpeg
-        obs-studio
-        satty
+      #   ffmpeg
+      #   obs-studio
+      #   satty
 
-        kittysay
-        # neofetch
-        fastfetch
-        # hyfetch
-        # honeyfetch
+      #   kittysay
+      #   # neofetch
+      #   fastfetch
+      #   # hyfetch
+      #   # honeyfetch
 
-        #teams
-        vscode
-        onedrive
+      #   #teams
+      #   vscode
+      #   onedrive
 
-        rmpc
+      #   rmpc
 
-      ];
+      # ];
     };
   };
 }
