@@ -7,33 +7,14 @@
   lib,
   pkgs,
   inputs,
-  #      thenixuser ? import /home/cathe/dots/user.nix
   ...
 }:
 
-let
-  # home-manager-tar = builtins.fetchTarBall "https://github.com/nix-community/home-manager/archive/master.tar.gz";
-  # home-manager-tar = builtins.fetchTarBall "https://github.com/nix-community/home-manager/archive/release-25.11.tar.gz";
-  # home-manager = import "${home-manager-tar}";
-  # thenixuser = import /home/cathe/dots/user.nix { inherit pkgs; };
-  # thenvidia = import (thenixuser.home + "/dots/nixos/nvidia.nix") { inherit config; };
-in
 {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    # <home-manager/nixos>
-    # thenixuser.user
     ./system
-    # ./modules/gnome
-    # ./programs
-    # ./modules/docker
-    # ./modules/network-sharing
-    # ./modules/thumbnails
-    # ./modules/nix-gaming
-    # ./modules/nvidia
-    #      <nixos-hardware/common/cpu/amd>
-    #      <nixos-hardware/common/gpu/nvidia/ada-lovelace>
   ];
 
   users.users.cathe = {
