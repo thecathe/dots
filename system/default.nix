@@ -7,6 +7,7 @@
     ./git.nix
     ./neovim.nix
     ./zsh.nix
+    ./direnv.nix
     ./fonts.nix
     ./firefox.nix
     ./nautilus.nix
