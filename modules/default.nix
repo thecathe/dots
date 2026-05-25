@@ -11,7 +11,7 @@
 # in
 {
   imports = [
-    ./git
+    ./git.nix
     ./direnv
     ./shell
     ./firefox
