@@ -143,6 +143,7 @@
     # minecraft launcher
     (prismlauncher.override {
       jdks = [
+        jre21_minimal
         jre25_minimal
       ];
     })
