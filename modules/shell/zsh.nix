@@ -21,7 +21,7 @@
       "HIST_FCNTL_LOCK"
     ];
 
-    initExtra = ''
+    initContent = ''
       export PATH="$HOME/dots/bin:$PATH"
     '';
 
