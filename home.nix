@@ -11,11 +11,7 @@
 # in
 {
   imports = [
-    ./modules/git
-    ./modules/direnv
-    ./modules/shell
-    ./modules/firefox
-    # ./modules/hyprland
+    ./modules
   ];
 
   nixpkgs = {

@@ -253,35 +253,35 @@ in
 
     egl-wayland
     kitty
-    hyprland
-    # waybar
-    # waybar-lyric
-    hyprpaper
-    ags
-    sway
-    swaylock
-    hypridle
+    # hyprland
+    # # waybar
+    # # waybar-lyric
+    # hyprpaper
+    # ags
+    # sway
+    # swaylock
+    # hypridle
 
-    expat # required by fontconfig?
-    fontconfig # required by hyprland?
+    # expat # required by fontconfig?
+    # fontconfig # required by hyprland?
 
-    hyprlandPlugins.hy3
-    # hyprlandPlugins.hyprbars # err
-    hyprlandPlugins.hyprsplit
-    # hyprlandPlugins.hyprspace # err
-    # hyprlandPlugins.hyprfocus # err
-    # hyprlandPlugins.hyprtrails # err
-    hyprlandPlugins.hypr-dynamic-cursors
+    # hyprlandPlugins.hy3
+    # # hyprlandPlugins.hyprbars # err
+    # hyprlandPlugins.hyprsplit
+    # # hyprlandPlugins.hyprspace # err
+    # # hyprlandPlugins.hyprfocus # err
+    # # hyprlandPlugins.hyprtrails # err
+    # hyprlandPlugins.hypr-dynamic-cursors
 
     # waylock
     # quickshell ## replace waybar
     mutagen
-    slurp
-    eww
-    rofi
+    # slurp
+    # eww
+    # rofi
 
     ## https://wiki.hypr.land/Useful-Utilities/Must-have/
-    swaynotificationcenter
+    # swaynotificationcenter
     wireplumber
     noto-fonts
 

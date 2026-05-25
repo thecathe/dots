@@ -1,7 +1,13 @@
 { ... }:
 {
   programs.firefox = {
+    enable = true;
 
+    policies = {
+      # DisableTelemetry = true;
+      DontCheckDefaultBrowser = true;
+      HardwareAcceleration = true;
+    };
     preferences = {
       # see pdf options: https://github.com/mozilla/pdf.js/blob/master/extensions/chromium/options/options.html
       "pdfjs.defaultZoomValue" = "auto";
