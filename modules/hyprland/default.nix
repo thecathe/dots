@@ -9,6 +9,12 @@ in
     ./ashell
     ./rofi
   ];
+  programs.hyprland = {
+    enable = enabled;
+    withUWSM = withUWSM;
+    xwayland.enable = enabled;
+    # TODO:
+  };
 
   # https://mynixos.com/options/programs.hyprland
   wayland.windowManager.hyprland = {

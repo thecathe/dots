@@ -2,15 +2,16 @@
 
 {
   imports = [
-    ./git
-    ./gnome
-    ./network-sharing
-    ./fonts
-    ./zsh
-    ./nautilus
+    ./wm
     ./thumbnails
-    ./docker
-    ./nix-gaming
-    ./firefox
+    ./git.nix
+    ./neovim.nix
+    ./zsh.nix
+    ./fonts.nix
+    ./firefox.nix
+    ./nautilus.nix
+    ./docker.nix
+    ./network-sharing.nix
+    ./nix-gaming.nix
   ];
 }
