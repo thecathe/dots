@@ -23,13 +23,21 @@
 
     initContent = ''
       export PATH="$HOME/dots/bin:$PATH"
+      ## 
+      webm2mp4() {
+        local input output
+        input="$(realpath "$1")"
+        output="$(realpath -, "$2")" 
+        nix-shell -p ffmpeg --run \ 
+          "ffmpeg -i '$input' -c:v libx264 -crf 18 -c:a flac '$output'"
+      }
     '';
 
     shellAliases = {
-      update = "sudo nixos-rebuild test";
-      upgrade = "sudo nixos-rebuild switch";
-      upboot = "sudo nixos-rebuild boot";
-      refresh = "home-manager switch -b backup";
+      # update = "sudo nixos-rebuild test";
+      # upgrade = "sudo nixos-rebuild switch";
+      # upboot = "sudo nixos-rebuild boot";
+      # refresh = "home-manager switch -b backup";
       # nix-shell = "nix-shell --run $SHELL";
       img2pdf = "nix-shell -p img2pdf --run $SHELL";
     };
