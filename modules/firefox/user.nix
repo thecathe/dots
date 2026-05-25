@@ -1,15 +1,10 @@
 { pkgs, ... }:
 
-let
-  thenixuser = import "/home/cathe/dots/user.nix" { inherit pkgs; };
-  name = thenixuser.username;
-in
 {
   # https://mynixos.com/home-manager/options/programs.firefox.profiles.%3Cname%3E
-  name = name;
-  "${name}" = {
+  cathe = {
     id = 0;
-    name = name;
+    name = "cathe";
     isDefault = true;
     settings = {
       # "extensions.autoDisableScopes" = 0;
