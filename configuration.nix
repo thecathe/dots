@@ -205,8 +205,9 @@
     gh
 
     nix
-    nixfmt
     nixd
+    nixfmt
+    alejandra
     nix-search-cli
     nix-index
 
