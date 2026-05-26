@@ -17,6 +17,8 @@
     ./system
   ];
 
+  nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+
   users.users.cathe = {
     isNormalUser = true;
     description = "cathe";
@@ -204,6 +206,7 @@
 
     nix
     nixfmt
+    nixd
     nix-search-cli
     nix-index
 
