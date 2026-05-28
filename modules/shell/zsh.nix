@@ -41,6 +41,7 @@
       # nix-shell = "nix-shell --run $SHELL";
       img2pdf = "nix-shell -p img2pdf --run $SHELL";
       torrent = "nix-shell -p qbittorrent tor-browser --run $SHELL";
+      epub = "nix-shell -p epy --run $SHELL";
     };
   };
 
