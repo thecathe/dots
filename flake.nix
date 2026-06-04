@@ -14,6 +14,12 @@
 
     # nix-gaming
     nix-gaming.url = "github:fufexan/nix-gaming";
+
+    # stylix
+    stylix = {
+      url = "github:nix-community/stylix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -22,6 +28,7 @@
       nixpkgs,
       home-manager,
       nix-gaming,
+      stylix,
       ...
     }@inputs:
     {
@@ -43,6 +50,8 @@
             home-manager.useUserPackages = true;
             home-manager.users.cathe = import ./home.nix;
           }
+
+          stylix.nixosModules.stylix
         ];
       };
 
