@@ -63,7 +63,15 @@
         '';
       }
 
-      which-key-nvim # show keymaps
+      # show keymaps
+      {
+        plugin = which-key-nvim;
+        type = "lua";
+        config = ''
+          require('which-key').setup({ delay = 500 })
+        '';
+      }
+
       gitignore-nvim # git ignore
 
       # ── LSP ─────────────────────────────────────────────────────────────
