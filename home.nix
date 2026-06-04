@@ -11,7 +11,7 @@
 # in
 {
   imports = [
-    ./modules
+    ./modules/home
   ];
 
   # nixpkgs = {
