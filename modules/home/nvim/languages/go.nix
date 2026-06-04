@@ -18,7 +18,7 @@
 
     -- imports and formatting
     -- Use the following configuration to have your imports organized on save using the logic of goimports and your code formatted.
-    autocmd("BufWritePre", {
+    vim.api.nvim_create_autocmd("BufWritePre", {
       pattern = "*.go",
       callback = function()
         local params = vim.lsp.util.make_range_params()
