@@ -5,7 +5,6 @@
     ./wm
     ./thumbnails
     ./git.nix
-    ./neovim.nix
     ./zsh.nix
     ./direnv.nix
     ./fonts.nix
