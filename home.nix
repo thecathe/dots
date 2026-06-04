@@ -1,7 +1,7 @@
 args@{
   config,
   pkgs,
-  inputs,
+  # inputs,
   ...
 }:
 
@@ -9,15 +9,24 @@ args@{
 #   thenixuser = import /home/cathe/dots/user.nix { };
 #   # thehyprland = import (thenixuser.home + "/dots/nixos/programs/hyprland.nix") { };
 # in
-let
-  stylix = args.inputs.stylix;
-in
+# let
+#   stylix = args.inputs.stylix;
+# in
 {
   imports = [
     ./modules/home
   ];
 
-  stylix.enable = true;
+  # args.inputs.stylix.enable = true;
+
+  # stylix = {
+  #   enable = true;
+  #   # targets = {
+  #   #   kitty.enable = true;
+  #   #   neovim.enable = true;
+  #   # };
+  #   # base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-dark-hard.yaml";
+  # };
 
   # nixpkgs = {
   #   config = {
