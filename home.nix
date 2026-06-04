@@ -1,4 +1,4 @@
-{
+args@{
   config,
   pkgs,
   inputs,
@@ -9,10 +9,15 @@
 #   thenixuser = import /home/cathe/dots/user.nix { };
 #   # thehyprland = import (thenixuser.home + "/dots/nixos/programs/hyprland.nix") { };
 # in
+let
+  stylix = args.inputs.stylix;
+in
 {
   imports = [
     ./modules/home
   ];
+
+  stylix.enable = true;
 
   # nixpkgs = {
   #   config = {
