@@ -270,13 +270,11 @@
               expr = 'import <nixpkgs> { }',
             },
             options = {
-              -- Lets nixd complete NixOS and Home Manager options against your
-              -- actual flake. Adjust the path, hostname, and username.
               nixos = {
-                expr = '(builtins.getFlake "/home/you/dots").nixosConfigurations.mymachine.options',
+                expr = '(builtins.getFlake "/home/cathe/dots").nixosConfigurations.mymachine.options',
               },
               home_manager = {
-                expr = '(builtins.getFlake "/home/you/dots").homeConfigurations.you.options',
+                expr = '(builtins.getFlake "/home/cathe/dots").homeConfigurations.cathe.options',
               },
             },
           },
