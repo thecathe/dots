@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  programs.neovim.extraLuaConfig = lib.mkAfter ''
+  programs.neovim.initLua = lib.mkAfter ''
     -- ── Go ──────────────────────────────────────────────────────────────
     require('lspconfig').gopls.setup({
       on_attach    = lsp_on_attach,

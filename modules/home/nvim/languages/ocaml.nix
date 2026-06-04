@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  programs.neovim.extraLuaConfig = lib.mkAfter ''
+  programs.neovim.initLua = lib.mkAfter ''
     -- ── OCaml ──────────────────────────────────────────────────────────────
     require('lspconfig').ocamllsp.setup({
       on_attach    = lsp_on_attach,

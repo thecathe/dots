@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  programs.neovim.extraLuaConfig = lib.mkAfter ''
+  programs.neovim.initLua = lib.mkAfter ''
     -- ── Erlang ─────────────────────────────────────────────────────────────
     require('lspconfig').erlangls.setup({
       on_attach    = lsp_on_attach,

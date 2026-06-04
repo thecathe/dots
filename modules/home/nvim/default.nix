@@ -104,7 +104,7 @@
       # ── Formatting ──────────────────────────────────────────────────────
       # Language modules register their formatters via:
       #   require('conform').formatters_by_ft.<ft> = { 'tool' }
-      # after this setup() call, using lib.mkAfter in their extraLuaConfig.
+      # after this setup() call, using lib.mkAfter in their initLua.
       {
         plugin = conform-nvim;
         type = "lua";
@@ -165,13 +165,13 @@
       }
 
       # ── Colourscheme ─────────────────────────────────────────────────────
-      # Uncomment one and add the colorscheme call in extraLuaConfig below.
+      # Uncomment one and add the colorscheme call in initLua below.
       # catppuccin-nvim
       # tokyonight-nvim
       gruvbox-nvim
     ];
 
-    extraLuaConfig = ''
+    initLua = ''
       -- ── Options ───────────────────────────────────────────────────────────
       local opt = vim.opt
       opt.number         = true

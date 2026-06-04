@@ -11,7 +11,7 @@
       prettier # uncomment for global Markdown formatting
     ];
 
-    extraLuaConfig = lib.mkAfter ''
+    initLua = lib.mkAfter ''
       -- ── Markdown ────────────────────────────────────────────────────────
       require('lspconfig').marksman.setup({
         on_attach    = lsp_on_attach,
