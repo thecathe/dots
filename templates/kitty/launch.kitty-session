@@ -1,0 +1,4 @@
+layout splits
+cd ~/dots
+launch --title "nvim editor" nvim 
+launch --title "shell" --location=hsplit
