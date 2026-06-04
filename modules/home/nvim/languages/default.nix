@@ -2,10 +2,10 @@
 
 {
   imports = [
-    ./languages/ocaml.nix
-    ./languages/erlang.nix
-    ./languages/go.nix
-    ./languages/markdown.nix
+    ./ocaml.nix
+    ./erlang.nix
+    ./go.nix
+    ./markdown.nix
     # ./languages/latex.nix
   ];
 }
