@@ -8,7 +8,7 @@
   programs.neovim = {
     extraPackages = with pkgs; [
       marksman # Markdown LSP: link completion, cross-references, headings
-      nodePackages.prettier # uncomment for global Markdown formatting
+      prettier # uncomment for global Markdown formatting
     ];
 
     extraLuaConfig = lib.mkAfter ''
