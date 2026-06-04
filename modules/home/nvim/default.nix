@@ -258,13 +258,27 @@
 
       _G.lsp_capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-      -- ── Nil (Nix LSP) — always globally available ──────────────────────
-      require('lspconfig').nil_ls.setup({
+      -- ── nixd (Nix LSP) — always globally available ──────────────────────
+      require('lspconfig').nixd.setup({
         on_attach    = lsp_on_attach,
         capabilities = lsp_capabilities,
         settings = {
-          ['nil'] = {
-            formatting = { command = { 'nixfmt' } },
+          nixd = {
+            formatting = { command = { 'alejandra' } },
+            nixpkgs = {
+              -- Lets nixd evaluate nixpkgs for accurate package completions
+              expr = 'import <nixpkgs> { }',
+            },
+            options = {
+              -- Lets nixd complete NixOS and Home Manager options against your
+              -- actual flake. Adjust the path, hostname, and username.
+              nixos = {
+                expr = '(builtins.getFlake "/home/you/dots").nixosConfigurations.mymachine.options',
+              },
+              home_manager = {
+                expr = '(builtins.getFlake "/home/you/dots").homeConfigurations.you.options',
+              },
+            },
           },
         },
       })
