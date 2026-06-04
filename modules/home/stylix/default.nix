@@ -1,6 +1,6 @@
-{ inputs, pkgs, ... }:
+{ pkgs, ... }:
 {
-  inputs.stylix = {
+  stylix = {
     enable = true;
     targets = {
       kitty.enable = true;
