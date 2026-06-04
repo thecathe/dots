@@ -16,8 +16,13 @@
     # project devShells so direnv can put the right version on PATH.
     extraPackages = with pkgs; [
       git
-      nil # Nix LSP
-      nixfmt-rfc-style # or nixpkgs-fmt, depending on your project style
+      nix
+      # nil # Nix LSP
+      nixd
+      # nixfmt
+      alejandra
+      nix-search-cli
+      nix-index
     ];
 
     plugins = with pkgs.vimPlugins; [

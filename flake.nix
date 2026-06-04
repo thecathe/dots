@@ -56,11 +56,11 @@
 
       templates = {
         ocaml = {
-          path = ./templates/ocaml.nix;
+          path = ./templates/ocaml;
           description = "OCaml project with opam, dune and direnv";
         };
         # erlang = {
-        #   path = ./templates/erlang.nix;
+        #   path = ./templates/erlang;
         #   description = "Erlang/OTP project with rebar3 and direnv";
         # };
       };
