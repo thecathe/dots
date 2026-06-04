@@ -1,0 +1,7 @@
+# This version must exactly match the ocamlformat pin in dune-project.
+# ocamlformat will error on any mismatch.
+version = 0.26.2
+
+# `default` is the upstream-recommended profile and a safe starting point.
+# Other options: `ocamlformat`, `janestreet`.
+profile = default

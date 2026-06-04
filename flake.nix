@@ -46,6 +46,17 @@
         ];
       };
 
+      templates = {
+        ocaml = {
+          path = ./templates/ocaml.nix;
+          description = "OCaml project with opam, dune and direnv";
+        };
+        erlang = {
+          path = ./templates/erlang.nix;
+          description = "Erlang/OTP project with rebar3 and direnv";
+        };
+      };
+
     };
 
 }

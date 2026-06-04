@@ -1,0 +1,20 @@
+; Bump the dune version here as your installed dune allows.
+(lang dune 3.17)
+
+; dune can generate .opam files from this specification.
+; Run `dune build` to regenerate them after editing this file.
+(generate_opam_files true)
+
+(package
+ (name my-project)
+ (synopsis "A short synopsis")
+ (description "A longer description")
+ (depends
+  ; Minimum OCaml version — match this to your opam switch version.
+  (ocaml (>= 5.2))
+  dune
+  ; `:with-dev-setup` marks these as development-only.
+  ; Install them with: opam install . --deps-only --with-dev-setup
+  (ocaml-lsp-server (and :with-dev-setup (>= 1.18)))
+  ; ocamlformat version must exactly match the `version` key in .ocamlformat.
+  (ocamlformat      (and :with-dev-setup (= 0.26.2)))))
