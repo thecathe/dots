@@ -20,8 +20,8 @@ end
 _G.lsp_capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 -- ── nixd (Nix LSP) — always globally available ──────────────────────
-require('lspconfig').nixd.setup({
-  on_attach    = lsp_on_attach,
+vim.lsp.config('nixd', {
+on_attach    = lsp_on_attach,
   capabilities = lsp_capabilities,
   settings = {
     nixd = {
@@ -41,5 +41,5 @@ require('lspconfig').nixd.setup({
     },
   },
 })
-
+vim.lsp.enable('nixd')
 

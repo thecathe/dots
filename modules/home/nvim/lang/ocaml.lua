@@ -1,4 +1,4 @@
-require('lspconfig').ocamllsp.setup({
+vim.lsp.config('ocamllsp', {
   on_attach    = lsp_on_attach,
   capabilities = lsp_capabilities,
   settings = {
@@ -6,4 +6,5 @@ require('lspconfig').ocamllsp.setup({
     inlayHints = { enable = true },
   },
 })
+vim.lsp.enable('ocamllsp')
 require('conform').formatters_by_ft.ocaml = { 'ocamlformat' }

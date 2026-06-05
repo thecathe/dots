@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./languages
+    ./lang
   ];
 
   xdg.configFile = {
