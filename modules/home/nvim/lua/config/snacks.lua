@@ -1,5 +1,5 @@
 require('snacks').setup({
-  picker    = { enabled = true },  -- replaces telescope
+  picker    = { enabled = true, sources = {explorer={layout={layout={width=40}}, },},},  -- replaces telescope
   explorer  = { enabled = true },  -- sidebar file tree
   terminal  = { enabled = true },  -- toggleable terminal
   notifier  = { enabled = true },  -- replaces vim.notify
