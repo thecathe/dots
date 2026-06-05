@@ -17,7 +17,7 @@ _G.lsp_on_attach = function(client, bufnr)
   end, vim.tbl_extend('force', o, { desc = 'Format buffer' }))
   vim.keymap.set('i', '<C-k>', vim.lsp.buf.signature_help, { buffer = bufnr, desc = 'Signature help' })
   -- Enable inlay hints if the server supports them
-  if client.supports_method('textDocument/inlayHint') then
+  if client:supports_method('textDocument/inlayHint') then
     vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
     -- Keymap to toggle them on/off
     vim.keymap.set('n', '<leader>ih', function()
