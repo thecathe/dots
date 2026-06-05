@@ -40,7 +40,7 @@ on_attach    = lsp_on_attach,
       formatting = { command = { 'alejandra' } },
       nixpkgs = {
         -- Lets nixd evaluate nixpkgs for accurate package completions
-        expr = 'import <nixpkgs> { }',
+        expr = '(builtins.getFlake "/home/cathe/dots").inputs.nixpkgs.legacyPackages.${builtins.currentSystem}',
       },
       options = {
         nixos = {
