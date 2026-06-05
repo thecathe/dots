@@ -56,6 +56,8 @@
 
       gitignore-nvim # git ignore
 
+      {plugin =direnv-vim;}
+
       # ── LSP ─────────────────────────────────────────────────────────────
       nvim-lspconfig
 
