@@ -8,9 +8,9 @@
   xdg.configFile = {
     "nvim/lua/options.lua".source = ./lua/options.lua;
     "nvim/lua/lsp.lua".source = ./lua/lsp.lua;
-    "nvim/lua/completion.lua".source = ./lua/config/completion.lua;
+    "nvim/lua/config/completion.lua".source = ./lua/config/completion.lua;
     "nvim/lua/diagnostics.lua".source = ./lua/diagnostics.lua;
-    "nvim/lua/snacks.lua".source = ./lua/config/snacks.lua;
+    "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
  };
 
   programs.neovim = {
