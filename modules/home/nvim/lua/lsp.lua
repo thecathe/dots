@@ -55,3 +55,13 @@ on_attach    = lsp_on_attach,
 })
 vim.lsp.enable('nixd')
 
+-- notice fresh files
+vim.lsp.config('*', {
+  capabilities = {
+    workspace = {
+      didChangeWatchedFiles = {
+        dynamicRegistration = true,
+      },
+    },
+  },
+})
