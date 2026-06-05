@@ -13,3 +13,5 @@ opt.undofile       = true    -- persistent undo across sessions
 
 vim.cmd.colorscheme('gruvbox')
 
+vim.keymap.set('n', '<leader>w+', '5<C-w>>', { desc = 'Widen window' })
+vim.keymap.set('n', '<leader>w-', '5<C-w><', { desc = 'Narrow window' })
