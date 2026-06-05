@@ -42,7 +42,7 @@
       {
         plugin = snacks-nvim;
         type = "lua";
-        config = "require('snacks')"; 
+        config = "require('config.snacks')"; 
       }
 
       # show keymaps
@@ -212,7 +212,7 @@
     initLua = ''
       require('options')
       require('lsp')
-      require('completion')
+      require('config.completion')
       require('diagnostics')
     '';
   };
