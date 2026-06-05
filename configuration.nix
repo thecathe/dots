@@ -59,6 +59,7 @@
     automatic = true;
     dates = "*-*-* 21:00:00";
     options = "--delete-older-than 7d";
+    keep-outputs = true;
   };
 
   networking.hostName = "nixos"; # Define your hostname.
