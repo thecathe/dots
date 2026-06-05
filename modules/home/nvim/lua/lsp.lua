@@ -1,7 +1,7 @@
 -- Exposed as _G globals so language modules (merged in via lib.mkAfter)
 -- can reference them without requiring a separate Lua module.
 
-_G.lsp_on_attach = function(_, bufnr)
+_G.lsp_on_attach = function(client, bufnr)
   local o = { buffer = bufnr, silent = true }
   vim.keymap.set('n', 'gd',         vim.lsp.buf.definition,        o)
   vim.keymap.set('n', 'gD',         vim.lsp.buf.declaration,       o)
