@@ -9,6 +9,7 @@
     "nvim/lua/options.lua".source = ./lua/options.lua;
     "nvim/lua/lsp.lua".source = ./lua/lsp.lua;
     "nvim/lua/completion.lua".source = ./lua/completion.lua;
+    "nvim/lua/diagnostics.lua".source = ./lua/diagnostics.lua;
     "nvim/lua/snacks.lua".source = ./lua/snacks.lua;
  };
 
@@ -209,125 +210,10 @@
     ];
 
     initLua = ''
-      -- ── Options ───────────────────────────────────────────────────────────
-      local opt = vim.opt
-      opt.number         = true
-      opt.relativenumber = true
-      opt.tabstop        = 2
-      opt.shiftwidth     = 2
-      opt.expandtab      = true
-      opt.termguicolors  = true
-      opt.signcolumn     = 'yes'   -- always show, prevents layout shifts
-      opt.updatetime     = 250     -- faster CursorHold (used by LSP hover)
-      opt.splitright     = true
-      opt.splitbelow     = true
-      opt.undofile       = true    -- persistent undo across sessions
-
-      vim.cmd.colorscheme('gruvbox')
-
-      -- ── Shared LSP utilities ──────────────────────────────────────────────
-      -- Exposed as _G globals so language modules (merged in via lib.mkAfter)
-      -- can reference them without requiring a separate Lua module.
-
-      _G.lsp_on_attach = function(_, bufnr)
-        local o = { buffer = bufnr, silent = true }
-        vim.keymap.set('n', 'gd',         vim.lsp.buf.definition,        o)
-        vim.keymap.set('n', 'gD',         vim.lsp.buf.declaration,       o)
-        vim.keymap.set('n', 'gr',         vim.lsp.buf.references,        o)
-        vim.keymap.set('n', 'gi',         vim.lsp.buf.implementation,    o)
-        vim.keymap.set('n', 'K',          vim.lsp.buf.hover,             o)
-        vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename,            o)
-        vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action,       o)
-        vim.keymap.set('n', '[d',         vim.diagnostic.goto_prev,      o)
-        vim.keymap.set('n', ']d',         vim.diagnostic.goto_next,      o)
-        vim.keymap.set('n', '<leader>f',  function()
-          require('conform').format({ bufnr = bufnr })
-        end, vim.tbl_extend('force', o, { desc = 'Format buffer' }))
-      end
-
-      _G.lsp_capabilities = require('cmp_nvim_lsp').default_capabilities()
-
-      -- ── nixd (Nix LSP) — always globally available ──────────────────────
-      require('lspconfig').nixd.setup({
-        on_attach    = lsp_on_attach,
-        capabilities = lsp_capabilities,
-        settings = {
-          nixd = {
-            formatting = { command = { 'alejandra' } },
-            nixpkgs = {
-              -- Lets nixd evaluate nixpkgs for accurate package completions
-              expr = 'import <nixpkgs> { }',
-            },
-            options = {
-              nixos = {
-                expr = '(builtins.getFlake "/home/cathe/dots").nixosConfigurations.mymachine.options',
-              },
-              home_manager = {
-                expr = '(builtins.getFlake "/home/cathe/dots").homeConfigurations.cathe.options',
-              },
-            },
-          },
-        },
-      })
-
-      -- ── Completion ────────────────────────────────────────────────────────
-      local cmp     = require('cmp')
-      local luasnip = require('luasnip')
-
-      cmp.setup({
-        snippet = {
-          expand = function(args) luasnip.lsp_expand(args.body) end,
-        },
-        mapping = cmp.mapping.preset.insert({
-          ['<C-b>']     = cmp.mapping.scroll_docs(-4),
-          ['<C-f>']     = cmp.mapping.scroll_docs(4),
-          ['<C-Space>'] = cmp.mapping.complete(),
-          ['<C-e>']     = cmp.mapping.abort(),
-          -- Tab cycles through completion items and luasnip jump points
-          ['<Tab>'] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_next_item()
-            elseif luasnip.expand_or_jumpable() then
-              luasnip.expand_or_jump()
-            else
-              fallback()
-            end
-          end, { 'i', 's' }),
-          ['<S-Tab>'] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_prev_item()
-            elseif luasnip.jumpable(-1) then
-              luasnip.jump(-1)
-            else
-              fallback()
-            end
-          end, { 'i', 's' }),
-          -- Explicit confirm only; <CR> does not auto-select
-          ['<CR>'] = cmp.mapping.confirm({ select = false }),
-        }),
-        sources = cmp.config.sources({
-          { name = 'nvim_lsp' },
-          { name = 'luasnip' },
-          { name = 'buffer' },
-          { name = 'path' },
-        }),
-      })
-
-      -- Show diagnostic float automatically when cursor pauses
-vim.api.nvim_create_autocmd('CursorHold', {
-  callback = function()
-    vim.diagnostic.open_float(nil, { focus = false, border = 'rounded' })
-  end,
-})
-
--- Configure how diagnostics are displayed
-vim.diagnostic.config({
-  virtual_text  = { prefix = '●', severity = { min = vim.diagnostic.severity.WARN } },
-  signs         = true,
-  underline     = true,
-  severity_sort = true,
-  float         = { border = 'rounded', source = true },
-})
+      require('options')
+      require('lsp')
+      require('completion')
+      require('diagnostics')
     '';
   };
 }
