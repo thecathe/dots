@@ -59,8 +59,9 @@
     automatic = true;
     dates = "*-*-* 21:00:00";
     options = "--delete-older-than 7d";
-};
-nix.settings = { keep-outputs = true;
+  };
+  nix.settings = {
+    keep-outputs = true;
   };
 
   networking.hostName = "nixos"; # Define your hostname.
@@ -95,7 +96,10 @@ nix.settings = { keep-outputs = true;
   services.udisks2.enable = true;
 
   # Enable OpenGL
-  hardware.graphics.enable = true;
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
 
   hardware.nvidia = {
     videoAcceleration = true;
