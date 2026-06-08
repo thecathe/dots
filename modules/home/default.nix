@@ -10,6 +10,6 @@
     # ./stylix
     ./shell
     ./firefox
-    ./hyprland
+    # ./hyprland
   ];
 }
