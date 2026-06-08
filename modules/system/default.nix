@@ -4,6 +4,7 @@
   imports = [
     ./wm
     ./thumbnails
+    ./torrent
     ./git.nix
     ./zsh.nix
     ./direnv.nix
