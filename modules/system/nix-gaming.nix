@@ -26,17 +26,18 @@
       mangohud
       protonup-ng
     ];
-  # environment.sessionVariables = {
-  # STEAM_EXTRA_COMPAT_TOOLS_PATHS = "/home/cathe/.steam/root/compatibilitytools.d";
-  # };
+  environment.sessionVariables = {
+    STEAM_EXTRA_COMPAT_TOOLS_PATHS = "/home/cathe/.steam/root/compatibilitytools.d";
+    STEAM_FORCE_DESKTOPUI_SCALING = "1";
+  };
   # https://mynixos.com/options/programs.steam
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
     platformOptimizations.enable = true;
-    # gamescopeSession.enable = true;
-    # extraCompatPackages = [ pkgs.proton-ge-bin ];
+    gamescopeSession.enable = true;
+    extraCompatPackages = [ pkgs.proton-ge-bin ];
   };
   programs.gamemode.enable = true;
   services.pipewire = {
@@ -56,4 +57,7 @@
 
   # make pipewire realtime-capable
   security.rtkit.enable = true;
+  xdg.portal = {
+    enable = true;
+  };
 }
