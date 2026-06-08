@@ -133,10 +133,10 @@ args@{
     libappimage
 
     # for battlenet: https://wiki.nixos.org/wiki/Battle.net
-    (wineWow64Packages.full.override {
-      wineRelease = "staging";
-      mingwSupport = true;
-    })
+    # (wineWow64Packages.full.override {
+    #   wineRelease = "staging";
+    #   mingwSupport = true;
+    # })
     winetricks
 
     wine64
