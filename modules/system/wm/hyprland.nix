@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
   # https://mynixos.com/options/programs.hyprland
@@ -25,4 +25,7 @@
     xwayland.enable = true;
     # TODO:
   };
+
+  xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-hyprland ];
+
 }

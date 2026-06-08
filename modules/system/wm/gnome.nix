@@ -7,6 +7,8 @@
   # Enable touchpad support (enabled default in most desktopManager).
   services.libinput.enable = true;
 
+  xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-gnome ];
+
   services.gnome.core-apps.enable = true;
   environment.gnome.excludePackages = with pkgs; [
     gnome-weather
