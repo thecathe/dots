@@ -29,6 +29,7 @@
   environment.sessionVariables = {
     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "/home/cathe/.steam/root/compatibilitytools.d";
     STEAM_FORCE_DESKTOPUI_SCALING = "1";
+    STEAM_FORCE_PIPEWIRE_CAPTURE = "1";
   };
   # https://mynixos.com/options/programs.steam
   programs.steam = {
@@ -38,6 +39,7 @@
     platformOptimizations.enable = true;
     gamescopeSession.enable = true;
     extraCompatPackages = [ pkgs.proton-ge-bin ];
+    protontricks.enable = true;
   };
   programs.gamemode.enable = true;
   services.pipewire = {
