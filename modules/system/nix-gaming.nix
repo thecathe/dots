@@ -43,10 +43,9 @@
     protontricks.enable = true;
   };
   home-manager.users.cathe = {
-    ## make steam launch with -pipewire cl arg
     xdg.desktopEntries.steam = {
       name = "Steam";
-      exec = "steam -pipewire %U";
+      exec = "steam %U";
       icon = "steam";
       terminal = false;
       categories = [
