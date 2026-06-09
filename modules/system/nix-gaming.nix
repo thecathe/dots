@@ -42,21 +42,23 @@
     extraCompatPackages = [ pkgs.proton-ge-bin ];
     protontricks.enable = true;
   };
-  ## make steam launch with -pipewire cl arg
-  xdg.desktopEntries.steam = {
-    name = "Steam";
-    exec = "steam -pipewire %U";
-    icon = "steam";
-    terminal = false;
-    categories = [
-      "Network"
-      "FileTransfer"
-      "Game"
-    ];
-    mimeType = [
-      "x-scheme-handler/steam"
-      "x-scheme-handler/steamlink"
-    ];
+  home-manager.users.cathe = {
+    ## make steam launch with -pipewire cl arg
+    xdg.desktopEntries.steam = {
+      name = "Steam";
+      exec = "steam -pipewire %U";
+      icon = "steam";
+      terminal = false;
+      categories = [
+        "Network"
+        "FileTransfer"
+        "Game"
+      ];
+      mimeType = [
+        "x-scheme-handler/steam"
+        "x-scheme-handler/steamlink"
+      ];
+    };
   };
   programs.gamemode.enable = true;
   services.pipewire = {
