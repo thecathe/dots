@@ -30,6 +30,7 @@
     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "/home/cathe/.steam/root/compatibilitytools.d";
     STEAM_FORCE_DESKTOPUI_SCALING = "1";
     STEAM_FORCE_PIPEWIRE_CAPTURE = "1";
+    __EGL_VENDOR_LIBRARY_DIRS = "/run/opengl-driver/share/glvnd/egl_vendor.d";
   };
   # https://mynixos.com/options/programs.steam
   programs.steam = {
@@ -40,6 +41,22 @@
     gamescopeSession.enable = true;
     extraCompatPackages = [ pkgs.proton-ge-bin ];
     protontricks.enable = true;
+  };
+  ## make steam launch with -pipewire cl arg
+  xdg.desktopEntries.steam = {
+    name = "Steam";
+    exec = "steam -pipewire %U";
+    icon = "steam";
+    terminal = false;
+    categories = [
+      "Network"
+      "FileTransfer"
+      "Game"
+    ];
+    mimeType = [
+      "x-scheme-handler/steam"
+      "x-scheme-handler/steamlink"
+    ];
   };
   programs.gamemode.enable = true;
   services.pipewire = {
@@ -59,7 +76,4 @@
 
   # make pipewire realtime-capable
   security.rtkit.enable = true;
-  # xdg.portal = {
-  #   enable = true;
-  # };
 }
