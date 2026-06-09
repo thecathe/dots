@@ -59,7 +59,7 @@
 
   # make pipewire realtime-capable
   security.rtkit.enable = true;
-  xdg.portal = {
-    enable = true;
-  };
+  # xdg.portal = {
+  #   enable = true;
+  # };
 }

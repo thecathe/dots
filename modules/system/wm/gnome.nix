@@ -7,7 +7,18 @@
   # Enable touchpad support (enabled default in most desktopManager).
   services.libinput.enable = true;
 
-  xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-gnome ];
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [ xdg-desktop-portal-gnome ];
+    config = {
+      gnome = {
+        default = [ "gnome" ];
+        "org.freedesktop.impl.portal.ScreenCast" = [ "gnome" ];
+        "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
+        "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+      };
+    };
+  };
 
   services.gnome.core-apps.enable = true;
   environment.gnome.excludePackages = with pkgs; [

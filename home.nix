@@ -260,13 +260,13 @@ args@{
     };
   };
 
-  xdg.portal = {
-    enable = true;
-    extraPortals = with pkgs; [
-      xdg-desktop-portal-gtk
-    ];
-    config.common.default = "*";
-  };
+  # xdg.portal = {
+  #   enable = true;
+  #   # extraPortals = with pkgs; [
+  #   #   xdg-desktop-portal-gtk
+  #   # ];
+  #   # config.common.default = "*";
+  # };
 
   fonts.fontconfig.enable = true;
 
