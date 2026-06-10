@@ -27,7 +27,7 @@
       mangohud
       protonup-ng
       lutris
-      wineWowPackages.staging
+      wineWow64Packages.staging
       winetricks
       vulkan-tools
       protonup-qt
