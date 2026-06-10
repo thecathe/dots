@@ -49,10 +49,12 @@
     device = "/dev/disk/by-uuid/6EDA6CCADA6C905F";
     fsType = "ntfs-3g";
     options = [
-      # "rw"
+      "rw"
       "uid=1000"
-      # "nofail"
-      # "x-systemd.mount-timeout=180"
+      "gid=1000"
+      "umask=000"
+      "nofail"
+      "x-systemd.mount-timeout=180"
     ];
   };
 
@@ -60,10 +62,12 @@
     device = "/dev/disk/by-uuid/BE685FF8685FADC1";
     fsType = "ntfs-3g";
     options = [
-      # "rw"
+      "rw"
       "uid=1000"
-      # "nofail"
-      # "x-systemd.mount-timeout=180"
+      "gid=1000"
+      "umask=000"
+      "nofail"
+      "x-systemd.mount-timeout=180"
     ];
   };
 
