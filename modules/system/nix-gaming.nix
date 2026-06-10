@@ -25,7 +25,16 @@
       mo2installer
       mangohud
       protonup-ng
+      lutris
+      wineWowPackages.staging
+      winetricks
+      vulkan-tools
+      protonup-qt
     ];
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
   environment.sessionVariables = {
     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "/home/cathe/.steam/root/compatibilitytools.d";
     STEAM_FORCE_DESKTOPUI_SCALING = "1";
