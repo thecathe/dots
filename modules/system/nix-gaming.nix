@@ -40,6 +40,10 @@
     STEAM_FORCE_DESKTOPUI_SCALING = "1";
     STEAM_FORCE_PIPEWIRE_CAPTURE = "1";
     __EGL_VENDOR_LIBRARY_DIRS = "/run/opengl-driver/share/glvnd/egl_vendor.d";
+    GBM_BACKEND = "nvidia-drm";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    LIBVA_DRIVER_NAME = "nvidia";
+    NVD_BACKEND = "direct";
   };
   # https://mynixos.com/options/programs.steam
   programs.steam = {
@@ -48,7 +52,7 @@
     dedicatedServer.openFirewall = true;
     platformOptimizations.enable = true;
     gamescopeSession.enable = true;
-    extraCompatPackages = [ pkgs.proton-ge-bin ];
+    extraCompatPackages = with pkgs; [ proton-ge-bin ];
     protontricks.enable = true;
   };
   home-manager.users.cathe = {
