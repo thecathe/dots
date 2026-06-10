@@ -228,20 +228,11 @@
     flatpak
     libappimage
 
-    wine64
-    wine64Packages.wayland
-    wine-staging
-    winetricks
-    protonup-qt
-    protontricks
 
     ffmpeg
     vlc
     samba
     avahi
-
-    linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
-    # linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta
 
     ## https://wiki.hypr.land/Useful-Utilities/Must-have/
     # swaynotificationcenter

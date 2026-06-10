@@ -72,7 +72,6 @@ args@{
     # '')
 
     wget
-    linuxKernel.packages.linux_zen.nvidia_x11_vulkan_beta_open
 
     fzf
 
@@ -111,10 +110,10 @@ args@{
     # swaylock
     # waylock
 
-    qt6.qtmultimedia
-    qt6.qt5compat
-    qt6.qtwebsockets
-    gtk3
+#    qt6.qtmultimedia
+#    qt6.qt5compat
+#    qt6.qtwebsockets
+#    gtk3
 
     ## https://github.com/ilyamiro/nixos-configuration/blob/master/home.nix
     adwaita-icon-theme
@@ -137,10 +136,6 @@ args@{
     #   wineRelease = "staging";
     #   mingwSupport = true;
     # })
-    winetricks
-
-    wine64
-    protontricks
 
     ffmpeg
     obs-studio
