@@ -6,7 +6,7 @@
     targets = {
       firefox.profileNames = [ "cathe" ];
       kitty.enable = true;
-      starship.enable = true;
+      starship.enable = false;
       neovim.enable = true;
       qt.enable = false; # disable for gnome
       ## gnome-shell.enable = false;
