@@ -38,6 +38,8 @@
     # inputs.nixpkgs.follows = "nixpkgs";
   };
 
+  boot.kernel.sysctl."fs.inotify.max_user_watches" = 524288;
+
   # Bootloader
   boot.loader.systemd-boot = {
     enable = true;
