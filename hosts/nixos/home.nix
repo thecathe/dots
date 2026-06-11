@@ -14,7 +14,7 @@ args@{
 # in
 {
   imports = [
-    ./modules/home
+    ../../modules/home
   ];
 
   # args.inputs.stylix.enable = true;
