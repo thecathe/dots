@@ -13,6 +13,5 @@
     ./nautilus.nix
     ./docker.nix
     ./network-sharing.nix
-    ./nix-gaming.nix
   ];
 }
