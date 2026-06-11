@@ -270,9 +270,4 @@ args@{
   #  programs.steam.enable = true;
 
   # Neovim
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    coc.enable = true;
-  };
 }
