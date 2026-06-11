@@ -10,7 +10,6 @@
     "nvim/lua/lsp.lua".source = ./lua/lsp.lua;
     "nvim/lua/diagnostics.lua".source = ./lua/diagnostics.lua;
     "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
-    "nvim/lua/config/possession.lua".source = ./lua/config/possession.lua;
     "nvim/lua/config/blink-cmp.lua".source = ./lua/config/blink-cmp.lua;
  };
 
@@ -61,13 +60,6 @@
 
       # ── LSP ─────────────────────────────────────────────────────────────
       nvim-lspconfig
-
-      # sessions
-      {
-        plugin = possession;
-        type = "lua";
-        config = "require('config.possession')";
-      }
 
       # ── Completion ──────────────────────────────────────────────────────
      {
