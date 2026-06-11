@@ -22,6 +22,10 @@
  
   nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
+  # Allow unfree packages
+  nixpkgs.config.allowUnfree = true;
+
+
   users.users.cathe = {
     isNormalUser = true;
     description = "cathe";
