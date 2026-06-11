@@ -5,7 +5,7 @@
     enableZshIntegration = true;
     presets = [
       "nerd-font-symbols"
-      "gruvbox-rainbow"
+#      "gruvbox-rainbow"
       # "catppuccin-powerline"
     ];
     settings = {
