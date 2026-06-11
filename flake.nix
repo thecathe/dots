@@ -52,7 +52,7 @@
            useUserPackages = true;
             extraSpecialArgs = {inherit inputs;};
             sharedModules = [
-              inputs.stylix.homeManager.stylix
+              inputs.stylix.homeManagerModules.stylix
             ];
             users.cathe = import ./hosts/nixos/home.nix;
             };
