@@ -10,5 +10,19 @@
       qt.enable = false; # disable for gnome
     };
     base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-dark-hard.yaml";
+    fonts = {
+      monospace = {
+        package = with pkgs; nerd-fonts.fira-code;
+        name = "FiraCode Nerd Font Mono";
+      };
+    sansSerif = {
+      package = pkgs.dejavu_fonts;
+      name = "DejaVu Sans";
+    };
+    serif = {
+      package = pkgs.dejavu_fonts;
+      name = "DejaVu Serif";
+    };
+    };
   };
 }
