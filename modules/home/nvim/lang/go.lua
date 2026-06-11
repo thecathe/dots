@@ -34,7 +34,9 @@ callback = function()
       end
     end
   end
-  vim.lsp.buf.format({async = false})
+  --  vim.lsp.buf.format({async = false})
 end
 })
+
+require('conform').formatters_by_ft.go = { 'goimports' }
 
