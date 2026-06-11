@@ -5,8 +5,8 @@
     # ../../modules/home/hyprland
   ];
 
-  home.username = "NEW_HOST";
-  home.homeDirectory = "/home/NEW_HOST";
+  home.username = "jjp38";
+  home.homeDirectory = "/home/jjp38";
   home.stateVersion = "25.11";
 
   home.sessionPath = [ "$HOME/dots/bin" ];
