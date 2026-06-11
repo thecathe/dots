@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ./wm
     ./thumbnails
     ./torrent
     ./git.nix
