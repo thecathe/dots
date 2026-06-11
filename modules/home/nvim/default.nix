@@ -38,6 +38,17 @@
       # ── Dependencies ────────────────────────────────────────────────────
       # plenary-nvim # lua library
 
+      {
+        plugin = gruvbox-nvim;
+        type = "lua";
+        config = ''
+          require("gruvbox").setup({
+            contrast = "hard", -- or "soft", depending on your taste
+          })
+          vim.cmd("colorscheme gruvbox")
+        '';
+      }
+
       # ── Snacks (replaces telescope; add before other plugins) ────────────
       {
         plugin = snacks-nvim;
