@@ -32,7 +32,7 @@
       ...
     }@inputs:
     {
-
+      ###### nixos machine
       nixosConfigurations.nixos = inputs.nixpkgs.lib.nixosSystem {
         specialArgs = { inherit inputs; };
         modules = [
@@ -42,18 +42,27 @@
               "flakes"
             ];
           }
-          ./configuration.nix
+          ./hosts/nixos
 
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.users.cathe = import ./home.nix;
+            home-manager.extraSpecialArgs = {inherit inputs;};
+            home-manager.users.cathe = import ./hosts/nixos/home.nix;
           }
 
         ];
       };
 
+      ###### worklaptop (ubuntu)
+      homeConfigurations."cathe@worklaptop" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        extraSpecialArgs = {inherit inputs;};
+        modules = [./hosts/worklaptop/home.nix ];
+      };
+
+      ###### project templates
       templates = {
         ocaml = {
           path = ./templates/ocaml;
