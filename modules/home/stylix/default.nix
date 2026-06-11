@@ -1,4 +1,4 @@
-args@{ pkgs, inputs, ... }:
+{ pkgs, ... }:
 {
   inputs.stylix = {
     enable = true;
