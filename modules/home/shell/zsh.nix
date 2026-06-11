@@ -56,7 +56,7 @@
       "vscode"
       "web-search" # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/web-search
     ];
-    theme = "agnoster";
+#    theme = "agnoster";
     # custom = "/home/cathe/dots/.config/home-manager/zsh/custom/";
   };
 }
