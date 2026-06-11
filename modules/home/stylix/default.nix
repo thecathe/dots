@@ -13,8 +13,10 @@
     base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-dark-hard.yaml";
     fonts = {
       monospace = {
-        package = with pkgs; nerd-fonts.fira-code;
-        name = "FiraCode Nerd Font Mono";
+        package = pkgs.nerd-fonts.jetbrains-mono;
+        name = "JetBrainsMono Nerd Font Mono";
+#        package = pkgs.nerd-fonts.fira-code;
+#        name = "FiraCode Nerd Font Mono";
       };
     sansSerif = {
       package = pkgs.dejavu_fonts;
