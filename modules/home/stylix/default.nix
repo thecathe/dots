@@ -1,8 +1,10 @@
 { pkgs, ... }:
 {
-  inputs.stylix = {
+  stylix = {
     enable = true;
+    autoEnable = true;
     targets = {
+      firefox.profileNames = [ "cathe" ];
       kitty.enable = true;
       neovim.enable = true;
     };
