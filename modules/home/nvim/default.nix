@@ -62,11 +62,17 @@
       nvim-lspconfig
 
       # ── Completion ──────────────────────────────────────────────────────
-     {
-  plugin = blink-cmp;
-  type   = "lua";
-  config = "require('config.blink-cmp')";
-}
+      {
+        plugin = blink-cmp;
+        type   = "lua";
+        config = "require('config.blink-cmp')";
+      }
+      {
+        plugin = blink-emoji-nvim;
+        type = "lua";
+#        config = 
+      }
+  
 
       # ── Treesitter ──────────────────────────────────────────────────────
       # Add grammars here as you add languages. LaTeX is omitted because
