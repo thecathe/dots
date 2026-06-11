@@ -59,10 +59,14 @@
           path = ./templates/ocaml;
           description = "OCaml project with opam, dune and direnv";
         };
-        # erlang = {
-        #   path = ./templates/erlang;
-        #   description = "Erlang/OTP project with rebar3 and direnv";
-        # };
+        erlang = {
+          path = ./templates/erlang;
+          description = "Erlang/OTP project with rebar3 and direnv";
+        };
+        go = {
+          path = ./templates/go;
+          description = "Go project with gopls, gotools and direnv";
+        };
       };
 
     };
