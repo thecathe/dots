@@ -47,10 +47,15 @@
 
           home-manager.nixosModules.home-manager
           {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = {inherit inputs;};
-            home-manager.users.cathe = import ./hosts/nixos/home.nix;
+            home-manager = {
+              useGlobalPkgs = true;
+           useUserPackages = true;
+            extraSpecialArgs = {inherit inputs;};
+            sharedModules = [
+              inputs.stylix.homeManager.stylix
+            ];
+            users.cathe = import ./hosts/nixos/home.nix;
+            };
           }
 
         ];
