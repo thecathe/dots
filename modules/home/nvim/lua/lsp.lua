@@ -29,7 +29,7 @@ _G.lsp_on_attach = function(client, bufnr)
   end
 end
 
-_G.lsp_capabilities = require('blink.cmp').default_capabilities()
+_G.lsp_capabilities = require('blink.cmp').get_lsp_capabilities()
 
 -- ── nixd (Nix LSP) — always globally available ──────────────────────
 vim.lsp.config('nixd', {
