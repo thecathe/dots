@@ -13,7 +13,11 @@ cmp.setup({
     -- Tab cycles through completion items and luasnip jump points
     ['<Tab>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
-        cmp.select_next_item()
+        if cmp.get_selected_entry() then 
+          cmp.confirm({ select = false}) -- confirm selection
+        else
+          cmp.select_next_item() -- otherwise move down
+        end
       elseif luasnip.expand_or_jumpable() then
         luasnip.expand_or_jump()
       else
