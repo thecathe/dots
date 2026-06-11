@@ -1,6 +1,6 @@
 args@{ pkgs, inputs, ... }:
 {
-  stylix = {
+  inputs.stylix = {
     enable = true;
     targets = {
       kitty.enable = true;
