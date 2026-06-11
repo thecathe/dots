@@ -19,7 +19,7 @@ args@{
 
   # args.inputs.stylix.enable = true;
 
-  inputs.stylix = {
+  stylix = {
      enable = true;
   #   # targets = {
   #   #   kitty.enable = true;
