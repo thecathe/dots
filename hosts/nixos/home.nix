@@ -1,4 +1,4 @@
-args@{
+{
   config,
   pkgs,
   inputs,
@@ -19,7 +19,7 @@ args@{
 
   # args.inputs.stylix.enable = true;
 
-  stylix = {
+  inputs.stylix = {
      enable = true;
   #   # targets = {
   #   #   kitty.enable = true;
