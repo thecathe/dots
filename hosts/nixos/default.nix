@@ -22,10 +22,12 @@
   
   stylix = {
     enable = true;
-    #targets = {
-    #  kitty.enable = true;
-    #  neovim.enable = true;
-    #};
+    autoEnable = true;
+    targets = {
+      firefox.profileNames = [ "cathe" ];
+#      kitty.enable = true;
+      neovim.enable = true;
+    };
     base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-dark-hard.yaml";
   };
 
