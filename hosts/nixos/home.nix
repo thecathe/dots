@@ -1,7 +1,7 @@
 args@{
   config,
   pkgs,
-  # inputs,
+  inputs,
   ...
 }:
 

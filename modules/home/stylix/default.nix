@@ -1,7 +1,4 @@
 args@{ pkgs, inputs, ... }:
-let
-  stylix = args.inputs.stylix;
-in
 {
   stylix = {
     enable = true;
