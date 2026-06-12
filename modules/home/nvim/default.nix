@@ -8,6 +8,7 @@
     "nvim/lua/lsp.lua".source = ./lua/lsp.lua;
     "nvim/lua/diagnostics.lua".source = ./lua/diagnostics.lua;
     "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
+    "nvim/lua/config/conform.lua".source = ./lua/config/conform.lua;
     "nvim/lua/config/bufferline.lua".source = ./lua/config/bufferline.lua;
     "nvim/lua/config/blink-cmp.lua".source = ./lua/config/blink-cmp.lua;
   };
@@ -160,14 +161,7 @@
       {
         plugin = conform-nvim;
         type = "lua";
-        config = ''
-          require('conform').setup({
-            format_on_save = {
-              timeout_ms   = 500,
-              lsp_fallback = true,
-            },
-          })
-        '';
+        config = "require('config.conform')";
       }
 
       # ── Fuzzy Finding ───────────────────────────────────────────────────
