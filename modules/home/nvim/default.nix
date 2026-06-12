@@ -231,7 +231,7 @@
       # Uncomment one and add the colorscheme call in initLua below.
       # catppuccin-nvim
       # tokyonight-nvim
-      gruvbox-nvim
+#      gruvbox-nvim
     ];
 
     initLua = ''
