@@ -51,6 +51,7 @@ on_attach    = lsp_on_attach,
   },
 })
 vim.lsp.enable('nixd')
+require('conform').formatters_by_ft.nix = { 'alejandra' }
 
 -- notice fresh files
 vim.lsp.config('*', {
