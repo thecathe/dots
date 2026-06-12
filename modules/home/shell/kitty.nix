@@ -9,9 +9,9 @@
       confirm_os_window_close = 0;
       # allow_remote_control = "yes";
       ##
-#      dynamic_background_opacity = true;
-#      background_opacity = "0.8";
-#      background_blur = 50;
+      dynamic_background_opacity = true;
+      background_opacity = "0.9";
+      background_blur = 5;
       ## 
       enable_audio_bell = false;
       ##
