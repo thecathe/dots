@@ -15,3 +15,8 @@ opt.undofile       = true    -- persistent undo across sessions
 
 vim.keymap.set('n', '<leader>w+', '5<C-w>>', { desc = 'Widen window' })
 vim.keymap.set('n', '<leader>w-', '5<C-w><', { desc = 'Narrow window' })
+
+-- format 
+vim.keymap.set('n', '<leader>f', function()
+  require('conform').format({ async = true })
+end, { desc = 'Format buffer' })

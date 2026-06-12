@@ -12,9 +12,6 @@ _G.lsp_on_attach = function(client, bufnr)
   vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action,       o)
   vim.keymap.set('n', '[d',         vim.diagnostic.goto_prev,      o)
   vim.keymap.set('n', ']d',         vim.diagnostic.goto_next,      o)
-  vim.keymap.set('n', '<leader>f',  function()
-    require('conform').format({ bufnr = bufnr })
-  end, vim.tbl_extend('force', o, { desc = 'Format buffer' }))
   vim.keymap.set('i', '<C-k>', vim.lsp.buf.signature_help, { buffer = bufnr, desc = 'Signature help' })
   -- Enable inlay hints if the server supports them
   if client:supports_method('textDocument/inlayHint') then
