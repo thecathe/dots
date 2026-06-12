@@ -96,11 +96,7 @@
         type = "lua";
         config = "require('config.blink-cmp')";
       }
-      {
-        plugin = blink-emoji-nvim;
-        type = "lua";
-        #        config =
-      }
+      blink-emoji-nvim
 
       # ── Treesitter ──────────────────────────────────────────────────────
       # Add grammars here as you add languages. LaTeX is omitted because
