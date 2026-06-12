@@ -25,13 +25,18 @@
     # project devShells so direnv can put the right version on PATH.
     extraPackages = with pkgs; [
       git
+      ### nix
       nix
-      # nil # Nix LSP
       nixd
-      # nixfmt
       alejandra
       nix-search-cli
       nix-index
+      ### latex
+      # texlab
+      # tectonic
+      # zathura ## pdf viewer
+      ### lua formatter
+      stylua
     ];
 
     plugins = with pkgs.vimPlugins; [
