@@ -6,9 +6,7 @@
   lib,
   modulesPath,
   ...
-}:
-
-{
+}: {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
@@ -21,10 +19,10 @@
     "usb_storage"
     "sd_mod"
   ];
-  boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-amd" ];
-  boot.extraModulePackages = [ ];
-  boot.supportedFilesystems = [ "ntfs" ];
+  boot.initrd.kernelModules = [];
+  boot.kernelModules = ["kvm-amd"];
+  boot.extraModulePackages = [];
+  boot.supportedFilesystems = ["ntfs"];
 
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/80acd108-6382-4fef-b428-d834a8027c94";
@@ -41,7 +39,7 @@
   };
 
   swapDevices = [
-    { device = "/dev/disk/by-uuid/759794c7-2c5b-4b95-b400-41243154961e"; }
+    {device = "/dev/disk/by-uuid/759794c7-2c5b-4b95-b400-41243154961e";}
   ];
 
   fileSystems."/mnt/data" = {

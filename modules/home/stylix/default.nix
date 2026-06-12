@@ -1,11 +1,10 @@
-{ pkgs, ... }:
-{
+{pkgs, ...}: {
   stylix = {
     enable = true;
     autoEnable = true;
     polarity = "dark";
     targets = {
-      firefox.profileNames = [ "cathe" ];
+      firefox.profileNames = ["cathe"];
       kitty.enable = true;
       starship.enable = false;
       neovim.enable = false;
@@ -15,7 +14,6 @@
       gtk.enable = false;
       ## gnome-shell.enable = false;
     };
-    
 
     base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-dark-hard.yaml";
 
@@ -42,17 +40,17 @@
       monospace = {
         package = pkgs.nerd-fonts.jetbrains-mono;
         name = "JetBrainsMono Nerd Font Mono";
-#        package = pkgs.nerd-fonts.fira-code;
-#        name = "FiraCode Nerd Font Mono";
+        #        package = pkgs.nerd-fonts.fira-code;
+        #        name = "FiraCode Nerd Font Mono";
       };
-    sansSerif = {
-      package = pkgs.cantarell-fonts;
-      name = "Cantarell";
-    };
-    serif = {
-      package = pkgs.dejavu_fonts;
-      name = "DejaVu Serif";
-    };
+      sansSerif = {
+        package = pkgs.cantarell-fonts;
+        name = "Cantarell";
+      };
+      serif = {
+        package = pkgs.dejavu_fonts;
+        name = "DejaVu Serif";
+      };
     };
   };
 }

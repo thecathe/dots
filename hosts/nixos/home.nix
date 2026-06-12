@@ -3,26 +3,17 @@
   pkgs,
   inputs,
   ...
-}:
-
-# let
-#   thenixuser = import /home/cathe/dots/user.nix { };
-#   # thehyprland = import (thenixuser.home + "/dots/nixos/programs/hyprland.nix") { };
-# in
-# let
-#   stylix = args.inputs.stylix;
-# in
-{
+}: {
   imports = [
     ../../modules/home
   ];
-    
+
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
   home.username = "cathe";
   home.homeDirectory = "/home/cathe";
 
-  home.sessionPath = [ "$HOME/dots/bin" ];
+  home.sessionPath = ["$HOME/dots/bin"];
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -36,23 +27,6 @@
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = with pkgs; [
-    # # Adds the 'hello' command to your environment. It prints a friendly
-    # # "Hello, world!" when run.
-    # pkgs.hello
-
-    # # It is sometimes useful to fine-tune packages, for example, by applying
-    # # overrides. You can do that directly here, just don't forget the
-    # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
-    # # fonts?
-    # (pkgs.nerdfonts.override { fonts = [ "FantasqueSansMono" ]; })
-
-    # # You can also create simple shell scripts directly inside your
-    # # configuration. For example, this adds a command 'my-hello' to your
-    # # environment:
-    # (pkgs.writeShellScriptBin "my-hello" ''
-    #   echo "Hello, ${config.home.username}!"
-    # '')
-
     wget
 
     fzf
@@ -66,8 +40,6 @@
     powerline-go
     powerline-fonts
     powerline-symbols
-
-    # neovim
 
     tmux
     abduco
@@ -92,10 +64,10 @@
     # swaylock
     # waylock
 
-#    qt6.qtmultimedia
-#    qt6.qt5compat
-#    qt6.qtwebsockets
-#    gtk3
+    #    qt6.qtmultimedia
+    #    qt6.qt5compat
+    #    qt6.qtwebsockets
+    #    gtk3
 
     ## https://github.com/ilyamiro/nixos-configuration/blob/master/home.nix
     adwaita-icon-theme
@@ -196,27 +168,26 @@
 
   # set cursor
   ## https://github.com/ilyamiro/nixos-configuration/blob/master/home.nix
-  home.pointerCursor =
-    let
-      getFrom = url: hash: name: {
-        gtk.enable = true;
-        x11.enable = true;
-        name = name;
-        size = 24;
-        package = pkgs.runCommand "moveUp" { } ''
-          mkdir -p $out/share/icons
-          ln -s ${
-            pkgs.fetchzip {
-              url = url;
-              hash = hash;
-            }
-          }/dist $out/share/icons/${name}
-        '';
-      };
-    in
+  home.pointerCursor = let
+    getFrom = url: hash: name: {
+      gtk.enable = true;
+      x11.enable = true;
+      name = name;
+      size = 24;
+      package = pkgs.runCommand "moveUp" {} ''
+        mkdir -p $out/share/icons
+        ln -s ${
+          pkgs.fetchzip {
+            url = url;
+            hash = hash;
+          }
+        }/dist $out/share/icons/${name}
+      '';
+    };
+  in
     getFrom "https://github.com/yeyushengfan258/ArcMidnight-Cursors/archive/refs/heads/main.zip"
-      "sha256-VgOpt0rukW0+rSkLFoF9O0xO/qgwieAchAev1vjaqPE="
-      "ArcMidnight-Cursors";
+    "sha256-VgOpt0rukW0+rSkLFoF9O0xO/qgwieAchAev1vjaqPE="
+    "ArcMidnight-Cursors";
 
   # services.easyeffects.enable = true;
 

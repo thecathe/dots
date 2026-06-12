@@ -1,16 +1,13 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
 {
   config,
   lib,
   pkgs,
   inputs,
   ...
-}:
-
-{
+}: {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -19,12 +16,10 @@
     ../../modules/nixos
   ];
 
- 
-  nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+  nix.nixPath = ["nixpkgs=${inputs.nixpkgs}"];
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-
 
   users.users.cathe = {
     isNormalUser = true;
@@ -52,15 +47,14 @@
   };
   boot.loader.efi.canTouchEfiVariables = true;
   # boot.supportedFilesystems = [ "ntfs" ];
-  fileSystems =
-    let
-      ntfs-drives = [
-        "/mnt/data"
-        "/mnt/archive"
-      ];
-    in
+  fileSystems = let
+    ntfs-drives = [
+      "/mnt/data"
+      "/mnt/archive"
+    ];
+  in
     lib.genAttrs ntfs-drives (path: {
-      options = [ "uid=1000" ];
+      options = ["uid=1000"];
     });
 
   # Garbage Collection
@@ -206,7 +200,7 @@
     enableZshIntegration = true;
   };
   programs.command-not-found.enable = false;
-  
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -234,7 +228,6 @@
     flatpak
     libappimage
 
-
     ffmpeg
     vlc
     samba
@@ -251,7 +244,6 @@
     gdk-pixbuf
 
     # teams-for-linux
-
   ];
   # programs.direnv.enable = true;
 
@@ -301,3 +293,4 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
+

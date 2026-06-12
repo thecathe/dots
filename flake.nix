@@ -1,5 +1,4 @@
 {
-
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     # home-manager, used for managing user configuration
@@ -22,68 +21,63 @@
     };
   };
 
-  outputs =
-    {
-      self,
-      nixpkgs,
-      home-manager,
-      nix-gaming,
-      stylix,
-      ...
-    }@inputs:
-    {
-      ###### nixos machine
-      nixosConfigurations.nixos = inputs.nixpkgs.lib.nixosSystem {
-        specialArgs = { inherit inputs; };
-        modules = [
-          {
-            nix.settings.experimental-features = [
-              "nix-command"
-              "flakes"
-            ];
-          }
-          ./hosts/nixos
-          inputs.stylix.nixosModules.stylix
+  outputs = {
+    self,
+    nixpkgs,
+    home-manager,
+    nix-gaming,
+    stylix,
+    ...
+  } @ inputs: {
+    ###### nixos machine
+    nixosConfigurations.nixos = inputs.nixpkgs.lib.nixosSystem {
+      specialArgs = {inherit inputs;};
+      modules = [
+        {
+          nix.settings.experimental-features = [
+            "nix-command"
+            "flakes"
+          ];
+        }
+        ./hosts/nixos
+        inputs.stylix.nixosModules.stylix
 
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-           useUserPackages = true;
+        home-manager.nixosModules.home-manager
+        {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
             extraSpecialArgs = {inherit inputs;};
             sharedModules = [
               inputs.stylix.homeModules.stylix
             ];
             users.cathe = import ./hosts/nixos/home.nix;
-            };
-          }
-
-        ];
-      };
-
-      ###### worklaptop (ubuntu)
-      homeConfigurations."cathe@worklaptop" = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux;
-        extraSpecialArgs = {inherit inputs;};
-        modules = [./hosts/worklaptop/home.nix ];
-      };
-
-      ###### project templates
-      templates = {
-        ocaml = {
-          path = ./templates/ocaml;
-          description = "OCaml project with opam, dune and direnv";
-        };
-        erlang = {
-          path = ./templates/erlang;
-          description = "Erlang/OTP project with rebar3 and direnv";
-        };
-        go = {
-          path = ./templates/go;
-          description = "Go project with gopls, gotools and direnv";
-        };
-      };
-
+          };
+        }
+      ];
     };
 
+    ###### worklaptop (ubuntu)
+    homeConfigurations."cathe@worklaptop" = home-manager.lib.homeManagerConfiguration {
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      extraSpecialArgs = {inherit inputs;};
+      modules = [./hosts/worklaptop/home.nix];
+    };
+
+    ###### project templates
+    templates = {
+      ocaml = {
+        path = ./templates/ocaml;
+        description = "OCaml project with opam, dune and direnv";
+      };
+      erlang = {
+        path = ./templates/erlang;
+        description = "Erlang/OTP project with rebar3 and direnv";
+      };
+      go = {
+        path = ./templates/go;
+        description = "Go project with gopls, gotools and direnv";
+      };
+    };
+  };
 }
