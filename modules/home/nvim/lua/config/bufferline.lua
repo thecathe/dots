@@ -1,9 +1,18 @@
 require("bufferline").setup({
 	options = {
 		mode = "buffers",
-		separator_style = "thin",
+		separator_style = "slant",
+		indicator = { style = "underline" },
+		diagnostics = "nvim_lsp",
 		always_show_bufferline = true,
+		hover = { enabled = true, delay = 200, reveal = { "close" } },
+		themable = true,
 		show_close_icon = false,
+		show_buffer_icons = true,
+		color_icons = true,
+		--    show_buffer_close_icons = true,
+		show_duplicate_prefix = true,
+		move_wraps_at_ends = true,
 		persist_buffer_sort = true,
 		close_command = function(bufnr)
 			Snacks.bufdelete(bufnr)
@@ -13,8 +22,8 @@ require("bufferline").setup({
 		end,
 		offsets = {
 			{
-				filetype = "snacks_explorer",
-				text = "explorer",
+				filetype = "snacks_layout_box",
+				text = "Explorer",
 				separator = true,
 				text_align = "center",
 			},

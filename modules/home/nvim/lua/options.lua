@@ -11,6 +11,7 @@ opt.updatetime     = 250     -- faster CursorHold (used by LSP hover)
 opt.splitright     = true
 opt.splitbelow     = true
 opt.undofile       = true    -- persistent undo across sessions
+opt.mousemoveevent = true
 
 --vim.cmd.colorscheme('gruvbox')
 
