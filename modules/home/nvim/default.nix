@@ -7,10 +7,11 @@
     "nvim/lua/options.lua".source = ./lua/options.lua;
     "nvim/lua/lsp.lua".source = ./lua/lsp.lua;
     "nvim/lua/diagnostics.lua".source = ./lua/diagnostics.lua;
-    "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
     "nvim/lua/config/conform.lua".source = ./lua/config/conform.lua;
     "nvim/lua/config/bufferline.lua".source = ./lua/config/bufferline.lua;
     "nvim/lua/config/blink-cmp.lua".source = ./lua/config/blink-cmp.lua;
+    "nvim/lua/config/resession.lua".source = ./lua/config/resession.lua;
+    "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
   };
 
   programs.neovim = {
@@ -76,6 +77,13 @@
 
       # ── LSP ─────────────────────────────────────────────────────────────
       nvim-lspconfig
+
+      ## sessions
+      {
+        plugin = resession-nvim;
+        type = "lua";
+        config = "require('config.resession')";
+      }
 
       # ── Completion ──────────────────────────────────────────────────────
       {
