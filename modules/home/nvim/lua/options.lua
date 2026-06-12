@@ -1,9 +1,10 @@
 local opt = vim.opt
 opt.number         = true
 opt.relativenumber = true
-opt.tabstop        = 2
-opt.shiftwidth     = 2
-opt.expandtab      = true
+opt.tabstop        = 2     -- tab size
+opt.shiftwidth     = 2     -- indentation size
+opt.smarttab       = true  -- tab snaps to next indent
+opt.expandtab      = true  -- replace tab with spaces
 opt.termguicolors  = true
 opt.signcolumn     = 'yes'   -- always show, prevents layout shifts
 opt.updatetime     = 250     -- faster CursorHold (used by LSP hover)
