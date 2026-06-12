@@ -1,6 +1,4 @@
-{ pkgs,... }:
-
-{
+{pkgs, ...}: {
   imports = [
     ./lang
   ];
@@ -12,7 +10,7 @@
     "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
     "nvim/lua/config/bufferline.lua".source = ./lua/config/bufferline.lua;
     "nvim/lua/config/blink-cmp.lua".source = ./lua/config/blink-cmp.lua;
- };
+  };
 
   programs.neovim = {
     enable = true;
@@ -35,7 +33,6 @@
     ];
 
     plugins = with pkgs.vimPlugins; [
-
       # ── Dependencies ────────────────────────────────────────────────────
       # plenary-nvim # lua library
 
@@ -54,7 +51,7 @@
       {
         plugin = snacks-nvim;
         type = "lua";
-        config = "require('config.snacks')"; 
+        config = "require('config.snacks')";
       }
 
       # show keymaps
@@ -74,7 +71,7 @@
         config = "require('config.bufferline')";
       }
 
-      {plugin =direnv-vim;}
+      {plugin = direnv-vim;}
 
       # ── LSP ─────────────────────────────────────────────────────────────
       nvim-lspconfig
@@ -82,70 +79,70 @@
       # ── Completion ──────────────────────────────────────────────────────
       {
         plugin = blink-cmp;
-        type   = "lua";
+        type = "lua";
         config = "require('config.blink-cmp')";
       }
       {
         plugin = blink-emoji-nvim;
         type = "lua";
-#        config = 
+        #        config =
       }
-  
 
       # ── Treesitter ──────────────────────────────────────────────────────
       # Add grammars here as you add languages. LaTeX is omitted because
       # vimtex (in latex.nix) handles highlighting better for that filetype.
       {
         plugin = nvim-treesitter.withPlugins (
-          p: with p; [
-            tree-sitter-nix
-            tree-sitter-lua
-            #
-            tree-sitter-ocaml
-            tree-sitter-ocaml-interface
-            tree-sitter-erlang
-            tree-sitter-markdown
-            tree-sitter-markdown-inline
-            tree-sitter-go
-            tree-sitter-python
-            tree-sitter-sql
-            # tree-sitter-haskell
-            # tree-sitter-java
-            # tree-sitter-rust
-            # tree-sitter-menhir
-            #
-            tree-sitter-ini
-            tree-sitter-toml
-            tree-sitter-yaml
-            tree-sitter-xml
-            tree-sitter-csv
-            tree-sitter-regex
-            #
-            tree-sitter-gitignore
-            tree-sitter-dockerfile
-            #
-            tree-sitter-kitty
-            tree-sitter-zsh
-            tree-sitter-tmux
-            #
-            tree-sitter-bash
-            tree-sitter-make
-            #
-            tree-sitter-html
-            tree-sitter-javascript
-            tree-sitter-css
-            # tree-sitter-php
-            tree-sitter-json
-            #
-            tree-sitter-typescript
-            tree-sitter-json5
-            #
-            tree-sitter-latex
-            tree-sitter-bibtex
-            #
-            # tree-sitter-julia
-            # tree-sitter-arduino
-          ]
+          p:
+            with p; [
+              tree-sitter-nix
+              tree-sitter-lua
+              #
+              tree-sitter-ocaml
+              tree-sitter-ocaml-interface
+              tree-sitter-erlang
+              tree-sitter-markdown
+              tree-sitter-markdown-inline
+              tree-sitter-go
+              tree-sitter-python
+              tree-sitter-sql
+              # tree-sitter-haskell
+              # tree-sitter-java
+              # tree-sitter-rust
+              # tree-sitter-menhir
+              #
+              tree-sitter-ini
+              tree-sitter-toml
+              tree-sitter-yaml
+              tree-sitter-xml
+              tree-sitter-csv
+              tree-sitter-regex
+              #
+              tree-sitter-gitignore
+              tree-sitter-dockerfile
+              #
+              tree-sitter-kitty
+              tree-sitter-zsh
+              tree-sitter-tmux
+              #
+              tree-sitter-bash
+              tree-sitter-make
+              #
+              tree-sitter-html
+              tree-sitter-javascript
+              tree-sitter-css
+              # tree-sitter-php
+              tree-sitter-json
+              #
+              tree-sitter-typescript
+              tree-sitter-json5
+              #
+              tree-sitter-latex
+              tree-sitter-bibtex
+              #
+              # tree-sitter-julia
+              # tree-sitter-arduino
+            ]
         );
         type = "lua";
         config = ''
@@ -220,18 +217,18 @@
       }
 
       {
-  plugin = smear-cursor-nvim;
-  type   = "lua";
-  config = ''
-    require('smear_cursor').setup()
-  '';
-}
+        plugin = smear-cursor-nvim;
+        type = "lua";
+        config = ''
+          require('smear_cursor').setup()
+        '';
+      }
 
       # ── Colourscheme ─────────────────────────────────────────────────────
       # Uncomment one and add the colorscheme call in initLua below.
       # catppuccin-nvim
       # tokyonight-nvim
-#      gruvbox-nvim
+      #      gruvbox-nvim
     ];
 
     initLua = ''
