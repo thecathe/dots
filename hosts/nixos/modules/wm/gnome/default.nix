@@ -3,10 +3,7 @@
 qt.platformTheme.name = "adwaita";
 
   # Enable the GNOME Desktop Environment.
-  services.displayManager.gdm = {
-    enable = true;
-    wayland = false; ### force to use x11
-  };
+  services.displayManager.gdm.enable = true;
   services.desktopManager.gnome.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
