@@ -3,12 +3,16 @@
   stylix = {
     enable = true;
     autoEnable = true;
+    polarity = "dark";
     targets = {
       firefox.profileNames = [ "cathe" ];
       kitty.enable = true;
       starship.enable = false;
       neovim.enable = false;
-      qt.enable = false; # disable for gnome
+      ## disable for gnome
+      qt.enable = false;
+      gnome.enable = false;
+      gtk.enable = false;
       ## gnome-shell.enable = false;
     };
     
