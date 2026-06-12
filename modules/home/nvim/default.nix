@@ -10,6 +10,7 @@
     "nvim/lua/lsp.lua".source = ./lua/lsp.lua;
     "nvim/lua/diagnostics.lua".source = ./lua/diagnostics.lua;
     "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
+    "nvim/lua/config/bufferline.lua".source = ./lua/config/bufferline.lua;
     "nvim/lua/config/blink-cmp.lua".source = ./lua/config/blink-cmp.lua;
  };
 
@@ -66,6 +67,12 @@
       }
 
       gitignore-nvim # git ignore
+
+      {
+        plugin = bufferline-nvim;
+        type = "lua";
+        config = "require('config.bufferline')";
+      }
 
       {plugin =direnv-vim;}
 
