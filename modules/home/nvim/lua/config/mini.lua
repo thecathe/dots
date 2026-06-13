@@ -1,3 +1,6 @@
+require("mini.icons").setup()
+MiniIcons.mock_nvim_web_devicons()
+
 require("mini.pairs").setup()
 
 require("mini.surround").setup({
@@ -54,9 +57,6 @@ require("mini.starter").setup({
 		end,
 	},
 })
-
-require("mini.icons").setup()
-MiniIcons.mock_nvim_web_devicons()
 
 -- move lines/selections with Alt+hjkl
 require("mini.move").setup({
