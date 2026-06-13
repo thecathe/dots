@@ -42,27 +42,14 @@
 
     plugins = with pkgs.vimPlugins; [
       # ── Dependencies ────────────────────────────────────────────────────
-      # plenary-nvim # lua library
-
-      {
-        plugin = gruvbox-nvim;
-        type = "lua";
-        config = ''
-          require("gruvbox").setup({
-            contrast = "hard", -- or "soft", depending on your taste
-          })
-          vim.cmd("colorscheme gruvbox")
-        '';
-      }
+     
 
       {
         plugin = mini-nvim;
         type = "lua";
-        config = "require('config.mini')'";
+        config = "require('config.mini')";
       }
-
-      # ── Snacks (replaces telescope; add before other plugins) ────────────
-      {
+ {
         plugin = snacks-nvim;
         type = "lua";
         config = "require('config.snacks')";
@@ -79,7 +66,20 @@
 
       gitignore-nvim # git ignore
 
+
+
+
       {
+        plugin = gruvbox-nvim;
+        type = "lua";
+        config = ''
+          require("gruvbox").setup({
+            contrast = "hard", -- or "soft", depending on your taste
+          })
+          vim.cmd("colorscheme gruvbox")
+        '';
+      }
+           {
         plugin = bufferline-nvim;
         type = "lua";
         config = "require('config.bufferline')";
