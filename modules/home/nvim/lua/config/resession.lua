@@ -1,29 +1,32 @@
+-- patch resession to support absolute paths for dir
+local function patch_resession()
+	local util = require("resession.util")
+	local original = util.get_session_dir
+	util.get_session_dir = function(dirname)
+		if dirname and dirname:sub(1, 1) == "/" then
+			return dirname -- treat as absolute, bypass stdpath prepending
+		end
+		return original(dirname)
+	end
+end
+
+require("resession").setup({
+	autosave = { enabled = false },
+})
+
+patch_resession()
+
 local utils = require("utils")
 
 local function get_session_dir()
 	return utils.get_session_dir()
-end
+end -- only used by SSave
 
--- only used by SSave
 local function ensure_session_dir()
 	local dir = get_session_dir()
 	vim.fn.mkdir(dir, "p")
 	return dir
 end
-
--- returns { dir = ... } when in a git repo, {} otherwise (falls back to resession default)
-local function session_opts()
-	local dir = get_project_dir()
-	return dir and { dir = dir } or {}
-end
-
-require("resession").setup({
-	autosave = {
-		enabled = false,
-		interval = 60,
-		notify = true,
-	},
-})
 
 vim.api.nvim_create_user_command("SSave", function(opts)
 	local dir = ensure_session_dir() -- creates /.nvim if needed
