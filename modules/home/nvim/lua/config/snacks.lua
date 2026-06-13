@@ -16,6 +16,7 @@ require("snacks").setup({
 	words = { enabled = true }, -- highlight word under cursor
 	quickfile = { enabled = true }, -- faster file loading
 	bigfile = { enabled = true }, -- disable heavy features on large files
+  dashboard = { enabled = false },
 })
 
 -- Picker (replaces the telescope keymaps you had)

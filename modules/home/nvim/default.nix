@@ -42,14 +42,13 @@
 
     plugins = with pkgs.vimPlugins; [
       # ── Dependencies ────────────────────────────────────────────────────
-     
 
       {
         plugin = mini-nvim;
         type = "lua";
         config = "require('config.mini')";
       }
- {
+      {
         plugin = snacks-nvim;
         type = "lua";
         config = "require('config.snacks')";
@@ -64,11 +63,6 @@
         '';
       }
 
-      gitignore-nvim # git ignore
-
-
-
-
       {
         plugin = gruvbox-nvim;
         type = "lua";
@@ -79,13 +73,14 @@
           vim.cmd("colorscheme gruvbox")
         '';
       }
-           {
+      {
         plugin = bufferline-nvim;
         type = "lua";
         config = "require('config.bufferline')";
       }
 
       direnv-vim
+      vim-gitgutter
 
       # ── LSP ─────────────────────────────────────────────────────────────
       nvim-lspconfig
