@@ -33,11 +33,11 @@ vim.api.nvim_create_user_command("SSave", function(opts)
 end, { nargs = "?" })
 
 vim.api.nvim_create_user_command("SLoad", function(opts)
-	require("resession").load(opts.args ~= "" and opts.args or nil, { dir = get_project_dir() })
+	require("resession").load(opts.args ~= "" and opts.args or nil, { dir = get_session_dir() })
 end, { nargs = "?" })
 
 vim.api.nvim_create_user_command("SDelete", function(opts)
-	require("resession").delete(opts.args ~= "" and opts.args or nil, { dir = get_project_dir() })
+	require("resession").delete(opts.args ~= "" and opts.args or nil, { dir = get_session_dir() })
 end, { nargs = "?" })
 
 -- VimEnter fallback
