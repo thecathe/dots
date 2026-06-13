@@ -6,6 +6,7 @@ require("snacks").setup({
 				layout = { preset = "sidebar", preview = false, layout = { width = 25, position = "left" } },
 				watch = true,
 				auto_close = true,
+				hidden = true,
 			},
 		},
 	}, -- replaces telescope
