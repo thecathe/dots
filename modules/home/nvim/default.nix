@@ -56,7 +56,7 @@
       }
 
       {
-        plugin = mini;
+        plugin = mini-nvim;
         type = "lua";
         config = "require('config.mini')'";
       }
