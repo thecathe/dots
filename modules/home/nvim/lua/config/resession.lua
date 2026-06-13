@@ -1,9 +1,7 @@
+local utils = require("utils")
+
 local function get_session_dir()
-	local result = vim.fn.systemlist("git rev-parse --show-toplevel 2>/dev/null")
-	if vim.v.shell_error == 0 and result[1] then
-		return result[1] .. "/.nvim"
-	end
-	return vim.fn.getcwd() .. "/.nvim"
+	return utils.get_session_dir()
 end
 
 -- only used by SSave

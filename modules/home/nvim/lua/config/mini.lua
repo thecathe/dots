@@ -1,3 +1,9 @@
+local utils = require("utils")
+
+local function get_session_dir()
+	return utils.get_session_dir()
+end
+
 require("mini.icons").setup()
 MiniIcons.mock_nvim_web_devicons()
 
@@ -22,7 +28,7 @@ require("mini.starter").setup({
 	end,
 	items = {
 		function()
-			local dir = get_session_dir()
+			local dir = utils.get_session_dir()
 			if vim.fn.isdirectory(dir) == 0 then
 				return {}
 			end

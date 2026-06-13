@@ -13,7 +13,7 @@
     "nvim/lua/config/resession.lua".source = ./lua/config/resession.lua;
     "nvim/lua/config/mini.lua".source = ./lua/config/mini.lua;
     "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
-    "nvim/lua/config/treesitter.lua".source = ./lua/config/treesitter.lua;
+    # "nvim/lua/config/treesitter.lua".source = ./lua/config/treesitter.lua;
   };
 
   programs.neovim = {
@@ -118,7 +118,8 @@
             ]
         );
         type = "lua";
-        config = "require('config.treesitter')";
+        # config = "require('config.treesitter')";
+        config = "require('nvim-treesitter').setup()";
       }
       # nvim-treesitter-textobjects
 

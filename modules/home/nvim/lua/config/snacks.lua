@@ -9,14 +9,14 @@ require("snacks").setup({
 			},
 		},
 	}, -- replaces telescope
-	explorer = { enabled = true, trash = true, replace_netrw = true, }, -- sidebar file tree
+	explorer = { enabled = true, trash = true }, -- sidebar file tree
 	terminal = { enabled = true }, -- toggleable terminal
 	notifier = { enabled = true }, -- replaces vim.notify
 	indent = { enabled = true }, -- indent guides
 	words = { enabled = true }, -- highlight word under cursor
 	quickfile = { enabled = true }, -- faster file loading
 	bigfile = { enabled = true }, -- disable heavy features on large files
-  dashboard = { enabled = false },
+	dashboard = { enabled = false },
 })
 
 -- Picker (replaces the telescope keymaps you had)
