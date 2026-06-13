@@ -13,6 +13,7 @@
     "nvim/lua/config/resession.lua".source = ./lua/config/resession.lua;
     "nvim/lua/config/mini.lua".source = ./lua/config/mini.lua;
     "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
+    "nvim/lua/config/treesitter.lua".source = ./lua/config/treesitter.lua;
   };
 
   programs.neovim = {
@@ -63,46 +64,6 @@
         '';
       }
 
-      {
-        plugin = gruvbox-nvim;
-        type = "lua";
-        config = ''
-          require("gruvbox").setup({
-            contrast = "hard", -- or "soft", depending on your taste
-          })
-          vim.cmd("colorscheme gruvbox")
-        '';
-      }
-      {
-        plugin = bufferline-nvim;
-        type = "lua";
-        config = "require('config.bufferline')";
-      }
-
-      direnv-vim
-      vim-gitgutter
-
-      # ── LSP ─────────────────────────────────────────────────────────────
-      nvim-lspconfig
-
-      ## sessions
-      {
-        plugin = resession-nvim;
-        type = "lua";
-        config = "require('config.resession')";
-      }
-
-      # ── Completion ──────────────────────────────────────────────────────
-      {
-        plugin = blink-cmp;
-        type = "lua";
-        config = "require('config.blink-cmp')";
-      }
-      blink-emoji-nvim
-
-      # ── Treesitter ──────────────────────────────────────────────────────
-      # Add grammars here as you add languages. LaTeX is omitted because
-      # vimtex (in latex.nix) handles highlighting better for that filetype.
       {
         plugin = nvim-treesitter.withPlugins (
           p:
@@ -157,14 +118,46 @@
             ]
         );
         type = "lua";
+        config = "require('config.treesitter')";
+      }
+      # nvim-treesitter-textobjects
+
+      {
+        plugin = gruvbox-nvim;
+        type = "lua";
         config = ''
-          require('nvim-treesitter.configs').setup({
-            highlight = { enable = true },
-            indent    = { enable = true },
+          require("gruvbox").setup({
+            contrast = "hard", -- or "soft", depending on your taste
           })
+          vim.cmd("colorscheme gruvbox")
         '';
       }
-      nvim-treesitter-textobjects
+      {
+        plugin = bufferline-nvim;
+        type = "lua";
+        config = "require('config.bufferline')";
+      }
+
+      direnv-vim
+      vim-gitgutter
+
+      # ── LSP ─────────────────────────────────────────────────────────────
+      nvim-lspconfig
+
+      ## sessions
+      {
+        plugin = resession-nvim;
+        type = "lua";
+        config = "require('config.resession')";
+      }
+
+      # ── Completion ──────────────────────────────────────────────────────
+      {
+        plugin = blink-cmp;
+        type = "lua";
+        config = "require('config.blink-cmp')";
+      }
+      blink-emoji-nvim
 
       # ── Formatting ──────────────────────────────────────────────────────
       # Language modules register their formatters via:

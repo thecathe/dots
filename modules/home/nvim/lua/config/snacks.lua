@@ -5,11 +5,11 @@ require("snacks").setup({
 			explorer = {
 				layout = { preset = "sidebar", preview = false, layout = { width = 25, position = "left" } },
 				watch = true,
-				auto_close = false,
+				auto_close = true,
 			},
 		},
 	}, -- replaces telescope
-	explorer = { enabled = true }, -- sidebar file tree
+	explorer = { enabled = true, trash = true, replace_netrw = true, }, -- sidebar file tree
 	terminal = { enabled = true }, -- toggleable terminal
 	notifier = { enabled = true }, -- replaces vim.notify
 	indent = { enabled = true }, -- indent guides
