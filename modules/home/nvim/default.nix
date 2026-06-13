@@ -11,6 +11,7 @@
     "nvim/lua/config/bufferline.lua".source = ./lua/config/bufferline.lua;
     "nvim/lua/config/blink-cmp.lua".source = ./lua/config/blink-cmp.lua;
     "nvim/lua/config/resession.lua".source = ./lua/config/resession.lua;
+    "nvim/lua/config/mini.lua".source = ./lua/config/mini.lua;
     "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
   };
 
@@ -54,6 +55,12 @@
         '';
       }
 
+      {
+        plugin = mini;
+        type = "lua";
+        config = "require('config.mini')'";
+      }
+
       # ── Snacks (replaces telescope; add before other plugins) ────────────
       {
         plugin = snacks-nvim;
@@ -78,7 +85,7 @@
         config = "require('config.bufferline')";
       }
 
-      {plugin = direnv-vim;}
+      direnv-vim
 
       # ── LSP ─────────────────────────────────────────────────────────────
       nvim-lspconfig
@@ -162,6 +169,7 @@
           })
         '';
       }
+      nvim-treesitter-textobjects
 
       # ── Formatting ──────────────────────────────────────────────────────
       # Language modules register their formatters via:
@@ -171,32 +179,6 @@
         plugin = conform-nvim;
         type = "lua";
         config = "require('config.conform')";
-      }
-
-      # ── Fuzzy Finding ───────────────────────────────────────────────────
-      # {
-      #   plugin = telescope-nvim;
-      #   type = "lua";
-      #   config = ''
-      #     local telescope = require('telescope')
-      #     local builtin   = require('telescope.builtin')
-      #     telescope.setup({})
-      #     vim.keymap.set('n', '<leader>ff', builtin.find_files,   { desc = 'Find files' })
-      #     vim.keymap.set('n', '<leader>fg', builtin.live_grep,    { desc = 'Live grep' })
-      #     vim.keymap.set('n', '<leader>fb', builtin.buffers,      { desc = 'Find buffers' })
-      #     vim.keymap.set('n', '<leader>fd', builtin.diagnostics,  { desc = 'Diagnostics' })
-      #     vim.keymap.set('n', '<leader>fr', builtin.lsp_references, { desc = 'LSP references' })
-      #   '';
-      # }
-
-      # ── File Navigation ─────────────────────────────────────────────────
-      {
-        plugin = oil-nvim;
-        type = "lua";
-        config = ''
-          require('oil').setup({ default_file_explorer = true })
-          vim.keymap.set('n', '-', '<cmd>Oil<cr>', { desc = 'Open parent directory' })
-        '';
       }
 
       # ── Project-local overrides (.neoconf.json) ─────────────────────────
