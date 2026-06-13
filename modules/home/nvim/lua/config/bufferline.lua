@@ -10,8 +10,7 @@ require("bufferline").setup({
 		show_close_icon = false,
 		show_buffer_icons = true,
 		color_icons = true,
-		--    show_buffer_close_icons = true,
-    truncate_names = true,
+		truncate_names = true,
 		show_duplicate_prefix = true,
 		max_prefix_length = 8,
 		move_wraps_at_ends = true,
@@ -25,7 +24,7 @@ require("bufferline").setup({
 		offsets = {
 			{
 				filetype = "snacks_layout_box",
-				text = "Explorer",
+				text = vim.fn.trim(vim.fn.system("basename $(eval git rev-parse --show-toplevel 2>/dev/null)")),
 				separator = true,
 				text_align = "center",
 			},

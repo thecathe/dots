@@ -5,7 +5,7 @@ require("snacks").setup({
 			explorer = {
 				layout = { preset = "sidebar", preview = false, layout = { width = 25, position = "left" } },
 				watch = true,
-				auto_close = true,
+				auto_close = false,
 				hidden = true,
 			},
 		},

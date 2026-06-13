@@ -43,8 +43,24 @@
     ];
 
     plugins = with pkgs.vimPlugins; [
-      # ── Dependencies ────────────────────────────────────────────────────
+      #### basics
+      direnv-vim
+      vim-gitgutter
+      nvim-lspconfig
 
+      #### theme
+      {
+        plugin = gruvbox-nvim;
+        type = "lua";
+        config = ''
+          require("gruvbox").setup({
+            contrast = "hard", -- or "soft", depending on your taste
+          })
+          vim.cmd("colorscheme gruvbox")
+        '';
+      }
+
+      #### bundles
       {
         plugin = mini-nvim;
         type = "lua";
@@ -56,7 +72,7 @@
         config = "require('config.snacks')";
       }
 
-      # show keymaps
+      #### show keymaps
       {
         plugin = which-key-nvim;
         type = "lua";
@@ -65,6 +81,7 @@
         '';
       }
 
+      #### treesitter
       {
         plugin = nvim-treesitter.withPlugins (
           p:
@@ -119,41 +136,25 @@
             ]
         );
         type = "lua";
-        # config = "require('config.treesitter')";
         config = "require('nvim-treesitter').setup()";
       }
-      # nvim-treesitter-textobjects
+      nvim-treesitter-textobjects
 
-      {
-        plugin = gruvbox-nvim;
-        type = "lua";
-        config = ''
-          require("gruvbox").setup({
-            contrast = "hard", -- or "soft", depending on your taste
-          })
-          vim.cmd("colorscheme gruvbox")
-        '';
-      }
-      {
-        plugin = bufferline-nvim;
-        type = "lua";
-        config = "require('config.bufferline')";
-      }
-
-      direnv-vim
-      vim-gitgutter
-
-      # ── LSP ─────────────────────────────────────────────────────────────
-      nvim-lspconfig
-
-      ## sessions
+      #### sessions
       {
         plugin = resession-nvim;
         type = "lua";
         config = "require('config.resession')";
       }
 
-      # ── Completion ──────────────────────────────────────────────────────
+      #### formatting
+      {
+        plugin = conform-nvim;
+        type = "lua";
+        config = "require('config.conform')";
+      }
+
+      #### completion
       {
         plugin = blink-cmp;
         type = "lua";
@@ -161,15 +162,8 @@
       }
       blink-emoji-nvim
 
-      # ── Formatting ──────────────────────────────────────────────────────
-      # Language modules register their formatters via:
-      #   require('conform').formatters_by_ft.<ft> = { 'tool' }
-      # after this setup() call, using lib.mkAfter in their initLua.
-      {
-        plugin = conform-nvim;
-        type = "lua";
-        config = "require('config.conform')";
-      }
+      #### visual
+      # blink-pairs
 
       # ── Project-local overrides (.neoconf.json) ─────────────────────────
       # Lets you drop a .neoconf.json in a project root to override LSP
@@ -182,7 +176,14 @@
         '';
       }
 
-      # ── Statusline ──────────────────────────────────────────────────────
+      #### bufferline
+      {
+        plugin = bufferline-nvim;
+        type = "lua";
+        config = "require('config.bufferline')";
+      }
+
+      #### bufferline
       {
         plugin = lualine-nvim;
         type = "lua";
@@ -191,6 +192,7 @@
         '';
       }
 
+      #### cursor
       {
         plugin = smear-cursor-nvim;
         type = "lua";
@@ -198,12 +200,6 @@
           require('smear_cursor').setup()
         '';
       }
-
-      # ── Colourscheme ─────────────────────────────────────────────────────
-      # Uncomment one and add the colorscheme call in initLua below.
-      # catppuccin-nvim
-      # tokyonight-nvim
-      #      gruvbox-nvim
     ];
 
     initLua = ''
