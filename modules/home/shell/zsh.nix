@@ -13,6 +13,7 @@
     setOptions = [
       "HIST_IGNORE_DUPS"
       "HIST_IGNORE_ALL_DUPS"
+      "HIST_EXPIRE_DUPS_FIRST"
       "HIST_SAVE_NO_DUPS"
       "HIST_FIND_NO_DUPS"
       "HIST_IGNORE_SPACE"
@@ -49,11 +50,8 @@
     enable = true;
     plugins = [
       "git"
-      "github"
-      "profiles"
+      "gh"
       "themes"
-      "tmux" # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/tmux
-      "vscode"
       "web-search" # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/web-search
     ];
 #    theme = "agnoster";
