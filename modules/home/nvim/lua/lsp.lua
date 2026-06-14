@@ -35,3 +35,5 @@ vim.lsp.config("*", {
 		},
 	},
 })
+-- but make nixd CHILL OUT cos it goes crazy
+vim.lsp.config("nixd", { capabilities = { workspace = { didChangeWatchedFiles = { didChangeWatchedFiles = false } } } })
