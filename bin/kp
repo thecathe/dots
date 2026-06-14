@@ -23,7 +23,7 @@ if [ -n "${KITTY_WINDOW_ID:-}" ]; then
       --type=tab \
       --no-response \
       --tab-title "$(basename "$SUBMODULE")" \
-      --title "nvim $(basename "$SUBMODULE")" \
+      --title "nvim $(basename "$PROJECT_ROOT") $(basename "$SUBMODULE")" \
       --cwd "$PROJECT_ROOT/$SUBMODULE" \
       -- nvim
   done <<< "$SUBMODULES"
