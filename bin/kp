@@ -14,15 +14,19 @@ PROJECT_NAME=$(basename "$PROJECT_ROOT")
 SUBMODULES=$(git submodule foreach --quiet 'echo $displaypath' 2>/dev/null)
 
 if [ -n "${KITTY_WINDOW_ID:-}" ]; then
-  # Inside kitty — open tabs in the current window
-  kitty @ launch --type=tab --tab-title "$PROJECT_NAME" \
-    --cwd "$PROJECT_ROOT" -- nvim
+  ORIG_WINDOW=$KITTY_WINDOW_ID
 
+  # open submodules in new tabs
   while IFS= read -r submodule; do
     [ -z "$submodule" ] && continue
-    kitty @ launch --type=tab --tab-title "$(basename "$submodule")" \
+    kitty @ launch --type=tab --no-response --tab-title "$(basename "$submodule")" \
       --cwd "$PROJECT_ROOT/$submodule" -- nvim
   done <<< "$SUBMODULES"
+
+  # return focus to original tab and run nvim
+  kitty @ --to "$KITTY_LISTEN_ON" focus-window --match "id:$ORIG_WINDOW"
+  cd "$PROJECT_ROOT"
+  exec nvim
 else
   # Outside kitty — open a new window
   {
