@@ -12,6 +12,7 @@ opt.splitright = true
 opt.splitbelow = true
 opt.undofile = true -- persistent undo across sessions
 opt.mousemoveevent = true
+opt.exrc = true -- project-local .nvim.lua config files
 
 -- format
 vim.keymap.set("n", "<leader>f", function()

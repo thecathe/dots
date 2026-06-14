@@ -183,7 +183,7 @@
         config = "require('config.bufferline')";
       }
 
-      #### bufferline
+      #### lualine
       {
         plugin = lualine-nvim;
         type = "lua";

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Run from inside any git repo: kp
+# Opens a kitty window with one tab per git submodule.
+# If no submodules exist, opens a single tab at the project root.
+
+set -euo pipefail
+
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {
+  echo "error: not inside a git repository" >&2
+  exit 1
+}
+
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
+
+generate_session() {
+  # Root tab always first
+  echo "new_tab $PROJECT_NAME"
+  echo "cd $PROJECT_ROOT"
+  echo "launch nvim ."
+
+  # One tab per submodule, named after the submodule directory
+  while IFS= read -r submodule; do
+    [ -z "$submodule" ] && continue
+    printf "\n"
+    echo "new_tab $(basename "$submodule")"
+    echo "cd $PROJECT_ROOT/$submodule"
+    echo "launch nvim ."
+  done < <(git submodule foreach --quiet 'echo $displaypath' 2>/dev/null)
+}
+
+generate_session | kitty --session -
