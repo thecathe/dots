@@ -18,18 +18,20 @@ if [ -n "${KITTY_WINDOW_ID:-}" ]; then
 
   # open submodules in new tabs
   while IFS= read -r submodule; do
-    [ -z "$submodule" ] && continue
+    [ -z "$SUBMODULE" ] && continue
     kitty @ --to "$KITTY_LISTEN_ON" launch \
       --type=tab \
       --no-response \
-      --tab-title "$(basename "$submodule")" \
-      --cwd "$PROJECT_ROOT/$submodule" \
+      --tab-title "$(basename "$SUBMODULE")" \
+      --title "nvim $(basename "$SUBMODULE")" \
+      --cwd "$PROJECT_ROOT/$SUBMODULE" \
       -- nvim
   done <<< "$SUBMODULES"
 
   # return focus to original tab and run nvim
   kitty @ --to "$KITTY_LISTEN_ON" focus-window --match "id:$ORIG_WINDOW"
   kitty @ set-tab-title "$(basename "$PROJECT_ROOT")"
+  kitty @ set-window-title "nvim $(basename "$PROJECT_ROOT")"
   cd "$PROJECT_ROOT"
   exec nvim
 else
