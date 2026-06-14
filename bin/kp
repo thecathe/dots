@@ -29,6 +29,7 @@ if [ -n "${KITTY_WINDOW_ID:-}" ]; then
 
   # return focus to original tab and run nvim
   kitty @ --to "$KITTY_LISTEN_ON" focus-window --match "id:$ORIG_WINDOW"
+  kitty @ set-tab-title "$(basename "$PROJECT_ROOT")"
   cd "$PROJECT_ROOT"
   exec nvim
 else
