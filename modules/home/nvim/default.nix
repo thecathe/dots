@@ -168,6 +168,19 @@
 
       #### visual
       # blink-pairs
+      {
+        plugin = render-markdown-nvim;
+        type = "lua";
+        config = ''
+          require('render-markdown').setup({
+            heading = { enabled = true },
+            code    = { enabled = true },
+            bullet  = { enabled = true },
+            checkbox = { enabled = true },
+            table   = { enabled = true },
+          })
+        '';
+      }
 
       # ── Project-local overrides (.neoconf.json) ─────────────────────────
       # Lets you drop a .neoconf.json in a project root to override LSP
