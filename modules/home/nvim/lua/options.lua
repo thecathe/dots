@@ -30,3 +30,12 @@ vim.keymap.set("i", "<S-Tab>", "<C-d>", { noremap = true })
 -- indent/unindent visual selection
 vim.keymap.set("v", "<Tab>", ">gv", { noremap = true })
 vim.keymap.set("v", "<S-Tab>", "<gv", { noremap = true })
+
+-- lazy git/docker
+vim.keymap.set("n", "<leader>g", function()
+	Snacks.lazygit()
+end, { desc = "Lazygit" })
+
+vim.keymap.set("n", "<leader>d", function()
+	Snacks.lazydocker()
+end, { desc = "Lazydocker" })

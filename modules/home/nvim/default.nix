@@ -45,8 +45,12 @@
     plugins = with pkgs.vimPlugins; [
       #### basics
       direnv-vim
+      vim-fugitive
       vim-gitgutter
       nvim-lspconfig
+
+      lazygit-nvim
+      lazydocker-nvim
 
       #### theme
       {

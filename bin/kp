@@ -11,21 +11,31 @@ PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {
 }
 
 PROJECT_NAME=$(basename "$PROJECT_ROOT")
+SUBMODULES=$(git submodule foreach --quiet 'echo $displaypath' 2>/dev/null)
 
-generate_session() {
-  # Root tab always first
-  echo "new_tab $PROJECT_NAME"
-  echo "cd $PROJECT_ROOT"
-  echo "launch nvim ."
+if [ -n "${KITTY_WINDOW_ID:-}" ]; then
+  # Inside kitty — open tabs in the current window
+  kitty @ launch --type=tab --tab-title "$PROJECT_NAME" \
+    --cwd "$PROJECT_ROOT" -- nvim
 
-  # One tab per submodule, named after the submodule directory
   while IFS= read -r submodule; do
     [ -z "$submodule" ] && continue
-    printf "\n"
-    echo "new_tab $(basename "$submodule")"
-    echo "cd $PROJECT_ROOT/$submodule"
-    echo "launch nvim ."
-  done < <(git submodule foreach --quiet 'echo $displaypath' 2>/dev/null)
-}
+    kitty @ launch --type=tab --tab-title "$(basename "$submodule")" \
+      --cwd "$PROJECT_ROOT/$submodule" -- nvim
+  done <<< "$SUBMODULES"
+else
+  # Outside kitty — open a new window
+  {
+    echo "new_tab $PROJECT_NAME"
+    echo "cd $PROJECT_ROOT"
+    echo "launch nvim"
 
-generate_session | kitty --session -
+    while IFS= read -r submodule; do
+      [ -z "$submodule" ] && continue
+      printf "\n"
+      echo "new_tab $(basename "$submodule")"
+      echo "cd $PROJECT_ROOT/$submodule"
+      echo "launch nvim"
+    done <<< "$SUBMODULES"
+  } | kitty --session -
+fi
