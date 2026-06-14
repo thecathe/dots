@@ -6,6 +6,7 @@
       ##
       confirm_os_window_close = 0;
       allow_remote_control = "yes";
+      listen_on = "unix:/tmp/kitty-{kitty_pid}";
       ##
       dynamic_background_opacity = true;
       background_opacity = "0.9";
