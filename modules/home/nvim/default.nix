@@ -17,6 +17,10 @@
     # "nvim/lua/config/treesitter.lua".source = ./lua/config/treesitter.lua;
   };
 
+  programs.neovide = {
+    enabled = true;
+  };
+
   programs.neovim = {
     enable = true;
     defaultEditor = true;
