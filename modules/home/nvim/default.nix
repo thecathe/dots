@@ -11,14 +11,11 @@
     "nvim/lua/config/conform.lua".source = ./lua/config/conform.lua;
     "nvim/lua/config/bufferline.lua".source = ./lua/config/bufferline.lua;
     "nvim/lua/config/blink-cmp.lua".source = ./lua/config/blink-cmp.lua;
+    "nvim/lua/config/render-markdown.lua".source = ./lua/config/render-markdown.lua;
     "nvim/lua/config/resession.lua".source = ./lua/config/resession.lua;
     "nvim/lua/config/mini.lua".source = ./lua/config/mini.lua;
     "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
     # "nvim/lua/config/treesitter.lua".source = ./lua/config/treesitter.lua;
-  };
-
-  programs.neovide = {
-    enabled = true;
   };
 
   programs.neovim = {
@@ -62,7 +59,7 @@
         type = "lua";
         config = ''
           require("gruvbox").setup({
-            contrast = "hard", -- or "soft", depending on your taste
+            contrast = "hard", -- or "soft"
           })
           vim.cmd("colorscheme gruvbox")
         '';
@@ -175,15 +172,7 @@
       {
         plugin = render-markdown-nvim;
         type = "lua";
-        config = ''
-          require('render-markdown').setup({
-            heading = { enabled = true },
-            code    = { enabled = true },
-            bullet  = { enabled = true },
-            checkbox = { enabled = true },
-            table   = { enabled = true },
-          })
-        '';
+        config = "require('config.render-markdown')";
       }
 
       # ── Project-local overrides (.neoconf.json) ─────────────────────────

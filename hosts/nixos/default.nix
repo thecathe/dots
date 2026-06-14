@@ -225,6 +225,7 @@
     nix-search-cli
     nix-index
 
+    neovide
     flatpak
     libappimage
 

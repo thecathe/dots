@@ -1,6 +1,5 @@
-{ ... }:
-
-{
+{...}: {
+  programs.bash.sessionVariables = {KP_EDITOR = "neovide";};
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -22,14 +21,15 @@
       "HIST_FCNTL_LOCK"
     ];
 
+    sessionVariables = {KP_EDITOR = "neovide";};
     initContent = ''
       export PATH="$HOME/dots/bin:$PATH"
-      ## 
+      ##
       webm2mp4() {
         local input output
         input="$(realpath "$1")"
-        output="$(realpath -, "$2")" 
-        nix-shell -p ffmpeg --run \ 
+        output="$(realpath -, "$2")"
+        nix-shell -p ffmpeg --run \
           "ffmpeg -i '$input' -c:v libx264 -crf 18 -c:a flac '$output'"
       }
     '';
@@ -54,7 +54,7 @@
       "themes"
       "web-search" # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/web-search
     ];
-#    theme = "agnoster";
+    #    theme = "agnoster";
     # custom = "/home/cathe/dots/.config/home-manager/zsh/custom/";
   };
 }

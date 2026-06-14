@@ -5,6 +5,26 @@
 
 set -euo pipefail
 
+# ── Default editor ────────────────────────────────────────────────────────────
+# Set KP_EDITOR=neovide in your shell config to make neovide the default.
+# Override per-invocation with --nvim or --neovide.
+EDITOR_CMD="${KP_EDITOR:-nvim}"
+
+
+
+# ── Flags ─────────────────────────────────────────────────────────────────────
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --neovide|-g) EDITOR_CMD="neovide"; shift ;;
+    --nvim|-n)    EDITOR_CMD="nvim";    shift ;;
+    *)
+      echo "usage: kp [--nvim|-n] [--neovide|-g]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+# ── Project detection ─────────────────────────────────────────────────────────
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {
   echo "error: not inside a git repository" >&2
   exit 1
@@ -13,7 +33,20 @@ PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {
 PROJECT_NAME=$(basename "$PROJECT_ROOT")
 SUBMODULES=$(git submodule foreach --quiet 'echo $displaypath' 2>/dev/null || echo "")
 
-if [ -n "${KITTY_WINDOW_ID:-}" ]; then
+# ── Launch ────────────────────────────────────────────────────────────────────
+if [ "$EDITOR_CMD" = "neovide" ]; then
+  # Neovide is a GUI — each repo gets its own window, all detached from kitty.
+  # Submodule windows open first, root project opens last.
+  while IFS= read -r submodule; do
+    [ -z "$submodule" ] && continue
+    (cd "$PROJECT_ROOT/$submodule" && neovide &)
+  done <<< "$SUBMODULES"
+
+  cd "$PROJECT_ROOT"
+  neovide &
+  disown $!
+
+elif [ -n "${KITTY_WINDOW_ID:-}" ]; then
   ORIG_WINDOW=$KITTY_WINDOW_ID
 
   # open submodules in new tabs

@@ -71,10 +71,10 @@
 
     ## https://github.com/ilyamiro/nixos-configuration/blob/master/home.nix
     adwaita-icon-theme
-    adw-gtk3
 
     pomodoro
     # musicus
+    adw-gtk3
     # musicpod
     # resonance
     # recordbox
