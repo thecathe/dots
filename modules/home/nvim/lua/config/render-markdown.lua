@@ -28,34 +28,49 @@ require("render-markdown").setup({
 -- vim.api.nvim_set_hl(0, "RenderMarkdownH3Bg", { bg = "#1a2d2b" })
 
 local function apply_markdown_highlights()
-	-- Foregrounds: link to gruvbox's named palette groups
-	vim.api.nvim_set_hl(0, "RenderMarkdownH1", { link = "GruvboxRedBold" })
-	vim.api.nvim_set_hl(0, "RenderMarkdownH2", { link = "GruvboxOrangeBold" })
-	vim.api.nvim_set_hl(0, "RenderMarkdownH3", { link = "GruvboxYellowBold" })
-	vim.api.nvim_set_hl(0, "RenderMarkdownH4", { link = "GruvboxGreenBold" })
-	vim.api.nvim_set_hl(0, "RenderMarkdownH5", { link = "GruvboxAquaBold" })
-	vim.api.nvim_set_hl(0, "RenderMarkdownH6", { link = "GruvboxBlueBold" })
+	-- gruvbox bright colours, cascade from warm to cool
+	local fg = {
+		"#fb4934", -- H1: bright red
+		"#fe8019", -- H2: bright orange
+		"#fabd2f", -- H3: bright yellow
+		"#b8bb26", -- H4: bright green
+		"#8ec07c", -- H5: bright aqua
+		"#83a598", -- H6: bright blue
+	}
 
-	-- -- Backgrounds: derive from the fg of each gruvbox group
-	-- local palette = {
-	--   'GruvboxRedBold', 'GruvboxOrangeBold', 'GruvboxYellowBold',
-	--   'GruvboxGreenBold', 'GruvboxAquaBold', 'GruvboxBlueBold',
-	-- }
-	-- for i, source in ipairs(palette) do
-	--   local hl = vim.api.nvim_get_hl(0, { name = source, link = false })
-	--   if hl.fg then
-	--     -- use the gruvbox colour as a very dim background
-	--     vim.api.nvim_set_hl(0, 'RenderMarkdownH' .. i .. 'Bg', {
-	--       bg = string.format('#%06x', hl.fg),
-	--     })
-	--   end
-	-- end
+	local function hex_to_rgb(hex)
+		hex = hex:gsub("#", "")
+		return {
+			r = tonumber(hex:sub(1, 2), 16),
+			g = tonumber(hex:sub(3, 4), 16),
+			b = tonumber(hex:sub(5, 6), 16),
+		}
+	end
 
-	local ok, colors = pcall(require, "gruvbox.palette")
-	if ok then
-		local bg = colors.get_base_colors(vim.o.background, "hard")
-		vim.api.nvim_set_hl(0, "RenderMarkdownH1Bg", { bg = bg.dark1 })
-		-- etc.
+	local function blend(hex1, hex2, t)
+		local c1 = hex_to_rgb(hex1)
+		local c2 = hex_to_rgb(hex2)
+		return string.format(
+			"#%02x%02x%02x",
+			math.floor(c1.r + (c2.r - c1.r) * t + 0.5),
+			math.floor(c1.g + (c2.g - c1.g) * t + 0.5),
+			math.floor(c1.b + (c2.b - c1.b) * t + 0.5)
+		)
+	end
+
+	local bg_top = "#504945" -- gruvbox bg2: most prominent
+	local bg_base = "#1d2021" -- gruvbox bg hard: base background
+
+	for i, color in ipairs(fg) do
+		-- t: 0 at H1 (full bg_top) → 0.9 at H6 (barely above base)
+		local t = (i - 1) / #fg * 0.9
+		vim.api.nvim_set_hl(0, "RenderMarkdownH" .. i, {
+			fg = color,
+			bold = i <= 2,
+		})
+		vim.api.nvim_set_hl(0, "RenderMarkdownH" .. i .. "Bg", {
+			bg = blend(bg_top, bg_base, t),
+		})
 	end
 end
 

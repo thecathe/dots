@@ -24,18 +24,27 @@ require("snacks").setup({
 vim.keymap.set("n", "<leader>ff", function()
 	Snacks.picker.files()
 end, { desc = "Find files" })
+
+vim.keymap.set("n", "<leader>fr", function()
+	Snacks.picker.recent()
+end, { desc = "Recent files" })
+
 vim.keymap.set("n", "<leader>fg", function()
 	Snacks.picker.grep()
 end, { desc = "Grep" })
+
 vim.keymap.set("n", "<leader>fb", function()
 	Snacks.picker.buffers()
 end, { desc = "Buffers" })
+
 vim.keymap.set("n", "<leader>fd", function()
 	Snacks.picker.diagnostics()
 end, { desc = "Diagnostics" })
-vim.keymap.set("n", "<leader>fr", function()
+
+vim.keymap.set("n", "<leader>fR", function()
 	Snacks.picker.lsp_references()
 end, { desc = "LSP references" })
+
 vim.keymap.set("n", "<leader>fs", function()
 	Snacks.picker.lsp_symbols()
 end, { desc = "LSP symbols" })
