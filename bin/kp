@@ -17,7 +17,7 @@ if [ -n "${KITTY_WINDOW_ID:-}" ]; then
   ORIG_WINDOW=$KITTY_WINDOW_ID
 
   # open submodules in new tabs
-  while IFS= read -r submodule; do
+  while IFS= read -r SUBMODULE; do
     [ -z "$SUBMODULE" ] && continue
     kitty @ --to "$KITTY_LISTEN_ON" launch \
       --type=tab \
