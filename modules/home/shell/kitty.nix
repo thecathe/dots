@@ -3,8 +3,8 @@
     enable = true;
     shellIntegration.enableZshIntegration = true;
     keybindings = {
-      "alt+shift+enter" = "kitten split-window --cwd=current --direction=vertical";
-      "alt+enter" = "kitten split-window --cwd=current --direction=horizontal";
+      "alt+shift+enter" = "kitty split-window --cwd=current --direction=vertical";
+      "alt+enter" = "kitty split-window --cwd=current --direction=horizontal";
     };
     settings = {
       ##
