@@ -39,3 +39,9 @@ vim.keymap.set("v", "<S-Tab>", "<gv", { noremap = true })
 -- vim.keymap.set("n", "<leader>d", function()
 -- 	Snacks.lazydocker()
 -- end, { desc = "Lazydocker" })
+
+if vim.g.neovide then
+	vim.g.neovide_cursor_hack = true
+	vim.g.neovide_cursor_animation_length = 0.08
+	vim.g.neovide_scroll_animation_length = 0.2
+end
