@@ -2,10 +2,10 @@
   programs.kitty = lib.mkForce {
     enable = true;
     shellIntegration.enableZshIntegration = true;
-    config = ''
-      map alt+enter kitten split-window --cwd=current --direction=vertical
-      map alt+shift+enter kitten split-window --cwd=current --direction=horizontal
-    '';
+    keybindings = {
+      "alt+enter" = "launch --cwd=current --location=vsplit";
+      "alt+shift+enter" = "launch --cwd=current --location=hsplit";
+    };
     settings = {
       ##
       confirm_os_window_close = 0;
@@ -18,6 +18,7 @@
       ##
       enable_audio_bell = false;
       ##
+      enabled_layouts = "splits";
       #      window_padding_width = 5;
       #      window_border_width = "0.2pt";
       ##

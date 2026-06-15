@@ -70,24 +70,39 @@ if vim.g.neovide then
 	vim.g.neovide_cursor_antialiasing = false
 
 	-- cursor colors
-	local function fix_cursor()
-		vim.api.nvim_set_hl(0, "Cursor", {
-			fg = "#1d2021",
-			bg = "#ebdbb2",
-		}) -- TODO: have both set to #ebdbb2 when on mini-starter
-		-- vim.api.nvim_set_hl(0, "lCursor", {
-		-- 	reverse = true,
-		-- })
+	-- local function update_cursor()
+	-- 	if vim.bo.filetype == "ministarter" then
+	-- 		vim.api.nvim_set_hl(0, "Cursor", { fg = "#ebdbb2", bg = "#ebdbb2" })
+	-- 	else
+	-- 		vim.api.nvim_set_hl(0, "Cursor", { reverse = true })
+	-- 	end
+	-- end
+
+	local current_cursor_mode = nil
+
+	local function update_cursor()
+		local is_starter = vim.bo.filetype == "ministarter"
+		if is_starter == current_cursor_mode then
+			return
+		end
+		current_cursor_mode = is_starter
+
+		if is_starter then
+			vim.api.nvim_set_hl(0, "Cursor", { fg = "#ebdbb2", bg = "#ebdbb2" })
+		else
+			vim.api.nvim_set_hl(0, "Cursor", { reverse = true })
+		end
 	end
-	fix_cursor()
-	-- vim.defer_fn(fix_cursor, 100)
-	vim.api.nvim_create_autocmd("ColorScheme", {
+
+	vim.api.nvim_create_autocmd("BufEnter", {
+		callback = update_cursor,
+	})
+
+	vim.api.nvim_create_autocmd("UIEnter", {
+		once = true,
 		callback = function()
-			fix_cursor()
+			vim.defer_fn(update_cursor, 200)
 		end,
-		-- callback = function()
-		-- 	vim.defer_fn(fix_cursor, 100)
-		-- end,
 	})
 
 	-- title
