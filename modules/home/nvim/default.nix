@@ -207,7 +207,9 @@
         plugin = smear-cursor-nvim;
         type = "lua";
         config = ''
-          require('smear_cursor').setup({enabled=not vim.g.neovide,})
+          if not vim.g.neovide then
+            require('smear_cursor').setup()
+          end
         '';
       }
     ];

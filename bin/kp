@@ -39,7 +39,7 @@ if [ "$EDITOR_CMD" = "neovide" ]; then
   # Submodule windows open first, root project opens last.
   while IFS= read -r submodule; do
     [ -z "$submodule" ] && continue
-    (cd "$PROJECT_ROOT/$submodule" && neovide &)
+    (cd "$PROJECT_ROOT/$submodule" && KP_PARENT="$PROJECT_NAME" neovide &)
   done <<< "$SUBMODULES"
 
   cd "$PROJECT_ROOT"
