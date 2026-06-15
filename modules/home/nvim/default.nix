@@ -17,6 +17,7 @@
     "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
     # "nvim/lua/config/treesitter.lua".source = ./lua/config/treesitter.lua;
   };
+
   programs.neovim = {
     enable = true;
     defaultEditor = true;
@@ -206,7 +207,7 @@
         plugin = smear-cursor-nvim;
         type = "lua";
         config = ''
-          require('smear_cursor').setup()
+          require('smear_cursor').setup({enabled=not vim.g.neovide,})
         '';
       }
     ];
