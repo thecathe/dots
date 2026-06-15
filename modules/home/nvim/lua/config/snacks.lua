@@ -2,7 +2,7 @@ require("snacks").setup({
 	picker = {
 		enabled = true,
 		sources = {
-			files = { exclude = { "**/_build/", "*_build/" } },
+			files = { exclude = { "**/_build/", "**/_build/**", "*/_build/*" } },
 			explorer = {
 				layout = { preset = "sidebar", preview = false, layout = { width = 25, position = "left" } },
 				watch = true,
