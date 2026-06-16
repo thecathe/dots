@@ -1,4 +1,6 @@
 require("render-markdown").setup({
+	file_types = { "markdown", "vimwiki" },
+	render_modes = true,
 	heading = {
 		icons = { "󰬺 ", "󰬻 ", "󰬼 ", "󰬽 ", "󰬾 ", "󰬿 " },
 		width = "full",
@@ -15,6 +17,7 @@ require("render-markdown").setup({
 	bullet = { enabled = true },
 	checkbox = { enabled = true },
 	table = { enabled = true },
+	completions = { lsp = { enabled = true } },
 })
 
 -- vim.api.nvim_set_hl(0, "RenderMarkdownH1", { fg = "#cba6f7", bold = true })
