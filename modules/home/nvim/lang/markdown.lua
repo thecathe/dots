@@ -19,6 +19,9 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.opt_local.shiftwidth = 2
 		vim.opt_local.expandtab = true
 
+		-- conceal just the (url) part, leave [link text] fully visible
+		-- vim.fn.matchadd("Conceal", "\\]\\zs([^)]*)\\ze", 10, -1, { conceal = "" })
+
 		-- follow link
 		vim.keymap.set("n", "gf", function()
 			local line = vim.api.nvim_get_current_line()

@@ -175,6 +175,20 @@
         type = "lua";
         config = "require('config.render-markdown')";
       }
+      # {
+      #   plugin = markview-nvim;
+      #   type = "lua";
+      #   config = ''
+      #     require('markview').setup({
+      #       markdown = {
+      #         headings  = { enable = true },
+      #         code_blocks = { enable = true },
+      #         tables    = { enable = true },
+      #         links     = { enable = true },
+      #       },
+      #     })
+      #   '';
+      # }
 
       # ── Project-local overrides (.neoconf.json) ─────────────────────────
       # Lets you drop a .neoconf.json in a project root to override LSP
