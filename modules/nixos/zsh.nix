@@ -6,10 +6,10 @@
     enableBashCompletion = true;
     autosuggestions.enable = true;
     syntaxHighlighting.enable = true;
-    ohMyZsh = {
-      enable = true;
-      plugins = ["git"];
-    };
+    # ohMyZsh = {
+    #   enable = true;
+    #   plugins = ["git"];
+    # };
   };
   users.defaultUserShell = pkgs.zsh;
   #system.userActivationScripts.zshrc = "touch .zshrc";
