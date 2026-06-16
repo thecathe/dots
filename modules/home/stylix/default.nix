@@ -44,12 +44,12 @@
         #        name = "FiraCode Nerd Font Mono";
       };
       sansSerif = {
-        package = pkgs.cantarell-fonts;
-        name = "Cantarell";
+        package = pkgs.nerd-fonts.ubuntu-sans;
+        name = "UbuntuSans Nerd Font";
       };
       serif = {
-        package = pkgs.dejavu_fonts;
-        name = "DejaVu Serif";
+        package = pkgs.nerd-fonts.ubuntu;
+        name = "Ubuntu Nerd Font";
       };
     };
   };
