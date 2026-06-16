@@ -59,7 +59,7 @@ require("mini.starter").setup({
 					action = "edit " .. path,
 					section = "Recent files",
 				}
-			end, vim.list_slice(oldfiles, 1, 5))
+			end, vim.list_slice(oldfiles, 1, 10))
 		end,
 	},
 })
