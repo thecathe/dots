@@ -170,13 +170,17 @@
 
       #### visual
       # blink-pairs
+
+      #### markdown/wiki/obsidian
+      vimwiki
+      # obsidian-nvim ## incompatible with render-markdown-nvim
       {
         plugin = render-markdown-nvim;
         type = "lua";
         config = "require('config.render-markdown')";
       }
       # {
-      #   plugin = markview-nvim;
+      #   plugin = markview-nvim; ## prefer visuals of render-markdown-nvim
       #   type = "lua";
       #   config = ''
       #     require('markview').setup({
