@@ -35,26 +35,9 @@
     '';
 
     shellAliases = {
-      # update = "sudo nixos-rebuild test";
-      # upgrade = "sudo nixos-rebuild switch";
-      # upboot = "sudo nixos-rebuild boot";
-      # refresh = "home-manager switch -b backup";
-      # nix-shell = "nix-shell --run $SHELL";
       img2pdf = "nix-shell -p img2pdf --run $SHELL";
       torrent = "qbittorrent & tor-browser &";
       epub = "nix-shell -p epy --run $SHELL";
     };
   };
-
-  # programs.zsh.oh-my-zsh = {
-  #   enable = true;
-  #   plugins = [
-  #     "git"
-  #     "gh"
-  #     "themes"
-  #     "web-search" # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/web-search
-  #   ];
-  #   #    theme = "agnoster";
-  #   # custom = "/home/cathe/dots/.config/home-manager/zsh/custom/";
-  # };
 }
