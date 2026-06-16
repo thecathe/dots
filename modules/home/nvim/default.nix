@@ -38,7 +38,8 @@
       ### latex
       # texlab
       # tectonic
-      # zathura ## pdf viewer
+      ## pdf viewer
+      zathura
       ### lua formatter
       stylua
     ];
