@@ -52,7 +52,19 @@ vim.api.nvim_create_autocmd("FileType", {
 
 			local ext = fullpath:match("%.(%w+)$")
 
-			vim.cmd("edit " .. vim.fn.fnameescape(fullpath))
+			-- handle cross-file links to headers
+			local file, heading = fullpath:match("(.+)#(.+)"), fullpath:match("#(.+)$")
+			local target = file or fullpath
+
+			if ext == "md" then
+				vim.cmd("edit " .. vim.fn.fnameescape(target))
+				if heading then
+					local pattern = "^#+ " .. heading:gsub("-", "."):gsub("%%20", " ")
+					vim.fn.search(pattern, "w")
+				end
+			else
+				vim.cmd("edit " .. vim.fn.fnameescape(target))
+			end
 		end, { buffer = true, desc = "Follow markdown link" })
 	end,
 })
