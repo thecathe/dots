@@ -9,21 +9,42 @@ require("snacks").setup({
 				auto_close = false,
 				hidden = true,
 				win = {
-					keys = {
-						["<cr>"] = {
-							"open_keep_focus",
-							action = function(picker, item)
-								Snacks.picker.actions.jump(picker, item, {})
-								vim.schedule(function()
-									picker.list.win:focus()
-								end)
-							end,
-							desc = "Open and keep explorer focus",
+					list = {
+						keys = {
+							["<CR>"] = "open_keep_focus",
+							["<S-CR>"] = "open_and_close",
 						},
-						["<s-cr>"] = { "confirm", desc = "Open and focus file" },
 					},
 				},
 			},
+		},
+		actions = {
+			open_and_close = function(picker, item)
+				-- vim.notify("open and close")
+				if not item then
+					return
+				end
+				require("snacks.explorer.actions").actions.confirm(picker, item, {})
+				Snacks.picker.actions.close(picker)
+				return
+			end,
+			open_keep_focus = function(picker, item)
+				-- vim.notify("open keep focus")
+				if not item then
+					return
+				end
+				if item.dir then
+					require("snacks.explorer.actions").actions.confirm(picker, item, {})
+					return
+				end
+				local win = picker.list.win.win
+				Snacks.picker.actions.jump(picker, item, {})
+				vim.schedule(function()
+					if vim.api.nvim_win_is_valid(win) then
+						vim.api.nvim_set_current_win(win)
+					end
+				end)
+			end,
 		},
 	}, -- replaces telescope
 	explorer = { enabled = true, trash = true }, -- sidebar file tree
