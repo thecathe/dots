@@ -46,14 +46,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 			local ext = fullpath:match("%.(%w+)$")
 
-			if ext == "pdf" then
-				vim.fn.jobstart({ "zathura", fullpath }, { detach = true })
-			elseif ext == "png" or ext == "jpg" or ext == "jpeg" or ext == "gif" then
-				vim.fn.jobstart({ "xdg-open", fullpath }, { detach = true })
-			else
-				-- open in nvim for text files
-				vim.cmd("edit " .. vim.fn.fnameescape(fullpath))
-			end
+			vim.cmd("edit " .. vim.fn.fnameescape(fullpath))
 		end, { buffer = true, desc = "Follow markdown link" })
 	end,
 })

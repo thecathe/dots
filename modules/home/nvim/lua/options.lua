@@ -41,15 +41,29 @@ vim.keymap.set("n", "<leader>s", function()
 	end
 end, { desc = "Toggle starter" })
 
--- lazy git/docker
--- vim.keymap.set("n", "<leader>g", function()
--- 	Snacks.lazygit()
--- end, { desc = "Lazygit" })
---
--- vim.keymap.set("n", "<leader>d", function()
--- 	Snacks.lazydocker()
--- end, { desc = "Lazydocker" })
+-- open pdfs in zathura
+local external_handlers = {
+	pdf = "zathura",
+	png = "xdg-open",
+	jpg = "xdg-open",
+	jpeg = "xdg-open",
+	gif = "xdg-open",
+	webp = "xdg-open",
+}
 
+vim.api.nvim_create_autocmd("BufReadCmd", {
+	pattern = { "*.pdf", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp" },
+	callback = function(args)
+		local ext = args.file:match("%.(%w+)$")
+		local handler = external_handlers[ext]
+		if handler then
+			vim.fn.jobstart({ handler, args.file }, { detach = true })
+			vim.cmd("bdelete")
+		end
+	end,
+})
+
+-- neovide
 if vim.g.neovide then
 	-- cursor
 	vim.opt.guicursor = table.concat({

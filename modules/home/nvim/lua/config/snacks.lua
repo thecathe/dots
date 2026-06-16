@@ -4,10 +4,25 @@ require("snacks").setup({
 		sources = {
 			files = { exclude = { "**/_build/", "**/_build/**", "*/_build/*" } },
 			explorer = {
-				layout = { preset = "sidebar", preview = false, layout = { width = 25, position = "left" } },
+				layout = { preset = "sidebar", preview = true, layout = { width = 25, position = "left" } },
 				watch = true,
 				auto_close = false,
 				hidden = true,
+				win = {
+					keys = {
+						["<s-cr>"] = {
+							"open_keep_focus",
+							action = function(picker, item)
+								Snacks.picker.actions.jump(picker, item, {})
+								vim.schedule(function()
+									picker.list.win:focus()
+								end)
+							end,
+							desc = "Open and keep explorer focus",
+						},
+						["<cr>"] = { "confirm", desc = "Open and focus file" },
+					},
+				},
 			},
 		},
 	}, -- replaces telescope
@@ -20,6 +35,11 @@ require("snacks").setup({
 	bigfile = { enabled = true }, -- disable heavy features on large files
 	dashboard = { enabled = false },
 })
+
+-- close buffer
+vim.keymap.set("n", "<leader>bd", function()
+	Snacks.bufdelete()
+end, { desc = "Delete buffer" })
 
 -- Picker (replaces the telescope keymaps you had)
 vim.keymap.set("n", "<leader>ff", function()
