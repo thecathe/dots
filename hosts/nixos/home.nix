@@ -35,6 +35,7 @@
     nixfmt
     # -powerlevel9k
     ansi
+    python314Packages.pylatexenc
 
     powerline
     powerline-go

@@ -18,6 +18,15 @@ require("render-markdown").setup({
 	checkbox = { enabled = true },
 	table = { enabled = true },
 	completions = { lsp = { enabled = true } },
+	latex = {
+		enabled = true,
+		render_modes = true,
+		converter = { "utftex", "latex2text" },
+		highlight = "RenderMarkdownMath",
+		position = "center",
+		top_pad = 0,
+		bottom_pad = 0,
+	},
 })
 
 -- vim.api.nvim_set_hl(0, "RenderMarkdownH1", { fg = "#cba6f7", bold = true })
