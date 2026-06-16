@@ -1,4 +1,5 @@
 {...}: {
+  ## pdf reader
   programs.zathura = {
     enable = true;
     options = {

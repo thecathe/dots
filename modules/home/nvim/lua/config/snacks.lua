@@ -10,7 +10,7 @@ require("snacks").setup({
 				hidden = true,
 				win = {
 					keys = {
-						["<s-cr>"] = {
+						["<cr>"] = {
 							"open_keep_focus",
 							action = function(picker, item)
 								Snacks.picker.actions.jump(picker, item, {})
@@ -20,7 +20,7 @@ require("snacks").setup({
 							end,
 							desc = "Open and keep explorer focus",
 						},
-						["<cr>"] = { "confirm", desc = "Open and focus file" },
+						["<s-cr>"] = { "confirm", desc = "Open and focus file" },
 					},
 				},
 			},
