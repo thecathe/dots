@@ -172,7 +172,7 @@
       # blink-pairs
 
       #### markdown/wiki/obsidian
-      vimwiki
+      # vimwiki
       # obsidian-nvim ## incompatible with render-markdown-nvim
       {
         plugin = render-markdown-nvim;
