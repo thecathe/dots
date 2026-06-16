@@ -15,6 +15,9 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.opt_local.spell = true
 		vim.opt_local.spelllang = "en_gb"
 		vim.opt_local.conceallevel = 2 -- render bold/italic markers
+		vim.opt_local.tabstop = 2
+		vim.opt_local.shiftwidth = 2
+		vim.opt_local.expandtab = true
 
 		-- follow link
 		vim.keymap.set("n", "gf", function()
