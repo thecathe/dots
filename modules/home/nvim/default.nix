@@ -36,6 +36,7 @@
       nix-search-cli
       nix-index
       ### latex
+      python314Packages.pylatexenc ## latex2text
       # texlab
       # tectonic
       ## pdf viewer
