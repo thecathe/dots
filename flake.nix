@@ -35,9 +35,12 @@
     stylix,
     # onto-nvim,
     ...
-  } @ inputs: {
+  } @ inputs: let
+    system = "x86_64-linux";
+  in {
     ###### nixos machine
     nixosConfigurations.nixos = inputs.nixpkgs.lib.nixosSystem {
+      inherit system;
       specialArgs = {inherit inputs;};
       modules = [
         {
