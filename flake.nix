@@ -11,6 +11,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    ## onto nvim plugin
+    # onto-nvim = {
+    #   url = "path:/home/cathe/Documents/git/thecathe/ontocaml";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
+
     # nix-gaming
     nix-gaming.url = "github:fufexan/nix-gaming";
 
@@ -27,6 +33,7 @@
     home-manager,
     nix-gaming,
     stylix,
+    # onto-nvim,
     ...
   } @ inputs: {
     ###### nixos machine

@@ -48,7 +48,7 @@ require("snacks").setup({
 		},
 	}, -- replaces telescope
 	explorer = { enabled = true, trash = true }, -- sidebar file tree
-	terminal = { enabled = true }, -- toggleable terminal
+	terminal = { enabled = true, win = { height = 6 } }, -- toggleable terminal
 	notifier = { enabled = true }, -- replaces vim.notify
 	indent = { enabled = true }, -- indent guides
 	words = { enabled = true }, -- highlight word under cursor
@@ -101,3 +101,8 @@ vim.keymap.set("n", "<leader>t", function()
 	Snacks.terminal()
 end, { desc = "Toggle terminal" })
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
+vim.keymap.set("t", "<C-w>h", "<C-\\><C-n><C-w>h")
+vim.keymap.set("t", "<C-w>j", "<C-\\><C-n><C-w>j")
+vim.keymap.set("t", "<C-w>k", "<C-\\><C-n><C-w>k")
+vim.keymap.set("t", "<C-w>l", "<C-\\><C-n><C-w>l")

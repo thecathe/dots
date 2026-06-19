@@ -1,4 +1,8 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  onto-nvim,
+  ...
+}: {
   imports = [
     ./lang
   ];
@@ -15,6 +19,7 @@
     "nvim/lua/config/resession.lua".source = ./lua/config/resession.lua;
     "nvim/lua/config/mini.lua".source = ./lua/config/mini.lua;
     "nvim/lua/config/snacks.lua".source = ./lua/config/snacks.lua;
+    "nvim/lua/dev/onto.lua".source = ./lua/dev/onto.lua;
     # "nvim/lua/config/treesitter.lua".source = ./lua/config/treesitter.lua;
   };
 
@@ -43,6 +48,8 @@
       zathura
       ### lua formatter
       stylua
+      ### my dev plugin
+      inputs.onto.packages.${system}.default
     ];
 
     plugins = with pkgs.vimPlugins; [
@@ -232,6 +239,13 @@
           end
         '';
       }
+
+      #### dev plugin
+      {
+        plugin = inputs.onto.packages.${system}.default;
+        type = "lua";
+        config = "require('onto')";
+      }
     ];
 
     initLua = ''
@@ -239,6 +253,8 @@
       require('lsp')
       require('diagnostics')
       require('utils')
+      require('onto-nvim')
+      re
     '';
   };
 }

@@ -14,14 +14,26 @@ opt.undofile = true -- persistent undo across sessions
 opt.mousemoveevent = true
 opt.exrc = true -- project-local .nvim.lua config files
 
+-- spelling dictionaries
+opt.spell = true
+opt.spelllang = { "en" }
+opt.spellfile = {
+	vim.fn.stdpath("config") .. "/spell/en.utf-8.add", -- global
+	vim.fn.getcwd() .. "/.nvim/spell.utf-8.add", -- project-local
+}
+
 -- format
 vim.keymap.set("n", "<leader>f", function()
 	require("conform").format({ async = true })
 end, { desc = "Format buffer" })
 
 -- window width
-vim.keymap.set("n", "<leader>w+", "5<C-w>>", { desc = "Widen window" })
-vim.keymap.set("n", "<leader>w-", "5<C-w><", { desc = "Narrow window" })
+vim.keymap.set("n", "<leader>wK", "5<C-w>>", { desc = "Widen window" })
+vim.keymap.set("n", "<leader>wJ", "5<C-w><", { desc = "Narrow window" })
+
+-- window height
+vim.keymap.set("n", "<leader>wk", "5<C-w>>", { desc = "Grow window" })
+vim.keymap.set("n", "<leader>wj", "5<C-w><", { desc = "Shrink window" })
 
 -- indent/unindent single line
 vim.keymap.set("n", "<S-Tab>", "<<", { noremap = true })
@@ -40,6 +52,11 @@ vim.keymap.set("n", "<leader>s", function()
 		starter.open()
 	end
 end, { desc = "Toggle starter" })
+
+-- open urls
+vim.keymap.set("n", "gx", function()
+	require("utils").open_url()
+end, { desc = "Open URL under cursor" })
 
 -- open pdfs in zathura
 local external_handlers = {
