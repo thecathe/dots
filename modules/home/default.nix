@@ -2,7 +2,7 @@
   imports = [
     ./git
     ./nvim
-    ./stylix
+    # ./stylix
     ./shell
     ./firefox
     # ./hyprland

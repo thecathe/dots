@@ -68,10 +68,12 @@
     };
 
     ###### worklaptop (ubuntu)
-    homeConfigurations."cathe@worklaptop" = home-manager.lib.homeManagerConfiguration {
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    homeConfigurations."cathe@worklaptop" = inputs.home-manager.lib.homeManagerConfiguration {
+      pkgs = nixpkgs.legacyPackages.${system};
       extraSpecialArgs = {inherit inputs;};
-      modules = [./hosts/worklaptop/home.nix];
+      modules = [./hosts/worklaptop/home.nix
+        # inputs.stylix.nixosModules.stylix
+      ];
     };
 
     ###### project templates
