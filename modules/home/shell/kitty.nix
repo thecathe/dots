@@ -5,6 +5,10 @@
     keybindings = {
       "alt+enter" = "launch --cwd=current --location=vsplit";
       "alt+shift+enter" = "launch --cwd=current --location=hsplit";
+      "ctrl+shift+d" = ''
+        launch --type=overlay --title='nvim dots' zsh -c 'tmux attach -t dots:0.0 2>/dev/null || tmux new-session -s dots -c ~/dots nvim'
+      '';
+      # launch --type=overlay --title='nvim dots' zsh -c 'tmux attach -t dots:0.0 2>/dev/null || (tmux new-session -d -s dots -c ~/dots nvim && tmux split-window -v -t dots:0 -c ~/dots && tmux resize-pane -t dots:0.1 -y 2 && tmux attach -t dots)'
     };
     settings = {
       ##
