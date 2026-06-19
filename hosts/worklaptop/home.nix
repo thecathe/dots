@@ -1,14 +1,14 @@
 { config, pkgs, inputs, ... }: {
   imports = [
     ../../modules/home
-    # Add or remove host-specific module imports here:
-    # ../../modules/home/hyprland
   ];
 
   home.username = "jjp38";
   home.homeDirectory = "/home/jjp38";
   home.stateVersion = "25.11";
-
+  
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  
   home.sessionPath = [ "$HOME/dots/bin" ];
 
   # Required for standalone home-manager (non-NixOS hosts)
