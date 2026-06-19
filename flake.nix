@@ -25,6 +25,9 @@
       url = "github:nix-community/stylix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # for non-nixos hosts
+    nixgl.url = "github:nix-community/nixGL";
   };
 
   outputs = {
@@ -32,7 +35,7 @@
     nixpkgs,
     home-manager,
     nix-gaming,
-    stylix,
+    stylix, nixgl,
     # onto-nvim,
     ...
   } @ inputs: let
