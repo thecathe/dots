@@ -27,7 +27,7 @@ let nixgl = inputs.nixgl; in
   ## override 
   programs.kitty = {enable=true;
 package = (pkgs.writeShellScriptBin "kitty" ''
-    exec ${nixgl.packages.${pkgs.stdenv.hostPlatform.system}.nixGLIntel}/bin/nixGlIntel ${pkgs.kitty}/bin/kitty "$@"
+    exec ${nixgl.packages.${pkgs.stdenv.hostPlatform.system}.nixGLIntel}/bin/nixGLIntel ${pkgs.kitty}/bin/kitty "$@"
   '');
   };
 
