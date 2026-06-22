@@ -17,6 +17,8 @@
 - auto-close empty buffer with any other buffers open
 - still issue with closing buffer with explorer open making everything difficult.
   - similar (ish) issue with `snacks.terminal` popping in and out of insert mode.
+- \gx not working in certain cases (e.g., on actual pdf md links. notably it correctly opens zanthura from `snacks.explorer`)
+- buffer width is still fixed
 
 ## structure
 
