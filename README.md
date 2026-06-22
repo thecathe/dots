@@ -11,11 +11,12 @@
   - lazynvim with nix stuff? what are the benefits, cos it feels like it may just be compounding the issue of having lots of lua stuff inside of a nix.
 - how to do vscode equivalent of `ctrl+shift+up/down` to columnwise select with cursor
 - how to configure certain sessions (like vscode workspaces) to show certain hidden directories/files?
-- some kind of dictionary/autocorrect?
-- auto brackets? (but only in a smart way...)
-- picker popup to filter out pdfs? only show them in explorer?
 - markdown auto bullet-points
--
+- picker files to only show project files rather than all. (e.,g \fr shows ALL recent files, which isn't that useful)
+  - picker popup to filter out pdfs? only show them in explorer?
+- auto-close empty buffer with any other buffers open
+- still issue with closing buffer with explorer open making everything difficult.
+  - similar (ish) issue with `snacks.terminal` popping in and out of insert mode.
 
 ## structure
 
