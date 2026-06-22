@@ -50,6 +50,9 @@ in
         exec ${nixGLPrefix} ${pkgs.kitty}/bin/kitty "$@"
       ''
     );
+    settings = {
+      shell = "${pkgs.zsh}/bin/zsh";
+    };
   };
 
   xdg.desktopEntries.kitty = {
