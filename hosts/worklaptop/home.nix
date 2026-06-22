@@ -48,7 +48,8 @@ in
     shellAliases = {
       rebuild = ''
         (cd ~/dots && home-manager switch --flake .#cathe@worklaptop); 
-        read -rp "Press Enter to continue..."
+        printf "Press Enter to continue...";
+        read -r _
       '';
     };
   };
