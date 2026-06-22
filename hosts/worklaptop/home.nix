@@ -50,9 +50,7 @@ in
         exec ${nixGLPrefix} ${pkgs.kitty}/bin/kitty "$@"
       ''
     );
-    settings = {
-      shell = "${pkgs.zsh}/bin/zsh";
-    };
+    ## NOTE: must install zsh using apt
   };
 
   xdg.desktopEntries.kitty = {
