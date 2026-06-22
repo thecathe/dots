@@ -224,4 +224,5 @@
   #  programs.steam.enable = true;
 
   # Neovim
+  myConfig.onto-nvimPlugin.enable = true;
 }

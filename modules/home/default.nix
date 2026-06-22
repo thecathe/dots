@@ -1,4 +1,8 @@
-{...}: {
+{
+  lib,
+  config,
+  ...
+}: {
   imports = [
     ./git
     ./nvim
@@ -8,4 +12,6 @@
     # ./hyprland
     ./zathura
   ];
+
+  options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";
 }

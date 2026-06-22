@@ -4,4 +4,4 @@ require("conform").formatters.dune_formatt = {
       stdin = true,
     }
 
-  require("conform").formatters_by_ft.dune = { "dune_format" },
+  require("conform").formatters_by_ft.dune = { "dune_format" }

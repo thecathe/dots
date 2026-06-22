@@ -12,10 +12,11 @@
     };
 
     ## onto nvim plugin
-    # onto-nvim = {
-    #   url = "path:/home/cathe/Documents/git/thecathe/ontocaml";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
+    onto-nvim = {
+      # url = "path:/home/cathe/Documents/git/thecathe/ontocaml";
+      url = "github:thecathe/ontocaml";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # nix-gaming
     nix-gaming.url = "github:fufexan/nix-gaming";
@@ -35,8 +36,9 @@
     nixpkgs,
     home-manager,
     nix-gaming,
-    stylix, nixgl,
-    # onto-nvim,
+    stylix,
+    nixgl,
+    onto-nvim,
     ...
   } @ inputs: let
     system = "x86_64-linux";
@@ -74,7 +76,8 @@
     homeConfigurations."cathe@worklaptop" = inputs.home-manager.lib.homeManagerConfiguration {
       pkgs = nixpkgs.legacyPackages.${system};
       extraSpecialArgs = {inherit inputs;};
-      modules = [./hosts/worklaptop/home.nix
+      modules = [
+        ./hosts/worklaptop/home.nix
         # inputs.stylix.nixosModules.stylix
       ];
     };
