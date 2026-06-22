@@ -105,6 +105,7 @@
               tree-sitter-lua
               #
               tree-sitter-ocaml
+              tree-sitter-dune
               tree-sitter-ocaml-interface
               tree-sitter-erlang
               tree-sitter-markdown

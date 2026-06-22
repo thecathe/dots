@@ -1,7 +1,8 @@
-{ lib, ...}: {
+{lib, ...}: {
   imports = [
     ./nix.nix
     ./ocaml.nix
+    ./dune.nix
     ./erlang.nix
     ./go.nix
     ./markdown.nix
