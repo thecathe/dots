@@ -11,8 +11,8 @@ require("snacks").setup({
 				win = {
 					list = {
 						keys = {
-							["<CR>"] = "open_keep_focus",
-							["<S-CR>"] = "open_and_close",
+							["<S-CR>"] = "open_keep_focus",
+							["<CR>"] = "open_and_close",
 						},
 					},
 				},
