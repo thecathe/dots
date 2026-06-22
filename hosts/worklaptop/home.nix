@@ -46,10 +46,12 @@ in
   programs.zsh = {
     enable = true;
     shellAliases = {
-      rebuild = "home-manager switch --flake .#cathe@worklaptop";
+      rebuild = ''
+        (cd ~/dots && home-manager switch --flake .#cathe@worklaptop); 
+        read -rp "Press Enter to continue..."
+      '';
     };
   };
-  
 
   ## override
   programs.kitty = {
