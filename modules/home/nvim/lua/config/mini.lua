@@ -41,7 +41,8 @@ require("mini.starter").setup({
 				return {
 					name = name,
 					action = function()
-						require("resession").load(name, { dir = dir })
+						-- require("resession").load(name, { dir = dir })
+						utils.handle_resession_load(name)
 					end,
 					section = "Sessions",
 				}
