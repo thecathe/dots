@@ -35,7 +35,8 @@
     nixpkgs,
     home-manager,
     nix-gaming,
-    stylix, nixgl,
+    stylix,
+    nixgl,
     # onto-nvim,
     ...
   } @ inputs: let
@@ -74,8 +75,9 @@
     homeConfigurations."cathe@worklaptop" = inputs.home-manager.lib.homeManagerConfiguration {
       pkgs = nixpkgs.legacyPackages.${system};
       extraSpecialArgs = {inherit inputs;};
-      modules = [./hosts/worklaptop/home.nix
-        # inputs.stylix.nixosModules.stylix
+      modules = [
+        ./hosts/worklaptop/home.nix
+        inputs.stylix.homeModules.stylix
       ];
     };
 
