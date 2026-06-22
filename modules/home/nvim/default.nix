@@ -1,7 +1,8 @@
 {
   inputs,
   pkgs,
-  # onto-nvim,
+  config,
+  lib,
   ...
 }: {
   imports = [
@@ -33,222 +34,227 @@
     # Tools that are truly global — i.e. not version-coupled to a project.
     # Language-specific LSP servers (ocamllsp, erlang_ls) belong in your
     # project devShells so direnv can put the right version on PATH.
-    extraPackages = with pkgs; [
-      git
-      ### nix
-      nix
-      nixd
-      alejandra
-      nix-search-cli
-      nix-index
-      ### latex
-      python314Packages.pylatexenc ## latex2text
-      # texlab
-      # tectonic
-      ## pdf viewer
-      zathura
-      ### lua formatter
-      stylua
-      ### my dev plugin
-      # inputs.onto.packages.${system}.default
-    ];
+    extraPackages = with pkgs;
+      [
+        git
+        ### nix
+        nix
+        nixd
+        alejandra
+        nix-search-cli
+        nix-index
+        ### latex
+        python314Packages.pylatexenc ## latex2text
+        # texlab
+        # tectonic
+        ## pdf viewer
+        zathura
+        ### lua formatter
+        stylua
+      ]
+      ++ lib.optionals config.myConfig.onto-nvimPlugin.enable [
+        ### my dev plugin
+        inputs.onto-nvim.packages.${pkgs.system}.default
+      ];
 
-    plugins = with pkgs.vimPlugins; [
-      #### basics
-      direnv-vim
-      vim-fugitive
-      vim-gitgutter
-      nvim-lspconfig
+    plugins = with pkgs.vimPlugins;
+      [
+        #### basics
+        direnv-vim
+        vim-fugitive
+        vim-gitgutter
+        nvim-lspconfig
 
-      lazygit-nvim
-      lazydocker-nvim
+        lazygit-nvim
+        lazydocker-nvim
 
-      #### theme
-      {
-        plugin = gruvbox-nvim;
-        type = "lua";
-        config = ''
-          require("gruvbox").setup({
-            contrast = "hard", -- or "soft"
-          })
-          vim.cmd("colorscheme gruvbox")
-        '';
-      }
+        #### theme
+        {
+          plugin = gruvbox-nvim;
+          type = "lua";
+          config = ''
+            require("gruvbox").setup({
+              contrast = "hard", -- or "soft"
+            })
+            vim.cmd("colorscheme gruvbox")
+          '';
+        }
 
-      #### bundles
-      {
-        plugin = mini-nvim;
-        type = "lua";
-        config = "require('config.mini')";
-      }
-      {
-        plugin = snacks-nvim;
-        type = "lua";
-        config = "require('config.snacks')";
-      }
+        #### bundles
+        {
+          plugin = mini-nvim;
+          type = "lua";
+          config = "require('config.mini')";
+        }
+        {
+          plugin = snacks-nvim;
+          type = "lua";
+          config = "require('config.snacks')";
+        }
 
-      #### show keymaps
-      {
-        plugin = which-key-nvim;
-        type = "lua";
-        config = ''
-          require('which-key').setup({ delay = 500 })
-        '';
-      }
+        #### show keymaps
+        {
+          plugin = which-key-nvim;
+          type = "lua";
+          config = ''
+            require('which-key').setup({ delay = 500 })
+          '';
+        }
 
-      #### treesitter
-      {
-        plugin = nvim-treesitter.withPlugins (
-          p:
-            with p; [
-              tree-sitter-nix
-              tree-sitter-lua
-              #
-              tree-sitter-ocaml
-              tree-sitter-dune
-              tree-sitter-ocaml-interface
-              tree-sitter-erlang
-              tree-sitter-markdown
-              tree-sitter-markdown-inline
-              tree-sitter-go
-              tree-sitter-python
-              tree-sitter-sql
-              # tree-sitter-haskell
-              # tree-sitter-java
-              # tree-sitter-rust
-              # tree-sitter-menhir
-              #
-              tree-sitter-ini
-              tree-sitter-toml
-              tree-sitter-yaml
-              tree-sitter-xml
-              tree-sitter-csv
-              tree-sitter-regex
-              #
-              tree-sitter-gitignore
-              tree-sitter-dockerfile
-              #
-              tree-sitter-kitty
-              tree-sitter-zsh
-              tree-sitter-tmux
-              #
-              tree-sitter-bash
-              tree-sitter-make
-              #
-              tree-sitter-html
-              tree-sitter-javascript
-              tree-sitter-css
-              # tree-sitter-php
-              tree-sitter-json
-              #
-              tree-sitter-typescript
-              tree-sitter-json5
-              #
-              tree-sitter-latex
-              tree-sitter-bibtex
-              #
-              # tree-sitter-julia
-              # tree-sitter-arduino
-            ]
-        );
-        type = "lua";
-        config = "require('nvim-treesitter').setup()";
-      }
-      nvim-treesitter-textobjects
+        #### treesitter
+        {
+          plugin = nvim-treesitter.withPlugins (
+            p:
+              with p; [
+                tree-sitter-nix
+                tree-sitter-lua
+                #
+                tree-sitter-ocaml
+                tree-sitter-dune
+                tree-sitter-ocaml-interface
+                tree-sitter-erlang
+                tree-sitter-markdown
+                tree-sitter-markdown-inline
+                tree-sitter-go
+                tree-sitter-python
+                tree-sitter-sql
+                # tree-sitter-haskell
+                # tree-sitter-java
+                # tree-sitter-rust
+                # tree-sitter-menhir
+                #
+                tree-sitter-ini
+                tree-sitter-toml
+                tree-sitter-yaml
+                tree-sitter-xml
+                tree-sitter-csv
+                tree-sitter-regex
+                #
+                tree-sitter-gitignore
+                tree-sitter-dockerfile
+                #
+                tree-sitter-kitty
+                tree-sitter-zsh
+                tree-sitter-tmux
+                #
+                tree-sitter-bash
+                tree-sitter-make
+                #
+                tree-sitter-html
+                tree-sitter-javascript
+                tree-sitter-css
+                # tree-sitter-php
+                tree-sitter-json
+                #
+                tree-sitter-typescript
+                tree-sitter-json5
+                #
+                tree-sitter-latex
+                tree-sitter-bibtex
+                #
+                # tree-sitter-julia
+                # tree-sitter-arduino
+              ]
+          );
+          type = "lua";
+          config = "require('nvim-treesitter').setup()";
+        }
+        nvim-treesitter-textobjects
 
-      #### sessions
-      {
-        plugin = resession-nvim;
-        type = "lua";
-        config = "require('config.resession')";
-      }
+        #### sessions
+        {
+          plugin = resession-nvim;
+          type = "lua";
+          config = "require('config.resession')";
+        }
 
-      #### formatting
-      {
-        plugin = conform-nvim;
-        type = "lua";
-        config = "require('config.conform')";
-      }
+        #### formatting
+        {
+          plugin = conform-nvim;
+          type = "lua";
+          config = "require('config.conform')";
+        }
 
-      #### completion
-      {
-        plugin = blink-cmp;
-        type = "lua";
-        config = "require('config.blink-cmp')";
-      }
-      blink-emoji-nvim
+        #### completion
+        {
+          plugin = blink-cmp;
+          type = "lua";
+          config = "require('config.blink-cmp')";
+        }
+        blink-emoji-nvim
 
-      #### visual
-      # blink-pairs
+        #### visual
+        # blink-pairs
 
-      #### markdown/wiki/obsidian
-      # vimwiki
-      # obsidian-nvim ## incompatible with render-markdown-nvim
-      {
-        plugin = render-markdown-nvim;
-        type = "lua";
-        config = "require('config.render-markdown')";
-      }
-      # {
-      #   plugin = markview-nvim; ## prefer visuals of render-markdown-nvim
-      #   type = "lua";
-      #   config = ''
-      #     require('markview').setup({
-      #       markdown = {
-      #         headings  = { enable = true },
-      #         code_blocks = { enable = true },
-      #         tables    = { enable = true },
-      #         links     = { enable = true },
-      #       },
-      #     })
-      #   '';
-      # }
+        #### markdown/wiki/obsidian
+        # vimwiki
+        # obsidian-nvim ## incompatible with render-markdown-nvim
+        {
+          plugin = render-markdown-nvim;
+          type = "lua";
+          config = "require('config.render-markdown')";
+        }
+        # {
+        #   plugin = markview-nvim; ## prefer visuals of render-markdown-nvim
+        #   type = "lua";
+        #   config = ''
+        #     require('markview').setup({
+        #       markdown = {
+        #         headings  = { enable = true },
+        #         code_blocks = { enable = true },
+        #         tables    = { enable = true },
+        #         links     = { enable = true },
+        #       },
+        #     })
+        #   '';
+        # }
 
-      # ── Project-local overrides (.neoconf.json) ─────────────────────────
-      # Lets you drop a .neoconf.json in a project root to override LSP
-      # settings without touching this config. Must be set up before lspconfig.
-      {
-        plugin = neoconf-nvim;
-        type = "lua";
-        config = ''
-          require('neoconf').setup()
-        '';
-      }
+        # ── Project-local overrides (.neoconf.json) ─────────────────────────
+        # Lets you drop a .neoconf.json in a project root to override LSP
+        # settings without touching this config. Must be set up before lspconfig.
+        {
+          plugin = neoconf-nvim;
+          type = "lua";
+          config = ''
+            require('neoconf').setup()
+          '';
+        }
 
-      #### bufferline
-      {
-        plugin = bufferline-nvim;
-        type = "lua";
-        config = "require('config.bufferline')";
-      }
+        #### bufferline
+        {
+          plugin = bufferline-nvim;
+          type = "lua";
+          config = "require('config.bufferline')";
+        }
 
-      #### lualine
-      {
-        plugin = lualine-nvim;
-        type = "lua";
-        config = ''
-          require('lualine').setup({ options = { theme = 'auto' } })
-        '';
-      }
+        #### lualine
+        {
+          plugin = lualine-nvim;
+          type = "lua";
+          config = ''
+            require('lualine').setup({ options = { theme = 'auto' } })
+          '';
+        }
 
-      #### cursor
-      {
-        plugin = smear-cursor-nvim;
-        type = "lua";
-        config = ''
-          if not vim.g.neovide then
-            require('smear_cursor').setup()
-          end
-        '';
-      }
-
-      #### dev plugin
-      # {
-      #   plugin = inputs.onto.packages.${system}.default;
-      #   type = "lua";
-      #   config = "require('onto')";
-      # }
-    ];
+        #### cursor
+        {
+          plugin = smear-cursor-nvim;
+          type = "lua";
+          config = ''
+            if not vim.g.neovide then
+              require('smear_cursor').setup()
+            end
+          '';
+        }
+      ]
+      ++ lib.optionals config.myConfig.onto-nvimPlugin.enable [
+        #### dev plugin
+        {
+          plugin = inputs.onto-nvim.packages.${pkgs.system}.default;
+          type = "lua";
+          config = "require('onto')";
+        }
+      ];
 
     initLua = ''
       require('options')
