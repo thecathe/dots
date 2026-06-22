@@ -1,43 +1,67 @@
-{ config, pkgs, inputs, ... }:
-let nixgl = inputs.nixgl; in
- {
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
+let
+  nixgl = inputs.nixgl;
+  nixGLPrefix = "${nixgl.packages.${pkgs.stdenv.hostPlatform.system}.nixGLIntel}/bin/nixGLIntel";
+  ## auto detection version
+  # nixGLPrefix = "${nixgl.packages.${pkgs.stdenv.hostPlatform.system}.nixGL}/bin/nixGL";
+in
+{
   imports = [
     ../../modules/home
   ];
 
   nix = {
     package = pkgs.nix;
-    settings.experimental-features = [ "nix-command" "flakes" ];
+    settings.experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
   };
 
   home.username = "jjp38";
   home.homeDirectory = "/home/jjp38";
   home.stateVersion = "25.11";
-  
+
   home.sessionPath = [ "$HOME/dots/bin" ];
 
   # Required for standalone home-manager (non-NixOS hosts)
   programs.home-manager.enable = true;
 
   home.packages = with pkgs; [
-    wget fzf git gh tmux
-    nix nixfmt
+    wget
+    fzf
+    git
+    gh
+    tmux
+    nix
+    nixfmt
   ];
 
-  ## override 
-  programs.kitty = {enable=true;
-package = (pkgs.writeShellScriptBin "kitty" ''
-    exec ${nixgl.packages.${pkgs.stdenv.hostPlatform.system}.nixGLIntel}/bin/nixGLIntel ${pkgs.kitty}/bin/kitty "$@"
-  '');
+  ## override
+  programs.kitty = {
+    enable = true;
+    package = (
+      pkgs.writeShellScriptBin "kitty" ''
+        exec ${nixGLPrefix} ${pkgs.kitty}/bin/kitty "$@"
+      ''
+    );
   };
 
   xdg.desktopEntries.kitty = {
-        name = "Kitty";
+    name = "Kitty";
     genericName = "Terminal Emulator";
-    exec = "${nixgl.packages.${pkgs.stdenv.hostPlatform.system}.nixGLIntel}/bin/nixGLIntel ${pkgs.kitty}/bin/kitty";
+    exec = "${nixGLPrefix} ${pkgs.kitty}/bin/kitty";
     icon = "kitty";
     terminal = false;
-    categories = [ "System" "TerminalEmulator" ];
+    categories = [
+      "System"
+      "TerminalEmulator"
+    ];
   };
 
   home.sessionVariables = {
