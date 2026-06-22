@@ -42,6 +42,15 @@ in
     nixfmt
   ];
 
+  ## NOTE: must install zsh using apt
+  programs.zsh = {
+    enable = true;
+    shellAliases = {
+      rebuild = "home-manager switch --flake .#cathe@worklaptop";
+    };
+  };
+  
+
   ## override
   programs.kitty = {
     enable = true;
@@ -50,7 +59,6 @@ in
         exec ${nixGLPrefix} ${pkgs.kitty}/bin/kitty "$@"
       ''
     );
-    ## NOTE: must install zsh using apt
   };
 
   xdg.desktopEntries.kitty = {
