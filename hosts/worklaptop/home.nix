@@ -12,6 +12,9 @@ in {
   imports = [
     ../../modules/home
   ];
+  
+  ## override 
+  stylix.targets.kde.enable = false;
 
   nix = {
     package = pkgs.nix;
@@ -78,6 +81,10 @@ in {
 
   home.sessionVariables = {
     EDITOR = "nvim";
+  };
+
+  systemd.user.sessionVariables = {
+  	KP_EDITOR = "neovide";
   };
 
   fonts.fontconfig.enable = true;

@@ -78,7 +78,7 @@
       extraSpecialArgs = {inherit inputs;};
       modules = [
         ./hosts/worklaptop/home.nix
-        # inputs.stylix.nixosModules.stylix
+        inputs.stylix.homeModules.stylix
       ];
     };
 
