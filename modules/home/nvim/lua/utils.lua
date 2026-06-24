@@ -13,6 +13,7 @@ local function patch_resession()
 end
 
 patch_resession()
+
 -- handle project-local sessions
 M.get_session_dir = function()
 	local result = vim.fn.systemlist("git rev-parse --show-toplevel 2>/dev/null")
@@ -27,25 +28,39 @@ local function remap_session_paths(session_path)
 	local content = vim.fn.readfile(session_path)
 	local joined = table.concat(content, "\n")
 	-- replace any /home/<whatever> prefix with current home
-	local remapped = joined:gsub("/home/[^/]+", current_home)
+	local remapped = joined:gsub('"/home/[^/"]+', '"' .. current_home)
 	vim.fn.writefile(vim.split(remapped, "\n"), session_path)
 end
 
+local function open_starter()
+	-- Delay slightly so any pending UI events settle first
+	vim.schedule(function()
+		require("mini.starter").open()
+	end)
+end
+
 M.handle_resession_load = function(session_name)
-	local session_name = session_name or "default"
+	session_name = session_name or "default"
 	local dir = M.get_session_dir()
 	local full_path = dir .. "/" .. session_name .. ".json"
-	-- handle remapping session paths when on different machine
+	
+  -- handle remapping session paths when on different machine
 	if vim.fn.filereadable(full_path) == 0 then
 		vim.notify("No session found at " .. full_path, vim.log.levels.WARN)
+    open_starter()
 		return
 	end
+
 	remap_session_paths(full_path)
+
 	-- handle loading files we can't find
-	local ok, err = pcall(require("resession").load, session_name, { dit = dir })
+	local ok, err = pcall(require("resession").load, session_name, { dir = dir })
 	if not ok then
 		vim.notify("Session load failed: " .. err, vim.log.levels.WARN)
+    open_starter()
+    return
 	end
+
 	-- handle closing buffers for those we don't find
 	for _, buf in ipairs(vim.api.nvim_list_bufs()) do
 		local path = vim.api.nvim_buf_get_name(buf)
