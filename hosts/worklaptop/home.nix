@@ -12,8 +12,8 @@ in {
   imports = [
     ../../modules/home
   ];
-  
-  ## override 
+
+  ## override
   stylix.targets.kde.enable = false;
 
   nix = {
@@ -70,13 +70,14 @@ in {
   xdg.desktopEntries.kitty = {
     name = "Kitty";
     genericName = "Terminal Emulator";
-    exec = "${nixGLPrefix} ${pkgs.kitty}/bin/kitty";
-    icon = "kitty";
+    exec = "${nixGLPrefix}${pkgs.kitty}/bin/kitty";
+    icon = "${pkgs.kitty}/share/icons/hicolor/256x256/apps/kitty.png";
     terminal = false;
     categories = [
       "System"
       "TerminalEmulator"
     ];
+    settings = {StartupWMClass = "kitty";};
   };
 
   home.sessionVariables = {
@@ -84,7 +85,7 @@ in {
   };
 
   systemd.user.sessionVariables = {
-  	KP_EDITOR = "neovide";
+    KP_EDITOR = "neovide";
   };
 
   fonts.fontconfig.enable = true;
