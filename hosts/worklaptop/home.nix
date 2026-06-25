@@ -27,6 +27,7 @@ in {
   home.username = "jjp38";
   home.homeDirectory = "/home/jjp38";
   home.stateVersion = "25.11";
+  news.display = "silent";
 
   home.sessionPath = ["$HOME/dots/bin"];
 
