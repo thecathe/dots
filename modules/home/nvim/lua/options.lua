@@ -1,3 +1,5 @@
+local utils = require("utils")
+
 local opt = vim.opt
 opt.number = true
 opt.relativenumber = true
@@ -36,6 +38,7 @@ vim.keymap.set("n", "<leader>wk", "5<C-w>>", { desc = "Grow window" })
 vim.keymap.set("n", "<leader>wj", "5<C-w><", { desc = "Shrink window" })
 
 -- indent/unindent single line
+vim.keymap.set("n", "<Tab>", ">>", { noremap = true })
 vim.keymap.set("n", "<S-Tab>", "<<", { noremap = true })
 vim.keymap.set("i", "<S-Tab>", "<C-d>", { noremap = true })
 
@@ -58,21 +61,11 @@ vim.keymap.set("n", "gx", function()
 	require("utils").open_url()
 end, { desc = "Open URL under cursor" })
 
--- open pdfs in zathura
-local external_handlers = {
-	pdf = "zathura",
-	png = "xdg-open",
-	jpg = "xdg-open",
-	jpeg = "xdg-open",
-	gif = "xdg-open",
-	webp = "xdg-open",
-}
-
 vim.api.nvim_create_autocmd("BufReadCmd", {
 	pattern = { "*.pdf", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp" },
 	callback = function(args)
 		local ext = args.file:match("%.(%w+)$")
-		local handler = external_handlers[ext]
+		local handler = utils.external_handlers[ext]
 		if handler then
 			vim.fn.jobstart({ handler, args.file }, { detach = true })
 			vim.cmd("bdelete")

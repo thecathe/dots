@@ -1,3 +1,5 @@
+local utils = require("utils")
+
 vim.lsp.config("marksman", {
 	on_attach = lsp_on_attach,
 	capabilities = lsp_capabilities,
@@ -19,9 +21,6 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.opt_local.shiftwidth = 2
 		vim.opt_local.expandtab = true
 
-		-- conceal just the (url) part, leave [link text] fully visible
-		-- vim.fn.matchadd("Conceal", "\\]\\zs([^)]*)\\ze", 10, -1, { conceal = "" })
-
 		-- follow link
 		vim.keymap.set("n", "gf", function()
 			local line = vim.api.nvim_get_current_line()
@@ -29,17 +28,31 @@ vim.api.nvim_create_autocmd("FileType", {
 
 			-- extract link target from markdown syntax [text](target)
 			local link
-			for text, url in line:gmatch("%[.-%]%((.-)%)") do
-				link = text
-				break
+			local s = 1
+			while true do
+				local lhs, rhs, url = line:find("%[.-%]%((.-)%)", s)
+				if not lhs then
+					break
+				end
+				if col >= lhs and col <= rhs then
+					link = url
+					break
+				end
+				s = lhs + 1
 			end
 
 			-- also try bare paths under cursor as fallback
 			link = link or vim.fn.expand("<cfile>")
 
 			if not link or link == "" then
-				vim.notify("no link found under cursor", vim.log.levels.WARN)
+				vim.notify("Link not found under cursor", vim.log.levels.WARN)
 				return
+			end
+
+			-- strip fragment (#heading) before any path operations
+			local raw_path, fragment = link:match("^([^#]*)(#?.*)$")
+			if raw_path == "" then
+				raw_path = link
 			end
 
 			-- decode percent-encoding (%20 → space etc.)
@@ -49,21 +62,19 @@ vim.api.nvim_create_autocmd("FileType", {
 
 			-- resolve relative to current file's directory
 			local fullpath = vim.fn.fnamemodify(vim.fn.expand("%:p:h") .. "/" .. path, ":p")
-
 			local ext = fullpath:match("%.(%w+)$")
 
-			-- handle cross-file links to headers
-			local file, heading = fullpath:match("(.+)#(.+)"), fullpath:match("#(.+)$")
-			local target = file or fullpath
+			if ext and utils.external_handlers[ext] then
+				vim.fn.jobstart({ utils.external_handlers[ext], fullpath }, { detach = true })
+				return
+			end
 
-			if ext == "md" then
-				vim.cmd("edit " .. vim.fn.fnameescape(target))
-				if heading then
-					local pattern = "^#+ " .. heading:gsub("-", "."):gsub("%%20", " ")
-					vim.fn.search(pattern, "w")
-				end
-			else
-				vim.cmd("edit " .. vim.fn.fnameescape(target))
+			-- open in neovim and jump to heading if present
+			vim.cmd("edit " .. vim.fn.fnameescape(fullpath))
+			if fragment and fragment ~= "" then
+				local heading = fragment:sub(2) -- drop the leading #
+				local pattern = "^#+ " .. heading:gsub("-", "."):gsub("%%20", " ")
+				vim.fn.search(pattern, "w")
 			end
 		end, { buffer = true, desc = "Follow markdown link" })
 	end,

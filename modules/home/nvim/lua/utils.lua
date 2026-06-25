@@ -1,5 +1,15 @@
 local M = {}
 
+-- open pdfs in zathura
+M.external_handlers = {
+	pdf = "zathura",
+	png = "xdg-open",
+	jpg = "xdg-open",
+	jpeg = "xdg-open",
+	gif = "xdg-open",
+	webp = "xdg-open",
+}
+
 -- patch resession to support absolute paths for dir
 local function patch_resession()
 	local util = require("resession.util")
@@ -43,11 +53,11 @@ M.handle_resession_load = function(session_name)
 	session_name = session_name or "default"
 	local dir = M.get_session_dir()
 	local full_path = dir .. "/" .. session_name .. ".json"
-	
-  -- handle remapping session paths when on different machine
+
+	-- handle remapping session paths when on different machine
 	if vim.fn.filereadable(full_path) == 0 then
 		vim.notify("No session found at " .. full_path, vim.log.levels.WARN)
-    open_starter()
+		open_starter()
 		return
 	end
 
@@ -57,8 +67,8 @@ M.handle_resession_load = function(session_name)
 	local ok, err = pcall(require("resession").load, session_name, { dir = dir })
 	if not ok then
 		vim.notify("Session load failed: " .. err, vim.log.levels.WARN)
-    open_starter()
-    return
+		open_starter()
+		return
 	end
 
 	-- handle closing buffers for those we don't find
