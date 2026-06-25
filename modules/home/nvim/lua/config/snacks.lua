@@ -68,8 +68,12 @@ vim.keymap.set("n", "<leader>ff", function()
 end, { desc = "Find files" })
 
 vim.keymap.set("n", "<leader>fr", function()
+	Snacks.picker.recent({ filter = { cwd = vim.fn.getcwd() } })
+end, { desc = "Recent files (project)" })
+
+vim.keymap.set("n", "<leader>fR", function()
 	Snacks.picker.recent()
-end, { desc = "Recent files" })
+end, { desc = "Recent files (global)" })
 
 vim.keymap.set("n", "<leader>fg", function()
 	Snacks.picker.grep()
@@ -83,7 +87,7 @@ vim.keymap.set("n", "<leader>fd", function()
 	Snacks.picker.diagnostics()
 end, { desc = "Diagnostics" })
 
-vim.keymap.set("n", "<leader>fR", function()
+vim.keymap.set("n", "<leader>fF", function()
 	Snacks.picker.lsp_references()
 end, { desc = "LSP references" })
 
