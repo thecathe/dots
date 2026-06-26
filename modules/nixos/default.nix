@@ -1,9 +1,12 @@
-{ pkgs, inputs, ... }:
-
 {
+  pkgs,
+  inputs,
+  ...
+}: {
   imports = [
     ./thumbnails
     ./torrent
+    ./waydroid
     ./git.nix
     ./zsh.nix
     ./direnv.nix
