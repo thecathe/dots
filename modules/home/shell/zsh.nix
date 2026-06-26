@@ -34,6 +34,15 @@
       }
     '';
 
+    initExtra = ''
+      hash -d dots="$HOME/dots"
+      hash -d git="$HOME/git"
+      hash -d mgit="$HOME/git/thecathe"
+      hash -d indimo="$HOME/git/thecathe/indimo"
+      hash -d ontocaml="$HOME/git/thecathe/ontocaml"
+      hash -d cloakaml="$HOME/git/thecathe/cloakaml"
+    '';
+
     shellAliases = {
       img2pdf = "nix-shell -p img2pdf --run $SHELL";
       torrent = "qbittorrent & tor-browser &";
