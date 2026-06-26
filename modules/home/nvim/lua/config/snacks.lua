@@ -24,6 +24,10 @@ require("snacks").setup({
 				if not item then
 					return
 				end
+				if item.dir then
+					require("snacks.explorer.actions").actions.confirm(picker, item, {})
+					return
+				end
 				require("snacks.explorer.actions").actions.confirm(picker, item, {})
 				Snacks.picker.actions.close(picker)
 				return
