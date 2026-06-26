@@ -47,6 +47,8 @@
       img2pdf = "nix-shell -p img2pdf --run $SHELL";
       torrent = "qbittorrent & tor-browser &";
       epub = "nix-shell -p epy --run $SHELL";
+      upwayd = "sudo systemctl start waydroid-container && waydroid session start &";
+      dnwayd = "waydroid session stop && sudo systemctl stop waydroid-container";
     };
   };
 }
