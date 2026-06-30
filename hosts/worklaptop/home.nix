@@ -37,13 +37,6 @@ in {
   home.packages = with pkgs;
     (import ../../modules/shared/fonts.nix pkgs)
     ++ [
-      wget
-      fzf
-      git
-      gh
-      tmux
-      nix
-      nixfmt
     ];
 
   ## NOTE: must install zsh using apt

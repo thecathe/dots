@@ -32,9 +32,7 @@
         nix-shell -p ffmpeg --run \
           "ffmpeg -i '$input' -c:v libx264 -crf 18 -c:a flac '$output'"
       }
-    '';
-
-    initExtra = ''
+      ##
       hash -d dots="$HOME/dots"
       hash -d git="$HOME/git"
       hash -d mgit="$HOME/git/thecathe"

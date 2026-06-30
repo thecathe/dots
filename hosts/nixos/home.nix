@@ -27,29 +27,7 @@
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = with pkgs; [
-    wget
-
-    fzf
-
-    nix
-    nixfmt
-    # -powerlevel9k
-    ansi
-
-    powerline
-    powerline-go
-    powerline-fonts
-    powerline-symbols
-
-    tmux
-    abduco
-    dvtm
-
-    git
-    gh
-
     discord
-    obsidian
 
     expat # required by fontconfig?
     fontconfig # required by hyprland?
@@ -72,36 +50,13 @@
     ## https://github.com/ilyamiro/nixos-configuration/blob/master/home.nix
     adwaita-icon-theme
 
-    pomodoro
+    ## music players?
     # musicus
     adw-gtk3
     # musicpod
     # resonance
     # recordbox
     # amarok
-
-    gource
-
-    flatpak
-    libappimage
-
-    # for battlenet: https://wiki.nixos.org/wiki/Battle.net
-    # (wineWow64Packages.full.override {
-    #   wineRelease = "staging";
-    #   mingwSupport = true;
-    # })
-
-    ffmpeg
-    obs-studio
-    satty
-
-    kittysay
-    fastfetch
-
-    vscode
-    onedrive
-
-    rmpc
 
     # minecraft launcher
     (prismlauncher.override {
