@@ -63,9 +63,8 @@
             useGlobalPkgs = true;
             useUserPackages = true;
             extraSpecialArgs = {inherit inputs;};
-            sharedModules = [
-              inputs.stylix.homeModules.stylix
-            ];
+            # sharedModules = [
+            # ];
             users.cathe = import ./hosts/nixos/home.nix;
           };
         }
