@@ -8,7 +8,7 @@
       kitty.enable = true;
       ## disable
       starship.enable = false;
-      neovim.enable = false;
+      # neovim.enable = false;
       zathura.enable = false;
       ## disable for gnome
       qt.enable = false;
