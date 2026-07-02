@@ -11,10 +11,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    ## onto nvim plugin
-    onto-nvim = {
-      # url = "path:/home/cathe/Documents/git/thecathe/ontocaml";
-      url = "github:thecathe/ontocaml";
+    # snapd
+    nix-snapd = {
+      url = "github:nix-community/nix-snapd";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -29,12 +28,20 @@
 
     # for non-nixos hosts
     nixgl.url = "github:nix-community/nixGL";
+
+    ## onto nvim plugin
+    onto-nvim = {
+      # url = "path:/home/cathe/Documents/git/thecathe/ontocaml";
+      url = "github:thecathe/ontocaml";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     self,
     nixpkgs,
     home-manager,
+    nix-snapd,
     nix-gaming,
     stylix,
     nixgl,
@@ -67,6 +74,11 @@
             # ];
             users.cathe = import ./hosts/nixos/home.nix;
           };
+        }
+
+        nix-snapd.nixosModules.default
+        {
+          services.snap.enable = true;
         }
       ];
     };
