@@ -1,7 +1,10 @@
-{ pkgs, inputs, ... }:
-
 {
+  pkgs,
+  inputs,
+  ...
+}: {
   imports = [
     ./gaming
+    ./nordvpn.nix
   ];
 }
