@@ -1,6 +1,7 @@
 {pkgs, ...}: {
   networking = {
-    firewall.checkReversePath = false;
+    networkmanager.unmanaged = ["interface-name:nordlynx"];
+    # firewall.checkReversePath = false;
     wg-quick.interfaces.nordlynx = {
       autostart = false;
       address = ["10.5.0.2/32"];
@@ -9,9 +10,9 @@
 
       peers = [
         {
-          publicKey = "qIhtTW9K4iXWFo5Q4dOPdXg8/xubXr9yEGoN55D8xnA=";
+          publicKey = "8pRFH/FfMBs3eBJCM2ABFoOs/13n78LYQvoovZVLdgI=";
           allowedIPs = ["0.0.0.0/0" "::/0"];
-          endpoint = "ca1697.nordvpn.com:51820";
+          endpoint = "us2944.nordvpn.com:51820";
           persistentKeepalive = 25;
         }
       ];
