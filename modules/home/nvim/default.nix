@@ -54,7 +54,7 @@
       ]
       ++ lib.optionals config.myConfig.onto-nvimPlugin.enable [
         ### my dev plugin
-        inputs.onto-nvim.packages.${pkgs.system}.default
+        #        inputs.onto-nvim.packages.${pkgs.system}.default
       ];
 
     plugins = with pkgs.vimPlugins;
