@@ -34,28 +34,27 @@
     # Tools that are truly global — i.e. not version-coupled to a project.
     # Language-specific LSP servers (ocamllsp, erlang_ls) belong in your
     # project devShells so direnv can put the right version on PATH.
-    extraPackages = with pkgs;
-      [
-        git
-        ### nix
-        nix
-        nixd
-        alejandra
-        nix-search-cli
-        nix-index
-        ### latex
-        python314Packages.pylatexenc ## latex2text
-        # texlab
-        # tectonic
-        ## pdf viewer
-        zathura
-        ### lua formatter
-        stylua
-      ]
-      ++ lib.optionals config.myConfig.onto-nvimPlugin.enable [
-        ### my dev plugin
-        #        inputs.onto-nvim.packages.${pkgs.system}.default
-      ];
+    extraPackages = with pkgs; [
+      git
+      ### nix
+      nix
+      nixd
+      alejandra
+      nix-search-cli
+      nix-index
+      ### latex
+      python314Packages.pylatexenc ## latex2text
+      # texlab
+      # tectonic
+      ## pdf viewer
+      zathura
+      ### lua formatter
+      stylua
+    ];
+    #  ++ lib.optionals config.myConfig.onto-nvimPlugin.enable [
+    ### my dev plugin
+    #        inputs.onto-nvim.packages.${pkgs.system}.default
+    # ];
 
     plugins = with pkgs.vimPlugins;
       [
