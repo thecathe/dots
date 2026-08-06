@@ -23,6 +23,14 @@
     };
   };
 
+  ## default terminal
+  xdg.terminal-exec = {
+    enable = true;
+    settings = {
+      default = "kitty.desktop";
+    };
+  };
+
   # gnome apps
   services.gnome.core-apps.enable = true;
   environment.gnome.excludePackages = with pkgs; [
