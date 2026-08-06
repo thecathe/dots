@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+{ pkgs, ... }: {
   qt.platformTheme = "gnome";
 
   # Enable the GNOME Desktop Environment.
@@ -8,15 +8,17 @@
   # Enable touchpad support (enabled default in most desktopManager).
   services.libinput.enable = true;
 
+  # enabling screen cast --
+  # ! still doesn't work for full-screen
   xdg.portal = {
     enable = true;
-    extraPortals = with pkgs; [xdg-desktop-portal-gnome];
+    extraPortals = with pkgs; [ xdg-desktop-portal-gnome ];
     config = {
       gnome = {
-        default = ["gnome"];
-        "org.freedesktop.impl.portal.ScreenCast" = ["gnome"];
-        "org.freedesktop.impl.portal.Screenshot" = ["gnome"];
-        "org.freedesktop.impl.portal.RemoteDesktop" = ["gnome"];
+        default = [ "gnome" ];
+        "org.freedesktop.impl.portal.ScreenCast" = [ "gnome" ];
+        "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
+        "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
       };
     };
   };
@@ -37,14 +39,16 @@
     epiphany
     geary
   ];
-  environment.systemPackages = with pkgs;
-  with gnomeExtensions; [
-    # blur-my-shell ## breaks with folders
-    # just-perfection ## does nothing?
-    # arc-menu
-    # dynamic-panel ## does nothing?
-    # dynamic-music-pill # # does nothing?
-  ];
+  environment.systemPackages =
+    with pkgs;
+    with gnomeExtensions;
+    [
+      # blur-my-shell ## breaks with folders
+      # just-perfection ## does nothing?
+      # arc-menu
+      # dynamic-panel ## does nothing?
+      # dynamic-music-pill # # does nothing?
+    ];
   # programs.geary.enable = false;
   # programs.epiphany.enable = false;
 }
