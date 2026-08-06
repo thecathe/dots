@@ -23,6 +23,7 @@
     };
   };
 
+  # gnome apps
   services.gnome.core-apps.enable = true;
   environment.gnome.excludePackages = with pkgs; [
     gnome-weather
