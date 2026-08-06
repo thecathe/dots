@@ -133,7 +133,7 @@
               #
               tree-sitter-kitty
               tree-sitter-zsh
-              tree-sitter-tmux
+              ## tree-sitter-tmux ## undefined?
               #
               tree-sitter-bash
               tree-sitter-make
