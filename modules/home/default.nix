@@ -48,6 +48,7 @@
       ## software
       vscode
       obsidian
+      audacity
 
       ## cloud storage
       onedrive
