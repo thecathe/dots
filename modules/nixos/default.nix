@@ -4,7 +4,7 @@
   ...
 }: {
   imports = [
-    ./thumbnails
+    ./media
     ./torrent
     ./waydroid
     ./git.nix

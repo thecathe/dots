@@ -1,0 +1,6 @@
+{...}: {
+  imports = [
+    ./thumbnails
+    ./immich
+  ];
+}
