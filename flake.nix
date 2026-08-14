@@ -49,6 +49,8 @@
     ...
   } @ inputs: let
     system = "x86_64-linux";
+    unfreeAllowList = import ./modules/shared/unfree.nix;
+    unfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowList;
   in {
     ###### nixos machine
     nixosConfigurations.nixos = inputs.nixpkgs.lib.nixosSystem {
@@ -60,6 +62,7 @@
             "nix-command"
             "flakes"
           ];
+          nixpkgs.config.allowUnfreePredicate = unfreePredicate;
         }
         ./hosts/nixos
         inputs.stylix.nixosModules.stylix
@@ -85,7 +88,10 @@
 
     ###### worklaptop (ubuntu)
     homeConfigurations."cathe@worklaptop" = inputs.home-manager.lib.homeManagerConfiguration {
-      pkgs = nixpkgs.legacyPackages.${system};
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfreePredicate = unfreePredicate;
+      };
       extraSpecialArgs = {inherit inputs;};
       modules = [
         ./hosts/worklaptop/home.nix

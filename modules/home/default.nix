@@ -11,6 +11,7 @@
     ./shell
     ./firefox
     # ./hyprland
+    ./vscode
     ./zathura
   ];
 
@@ -47,7 +48,6 @@
       rmpc # # kitty music-player?
 
       ## software
-      vscode
       obsidian
       audacity
 

@@ -14,6 +14,7 @@
     ./firefox.nix
     ./nautilus.nix
     ./docker.nix
+    ./vscode.nix
     ./network-sharing.nix
   ];
 }
