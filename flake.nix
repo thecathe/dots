@@ -29,6 +29,12 @@
     # for non-nixos hosts
     nixgl.url = "github:nix-community/nixGL";
 
+    # vscode extensions
+    nix-vscode-extensions = {
+      url = "github:nix-community/nix-vscode-extensions";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     ## onto nvim plugin
     #   onto-nvim = {
     #     # url = "path:/home/cathe/Documents/git/thecathe/ontocaml";
@@ -45,6 +51,7 @@
     nix-gaming,
     stylix,
     nixgl,
+    nix-vscode-extensions,
     #    onto-nvim,
     ...
   } @ inputs: let
@@ -62,7 +69,10 @@
             "nix-command"
             "flakes"
           ];
-          nixpkgs.config.allowUnfreePredicate = unfreePredicate;
+          nixpkgs = {
+            config.allowUnfreePredicate = unfreePredicate;
+            overlays = [inputs.nix-vscode-extensions.overlays.default];
+          };
         }
         ./hosts/nixos
         inputs.stylix.nixosModules.stylix
@@ -91,6 +101,7 @@
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfreePredicate = unfreePredicate;
+        overlays = [inputs.nix-vscode-extensions.overlays.default];
       };
       extraSpecialArgs = {inherit inputs;};
       modules = [

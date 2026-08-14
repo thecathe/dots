@@ -1,29 +1,81 @@
-{ lib, pkgs, ... }:
-let
-  globalExtensions = with pkgs.vscode-extensions; [
-    ### essential
-    mkhl.direnv
-    ### nix
-    bbenoist.nix
-    kamadorueda.alejandra # fmt
-    jnoortheen.nix-ide
-    jeff-hykin.better-nix-syntax
-    ### md
-    yzhang.markdown-all-in-one
-    ### useful
-    natqe.reload
-    christian-kohler.path-intellisense
-    # wraith13.zoombar-vscode ## not in pkgs
-    ### visuals
-    aaron-bond.better-comments
-    # amos402.scope-bar ## not in pkgs
-    ### theme
-    jdinhlife.gruvbox
-    ### claude
-    anthropic.claude-code
+{
+  lib,
+  pkgs,
+  ...
+}: let
+  globalExtensions = with pkgs.vscode-extensions;
+    [
+      ### essential
+      mkhl.direnv
+      ### nix
+      bbenoist.nix
+      kamadorueda.alejandra # fmt
+      jnoortheen.nix-ide
+      jeff-hykin.better-nix-syntax
+      ### useful
+      natqe.reload
+      christian-kohler.path-intellisense
+      zainchen.json
+      yzhang.markdown-all-in-one
+      tomoki1207.pdf
+      ### visuals
+      aaron-bond.better-comments
+      ### theme
+      jdinhlife.gruvbox
+      ### claude
+      anthropic.claude-code
+    ]
+    ++ (with pkgs.nix-vscode-extensions.vscode-marketplace-release-universal; [
+      ### utils
+      wraith13.zoombar-vscode ## not in pkgs
+      amos402.scope-bar
+      tomoki1207.selectline-statusbar
+      ### theme
+      yile-ou.paddy-color-theme
+      ### visual
+      sirtori.indenticator
+    ]);
+  groupExt_ocaml = with pkgs.vscode-extensions;
+    [
+      ocamllabs.ocaml-platform
+    ]
+    ++ (with pkgs.nix-vscode-extensions.vscode-marketplace-release-universal; [
+      ]);
+  groupExt_go = with pkgs.vscode-extensions; [
+    golang.go
+  ];
+  groupExt_erlang = with pkgs.vscode-extensions;
+    [
+    ]
+    ++ (with pkgs.nix-vscode-extensions.vscode-marketplace-release-universal; [
+      erlang-language-platform.erlang-language-platform
+      erlang-ls.erlang-ls
+      pgourlain.erlang
+    ]);
+  groupExt_python = with pkgs.vscode-extensions;
+    [
+      ms-python.python
+      ms-python.vscode-python-envs
+    ]
+    ++ (with pkgs.nix-vscode-extensions.vscode-marketplace-release-universal; [
+      ]);
+  groupExt_latex = with pkgs.vscode-extensions;
+    [
+      james-yu.latex-workshop
+    ]
+    ++ (with pkgs.nix-vscode-extensions.vscode-marketplace-release-universal; [
+      phr0s.bib
+    ]);
+  groupExt_web = with pkgs.vscode-extensions;
+    [
+    ]
+    ++ (with pkgs.nix-vscode-extensions.vscode-marketplace-release-universal; [
+      ]);
+  groupExt_java = with pkgs.vscode-extensions; [redhat.java];
+  groupExt_sql = with pkgs.vscode-extensions; [
+    yy0931.vscode-sqlite3-editor
   ];
   globalSettings = {
-
     "extensions.autoUpdate" = "on";
     "security.workspace.trust.untrustedFiles" = "open";
     "zenMode.hideLineNumbers" = false;
@@ -52,8 +104,7 @@ let
 
     "wordcounter.simple_wordcount" = false;
     "wordcounter.include_eol_chars" = false;
-    "wordcounter.side.left" = [ "word" ];
-
+    "wordcounter.side.left" = ["word"];
 
     "http" = {
       "proxyAuthorization" = null;
@@ -117,6 +168,7 @@ let
     };
 
     "workbench" = {
+      # "colorTheme" = "Gruvbox Dark Soft";
       "colorTheme" = "paddy-eucalyptus-upright";
 
       "editorAssociations" = {
@@ -256,8 +308,7 @@ let
       }
     ];
   };
-in
-{
+in {
   programs.vscode = {
     enable = true;
     mutableExtensionsDir = true;
@@ -266,202 +317,196 @@ in
     extensions = globalExtensions;
     profiles =
       builtins.mapAttrs
-        (
-          name: profileConfig:
+      (
+        name: profileConfig:
           profileConfig
           // {
-#            extensions = globalExtensions ++ (profileConfig.extensions or [ ]);
-            userSettings = globalSettings // (profileConfig.extensions or { });
+            extensions = globalExtensions ++ (profileConfig.extensions or []);
+            userSettings = globalSettings // (profileConfig.userSettings or {});
           }
-        )
-        {
-          default = {};
-          #       "nix" = {
-          #         extensions = with pkgs.vscode-extensions; [
-          #           bbenoist.nix
-          #           kamadorueda.alejandra # fmt
-          #           jnoortheen.nix-ide
-          #           jeff-hykin.better-nix-syntax
-          #         ];
-          #       };
+      )
+      {
+        default = {};
 
-          #       "ocaml" = {
+        "INDIMO" = {
+          extensions = groupExt_erlang ++ groupExt_python ++ groupExt_go;
+        };
 
-          #       };
-          #       "erlang" = {
+        "ocaml" = {
+          extensions = groupExt_ocaml;
+        };
+        "erlang" = {
+          extensions = groupExt_erlang;
+        };
+        "go" = {
+          extensions = groupExt_go;
+        };
+        "python" = {
+          extensions = groupExt_python;
+        };
+        "web" = {
+          extensions = groupExt_web;
+        };
+        "latex" = {
+          extensions = groupExt_latex;
+          userSettings = {
+            "[latex]" = {
+              "editor" = {
+                "foldingStrategy" = "indentation";
+                "wordWrap" = "wordWrapColumn";
+                "rulers" = [72];
+                "defaultFormatter" = "James-Yu.latex-workshop";
+              };
 
-          #       };
-          #       "go" = {
-
-          #       };
-          #       "python" = {
-
-          #       };
-          #       "web" = {
-
-          #       };
-          "latex" = {
-            userSettings = {
-              "[latex]" = {
-                "editor" = {
-                  "foldingStrategy" = "indentation";
-                  "wordWrap" = "wordWrapColumn";
-                  "rulers" = [ 72 ];
-                  "defaultFormatter" = "James-Yu.latex-workshop";
+              "ltex" = {
+                "disabledRules" = {
+                  "en-GB" = ["SENTENCE_WHITESPACE"];
                 };
+                "enabledRules" = {};
 
-                "ltex" = {
-                  "disabledRules" = {
-                    "en-GB" = [ "SENTENCE_WHITESPACE" ];
-                  };
-                  "enabledRules" = { };
+                "additionalRules.motherTongue" = "en-GB";
+                "language" = "en-GB";
+                "completionEnabled" = true;
+              };
 
-                  "additionalRules.motherTongue" = "en-GB";
-                  "language" = "en-GB";
-                  "completionEnabled" = true;
+              "vslilypond" = {
+                "general.pathToLilypond" = "C:\\Program Files (x86)\\LilyPond\\usr\\bin\\lilypond.exe";
+              };
+
+              "latex-workshop" = {
+                "editor.wordWrap" = "on";
+                "view.pdf.zoom" = "page-width";
+                "intellisense.unimathsymbols.enabled" = true;
+                "linting.chktex.convertOutput.column.enabled" = false;
+                "latex" = {
+                  "watch.pdf.delay" = 500;
+                  "search.rootFiles.exclude" = ["_*_only.tex"];
+                  "search.rootFiles.include" = ["main.tex"];
                 };
+                "view" = {
+                  "outline.sections" = [
+                    "part"
+                    "chapter"
+                    "section"
+                    "subsection"
+                    "subsubsection"
+                    "paragraph"
+                  ];
+                  "pdf" = {
+                    "trim" = 3;
+                    "invertMode.grayscale" = 0.2;
+                    "invertMode.brightness" = 1.5;
+                    "viewer" = "tab";
 
-                "vslilypond" = {
-                  "general.pathToLilypond" = "C:\\Program Files (x86)\\LilyPond\\usr\\bin\\lilypond.exe";
-                };
-
-                "latex-workshop" = {
-
-                  "editor.wordWrap" = "on";
-                  "view.pdf.zoom" = "page-width";
-                  "intellisense.unimathsymbols.enabled" = true;
-                  "linting.chktex.convertOutput.column.enabled" = false;
-                  "latex" = {
-                    "watch.pdf.delay" = 500;
-                    "search.rootFiles.exclude" = [ "_*_only.tex" ];
-                    "search.rootFiles.include" = [ "main.tex" ];
-                  };
-                  "view" = {
-
-                    "outline.sections" = [
-                      "part"
-                      "chapter"
-                      "section"
-                      "subsection"
-                      "subsubsection"
-                      "paragraph"
+                    "latex.tools" = [
+                      {
+                        "name" = "latexmk";
+                        "command" = "latexmk";
+                        "args" = [
+                          # "-bibtex";
+                          "-shell-escape"
+                          "-synctex=1"
+                          "-interaction=nonstopmode"
+                          "-file-line-error"
+                          "-pdf"
+                          "-outdir=%OUTDIR%"
+                          "%DOC%"
+                        ];
+                        "env" = {};
+                      }
+                      {
+                        "name" = "lualatexmk";
+                        "command" = "latexmk";
+                        "args" = [
+                          "-synctex=1"
+                          "-interaction=nonstopmode"
+                          "-file-line-error"
+                          "-lualatex"
+                          "-outdir=%OUTDIR%"
+                          "%DOC%"
+                        ];
+                        "env" = {};
+                      }
+                      {
+                        "name" = "xelatexmk";
+                        "command" = "latexmk";
+                        "args" = [
+                          "-synctex=1"
+                          "-interaction=nonstopmode"
+                          "-file-line-error"
+                          "-xelatex"
+                          "-outdir=%OUTDIR%"
+                          "%DOC%"
+                        ];
+                        "env" = {};
+                      }
+                      {
+                        "name" = "latexmk_rconly";
+                        "command" = "latexmk";
+                        "args" = ["%DOC%"];
+                        "env" = {};
+                      }
+                      {
+                        "name" = "pdflatex";
+                        "command" = "pdflatex";
+                        "args" = [
+                          "-synctex=1"
+                          "-interaction=nonstopmode"
+                          "-file-line-error"
+                          "%DOC%"
+                        ];
+                        "env" = {};
+                      }
+                      {
+                        "name" = "bibtex";
+                        "command" = "bibtex";
+                        "args" = ["%DOCFILE%"];
+                        "env" = {};
+                      }
+                      {
+                        "name" = "rnw2tex";
+                        "command" = "Rscript";
+                        "args" = [
+                          "-e"
+                          "knitr::opts_knit$set(concordance = TRUE); knitr::knit('%DOCFILE_EXT%')"
+                        ];
+                        "env" = {};
+                      }
+                      {
+                        "name" = "jnw2tex";
+                        "command" = "julia";
+                        "args" = [
+                          "-e"
+                          "using Weave; weave(\"%DOC_EXT%\"; doctype=\"tex\")"
+                        ];
+                        "env" = {};
+                      }
+                      {
+                        "name" = "jnw2texmintex";
+                        "command" = "julia";
+                        "args" = [
+                          "-e"
+                          "using Weave; weave(\"%DOC_EXT%\"; doctype=\"texminted\")"
+                        ];
+                        "env" = {};
+                      }
+                      {
+                        "name" = "tectonic";
+                        "command" = "tectonic";
+                        "args" = [
+                          "--synctex"
+                          "--keep-logs"
+                          "%DOC%.tex"
+                        ];
+                        "env" = {};
+                      }
                     ];
-                    "pdf" = {
-                      "trim" = 3;
-                      "invertMode.grayscale" = 0.2;
-                      "invertMode.brightness" = 1.5;
-                      "viewer" = "tab";
-
-                      "latex.tools" = [
-                        {
-                          "name" = "latexmk";
-                          "command" = "latexmk";
-                          "args" = [
-                            # "-bibtex";
-                            "-shell-escape"
-                            "-synctex=1"
-                            "-interaction=nonstopmode"
-                            "-file-line-error"
-                            "-pdf"
-                            "-outdir=%OUTDIR%"
-                            "%DOC%"
-                          ];
-                          "env" = { };
-                        }
-                        {
-                          "name" = "lualatexmk";
-                          "command" = "latexmk";
-                          "args" = [
-                            "-synctex=1"
-                            "-interaction=nonstopmode"
-                            "-file-line-error"
-                            "-lualatex"
-                            "-outdir=%OUTDIR%"
-                            "%DOC%"
-                          ];
-                          "env" = { };
-                        }
-                        {
-                          "name" = "xelatexmk";
-                          "command" = "latexmk";
-                          "args" = [
-                            "-synctex=1"
-                            "-interaction=nonstopmode"
-                            "-file-line-error"
-                            "-xelatex"
-                            "-outdir=%OUTDIR%"
-                            "%DOC%"
-                          ];
-                          "env" = { };
-                        }
-                        {
-                          "name" = "latexmk_rconly";
-                          "command" = "latexmk";
-                          "args" = [ "%DOC%" ];
-                          "env" = { };
-                        }
-                        {
-                          "name" = "pdflatex";
-                          "command" = "pdflatex";
-                          "args" = [
-                            "-synctex=1"
-                            "-interaction=nonstopmode"
-                            "-file-line-error"
-                            "%DOC%"
-                          ];
-                          "env" = { };
-                        }
-                        {
-                          "name" = "bibtex";
-                          "command" = "bibtex";
-                          "args" = [ "%DOCFILE%" ];
-                          "env" = { };
-                        }
-                        {
-                          "name" = "rnw2tex";
-                          "command" = "Rscript";
-                          "args" = [
-                            "-e"
-                            "knitr::opts_knit$set(concordance = TRUE); knitr::knit('%DOCFILE_EXT%')"
-                          ];
-                          "env" = { };
-                        }
-                        {
-                          "name" = "jnw2tex";
-                          "command" = "julia";
-                          "args" = [
-                            "-e"
-                            "using Weave; weave(\"%DOC_EXT%\"; doctype=\"tex\")"
-                          ];
-                          "env" = { };
-                        }
-                        {
-                          "name" = "jnw2texmintex";
-                          "command" = "julia";
-                          "args" = [
-                            "-e"
-                            "using Weave; weave(\"%DOC_EXT%\"; doctype=\"texminted\")"
-                          ];
-                          "env" = { };
-                        }
-                        {
-                          "name" = "tectonic";
-                          "command" = "tectonic";
-                          "args" = [
-                            "--synctex"
-                            "--keep-logs"
-                            "%DOC%.tex"
-                          ];
-                          "env" = { };
-                        }
-                      ];
-                    };
                   };
                 };
               };
             };
           };
-
         };
+      };
   };
 }
