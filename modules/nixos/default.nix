@@ -15,6 +15,7 @@
     ./nautilus.nix
     ./docker.nix
     ./vscode.nix
+    ./claude.nix
     ./network-sharing.nix
   ];
 }

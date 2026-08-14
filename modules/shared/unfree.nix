@@ -1,1 +1,1 @@
-[ "vscode" "obsidian" ]
+[ "vscode" "obsidian" "claude-code" ]

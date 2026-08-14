@@ -13,6 +13,7 @@
     # ./hyprland
     ./vscode
     ./obsidian
+    ./claude
     ./zathura
   ];
 
