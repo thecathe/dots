@@ -12,6 +12,7 @@
     ./firefox
     # ./hyprland
     ./vscode
+    ./obsidian
     ./zathura
   ];
 
@@ -48,7 +49,6 @@
       rmpc # # kitty music-player?
 
       ## software
-      obsidian
       audacity
 
       ## cloud storage
