@@ -19,6 +19,8 @@ let
     # amos402.scope-bar ## not in pkgs
     ### theme
     jdinhlife.gruvbox
+    ### claude
+    anthropic.claude-code
   ];
   globalSettings = {
 
