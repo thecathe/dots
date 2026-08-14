@@ -2,7 +2,8 @@
   pkgs,
   lib,
   ...
-}: {
+}:
+{
   imports = [
     ./git
     ./nvim
@@ -13,7 +14,7 @@
     ./zathura
   ];
 
-  options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";
+  # options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";
   config = {
     home.packages = with pkgs; [
       ## essential
@@ -25,25 +26,25 @@
       nixfmt
 
       ## packages
-      flatpak ## installer
-      libappimage ## appimage
+      flatpak # # installer
+      libappimage # # appimage
 
       ## git
       git
       gh
-      gource ## timelapse
+      gource # # timelapse
 
       ## terminal
-      tmux ## multiplexer
+      tmux # # multiplexer
       # abduco ## sessions, kitty?
       # dvtm ## tilling, kitty?
 
       ## audio tools
       ffmpeg
-      obs-studio ## screen recording
+      obs-studio # # screen recording
 
       ## music
-      rmpc ## kitty music-player?
+      rmpc # # kitty music-player?
 
       ## software
       vscode
@@ -54,10 +55,10 @@
       onedrive
 
       ## misc
-      satty ## screenshot tool
-      ansi ## get ansi escape sequences
-      rpi-imager ## rasberry-pi headless config
-      pomodoro ## timer
+      satty # # screenshot tool
+      ansi # # get ansi escape sequences
+      rpi-imager # # rasberry-pi headless config
+      pomodoro # # timer
 
       ## silly
       kittysay
