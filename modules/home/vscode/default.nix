@@ -258,18 +258,22 @@ in
 {
   programs.vscode = {
     enable = true;
-    mutableExtensionsDir = false;
+    mutableExtensionsDir = true;
+    enableUpdateCheck = false;
+    enableExtensionUpdateCheck = false;
+    extensions = globalExtensions;
     profiles =
       builtins.mapAttrs
         (
           name: profileConfig:
           profileConfig
           // {
-            extensions = globalExtensions ++ (profileConfig.extensions or [ ]);
+#            extensions = globalExtensions ++ (profileConfig.extensions or [ ]);
             userSettings = globalSettings // (profileConfig.extensions or { });
           }
         )
         {
+          default = {};
           #       "nix" = {
           #         extensions = with pkgs.vscode-extensions; [
           #           bbenoist.nix
