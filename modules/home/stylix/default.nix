@@ -15,6 +15,7 @@
       gnome.enable = false;
       gtk.enable = false;
       ## gnome-shell.enable = false;
+      vscode.enable = false;
     };
 
     base16Scheme = "${pkgs.base16-schemes}/share/themes/gruvbox-dark-hard.yaml";
