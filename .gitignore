@@ -1,2 +1,3 @@
 # workspace configs
 .vscode
+!/templates/*/.vscode
