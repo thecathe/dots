@@ -59,6 +59,7 @@
 in {
   programs.vscode = {
     enable = true;
+    programs.vscode.package = pkgs.vscodium;
     mutableExtensionsDir = true;
     enableUpdateCheck = false;
     enableExtensionUpdateCheck = false;
@@ -76,6 +77,16 @@ in {
       "go" = goProfile.profile;
       "erlang" = erlangProfile.profile;
       "java" = javaProfile.profile;
+    };
+  };
+
+  # vscodium marketplace redirect
+  xdg.configFile."VSCodium/product.json".text = builtins.toJSON {
+    extensionsGallery = {
+      serviceUrl = "https://marketplace.visualstudio.com/_apis/public/gallery";
+      itemUrl = "https://marketplace.visualstudio.com/items";
+      resourceUrlTemplate = "https://{publisher}.vscode-unpkg.net/{publisher}/{name}/{version}/{path}";
+      extensionUrlTemplate = "https://www.vscode-unpkg.net/_gallery/{publisher}/{name}/latest";
     };
   };
 }
