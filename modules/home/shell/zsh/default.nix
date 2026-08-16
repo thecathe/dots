@@ -1,4 +1,5 @@
 {...}: {
+  imports = [./aliases.nix];
   programs.bash.sessionVariables = {KP_EDITOR = "neovide";};
   programs.zsh = {
     enable = true;
@@ -32,21 +33,6 @@
         nix-shell -p ffmpeg --run \
           "ffmpeg -i '$input' -c:v libx264 -crf 18 -c:a flac '$output'"
       }
-      ##
-      hash -d dots="$HOME/dots"
-      hash -d git="$HOME/git"
-      hash -d mgit="$HOME/git/thecathe"
-      hash -d indimo="$HOME/git/thecathe/indimo"
-      hash -d ontocaml="$HOME/git/thecathe/ontocaml"
-      hash -d cloakaml="$HOME/git/thecathe/cloakaml"
     '';
-
-    shellAliases = {
-      img2pdf = "nix-shell -p img2pdf --run $SHELL";
-      torrent = "qbittorrent & tor-browser &";
-      epub = "nix-shell -p epy --run $SHELL";
-      upwayd = "sudo systemctl start waydroid-container && waydroid session start &";
-      dnwayd = "waydroid session stop && sudo systemctl stop waydroid-container";
-    };
   };
 }

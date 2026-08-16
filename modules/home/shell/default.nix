@@ -1,7 +1,7 @@
 {...}: {
   imports = [
+    ./zsh
     ./direnv.nix
-    ./zsh.nix
     ./starship.nix
     ./tmux.nix
     ./kitty.nix
