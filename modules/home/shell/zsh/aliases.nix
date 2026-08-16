@@ -59,8 +59,8 @@ in {
     }
 
     ## dhash files
-    [[ -f ${aliasDir}/dirs.dots.zsh  ]] && source ${aliasDir}/dirs.dots.zsh
-    [[ -f ${aliasDir}/dirs.local.zsh ]] && source ${aliasDir}/dirs.local.zsh
+    [[ -f ${aliasDir}/dirs.local.zsh ]] && source ${aliasDir}/dirs.local.zsh  ## local first to setup "roots" e.g., ~git ~dots
+    [[ -f ${aliasDir}/dirs.dots.zsh  ]] && source ${aliasDir}/dirs.dots.zsh   ## relies on several "roots" defined above
 
     dhash-set() {
       local scope=dots ## default (optiona=local)
