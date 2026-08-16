@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{pkgs, ...}: {
   qt.platformTheme = "gnome";
 
   # Enable the GNOME Desktop Environment.
@@ -12,13 +12,13 @@
   # ! still doesn't work for full-screen
   xdg.portal = {
     enable = true;
-    extraPortals = with pkgs; [ xdg-desktop-portal-gnome ];
+    extraPortals = with pkgs; [xdg-desktop-portal-gnome];
     config = {
       gnome = {
-        default = [ "gnome" ];
-        "org.freedesktop.impl.portal.ScreenCast" = [ "gnome" ];
-        "org.freedesktop.impl.portal.Screenshot" = [ "gnome" ];
-        "org.freedesktop.impl.portal.RemoteDesktop" = [ "gnome" ];
+        default = ["gnome"];
+        "org.freedesktop.impl.portal.ScreenCast" = ["gnome"];
+        "org.freedesktop.impl.portal.Screenshot" = ["gnome"];
+        "org.freedesktop.impl.portal.RemoteDesktop" = ["gnome"];
       };
     };
   };
@@ -27,7 +27,7 @@
   xdg.terminal-exec = {
     enable = true;
     settings = {
-      default = [ "kitty.desktop" ];
+      default = ["kitty.desktop"];
     };
   };
 
@@ -40,24 +40,27 @@
     gnome-contacts
     gnome-logs
     gnome-text-editor
-    gnome-music # # never works
+    gnome-music # never works with off-drive library (maybe because it's window formatted)
     gnome-photos
     gnome-tour
     gnome-user-docs
-    showtime
-    epiphany
-    geary
+    gnome-console
+    gnome-characters
+    gnome-tecla # keyboard viewer
+    decibels # audio
+    epiphany # browser
+    showtime # videos
+    geary # mailbox
+    yelp # help
   ];
-  environment.systemPackages =
-    with pkgs;
-    with gnomeExtensions;
-    [
-      # blur-my-shell ## breaks with folders
-      # just-perfection ## does nothing?
-      # arc-menu
-      # dynamic-panel ## does nothing?
-      # dynamic-music-pill # # does nothing?
-    ];
+  environment.systemPackages = with pkgs;
+  with gnomeExtensions; [
+    # blur-my-shell ## breaks with folders
+    # just-perfection ## does nothing?
+    # arc-menu
+    # dynamic-panel ## does nothing?
+    # dynamic-music-pill # # does nothing?
+  ];
   # programs.geary.enable = false;
   # programs.epiphany.enable = false;
 }
