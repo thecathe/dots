@@ -73,11 +73,11 @@
   fileSystems."/mnt/mini" = {
     device = "/dev/disk/by-uuid/3e3fec8c-e472-4732-8c07-e595c4eba2ab";
     fsType = "ext4";
-    options = [
-      #   # "rw"
-      #   # "nofail"
-      #   # "x-systemd.mount-timeout=180"
-    ];
+    # options = [
+    #   #   # "rw"
+    #   #   # "nofail"
+    #   #   # "x-systemd.mount-timeout=180"
+    # ];
   };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
