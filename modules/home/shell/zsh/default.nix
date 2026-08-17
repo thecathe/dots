@@ -3,6 +3,7 @@
   programs.bash.sessionVariables = {KP_EDITOR = "neovide";};
   programs.zsh = {
     enable = true;
+    defaultKeymap = "emacs";
     enableCompletion = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
