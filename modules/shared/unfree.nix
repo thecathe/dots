@@ -1,1 +1,2 @@
-[ "vscode" "obsidian" "claude-code" ]
+"vscode-extension-natqe-reload" "vscode-extension-anthropic-claude-code" "vscode-extension-ms-vscode-remote-explorer" "vscode-extension-ms-vscode-remote-remote-ssh" "vscode-extension-ms-vscode-remote-remote-ssh-edit"
+["vscode" "obsidian" "claude-code"]
