@@ -58,6 +58,8 @@
     system = "x86_64-linux";
     unfreeAllowList = import ./modules/shared/unfree.nix;
     unfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowList;
+    unfreeAllowListNixOS = unfreeAllowList ++ ["nvidia-x11" "discord" "steam" "steam-unwrapped" "nvidia-settings"];
+    unfreePredicateNixOS = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowListNixOS;
   in {
     ###### nixos machine
     nixosConfigurations.nixos = inputs.nixpkgs.lib.nixosSystem {
@@ -70,7 +72,7 @@
             "flakes"
           ];
           nixpkgs = {
-            config.allowUnfreePredicate = unfreePredicate;
+            config.allowUnfreePredicate = unfreePredicateNixOS;
             overlays = [inputs.nix-vscode-extensions.overlays.default];
           };
         }
