@@ -2,8 +2,7 @@
   pkgs,
   lib,
   ...
-}:
-{
+}: {
   imports = [
     ./git
     ./nvim
@@ -14,7 +13,8 @@
     ./vscode
     ./obsidian
     ./claude
-    ./zathura
+    ./zathura # epub reader?
+    ./navi # commadn cheatsheet tool
   ];
 
   # options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";
