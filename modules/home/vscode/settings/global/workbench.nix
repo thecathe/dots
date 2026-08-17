@@ -1,4 +1,7 @@
 {
+  # Disable floating windows
+  "workbench.editor.useModal" = "off";
+
   # Controls if the empty editor text hint should be visible in the editor.
   "workbench.editor.empty.hint" = "hidden";
 
@@ -74,4 +77,7 @@
   "workbench.colorCustomizations" = {
     "editorRuler.foreground" = "#4f505a";
   };
+
+  "workbench.settings.alwaysShowAdvancedSettings" = true;
+  "workbench.settings.showAISearchToggle" = false;
 }
