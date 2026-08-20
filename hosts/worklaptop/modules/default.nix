@@ -4,6 +4,7 @@
   ...
 }: {
   imports = [
+    ./xmodmap
     ./shell-overrides
   ];
 }
