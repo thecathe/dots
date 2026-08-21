@@ -12,6 +12,7 @@
 in {
   imports = [
     ../../modules/home
+    ./modules
   ];
 
   ## try to fix home-manager installs
