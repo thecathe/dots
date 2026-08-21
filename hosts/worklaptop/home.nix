@@ -2,6 +2,7 @@
   config,
   pkgs,
   inputs,
+  lib,
   ...
 }: let
   nixgl = inputs.nixgl;
@@ -12,6 +13,9 @@ in {
   imports = [
     ../../modules/home
   ];
+
+  ## try to fix home-manager installs
+  targets.genericLinux.enable = true;
 
   ## override
   stylix.targets.kde.enable = false;
