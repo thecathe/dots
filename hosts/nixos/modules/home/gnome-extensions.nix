@@ -7,6 +7,7 @@
     just-perfection # ?
     vitals # CPU/GPU stats
     tiling-assistant # windows-like tile snapping
+    tiling-shell # maybe better tiling?
     auto-move-windows # configure workstations to open on
   ];
 
@@ -16,6 +17,7 @@
     just-perfection.extensionUuid
     vitals.extensionUuid
     tiling-assistant.extensionUuid
+    tiling-shell.extensionUuid
     auto-move-windows.extensionUuid
   ];
 }
