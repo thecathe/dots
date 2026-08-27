@@ -4,6 +4,7 @@
   ...
 }: {
   imports = [
+    ./wm
     ./git
     ./nvim
     ./stylix

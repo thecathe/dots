@@ -73,7 +73,9 @@
           ];
           nixpkgs = {
             config.allowUnfreePredicate = unfreePredicateNixOS;
-            overlays = [inputs.nix-vscode-extensions.overlays.default];
+            overlays = [
+              inputs.nix-vscode-extensions.overlays.default
+            ];
           };
         }
         ./hosts/nixos
@@ -85,8 +87,6 @@
             useGlobalPkgs = true;
             useUserPackages = true;
             extraSpecialArgs = {inherit inputs;};
-            # sharedModules = [
-            # ];
             users.cathe = import ./hosts/nixos/home.nix;
           };
         }
@@ -103,7 +103,9 @@
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfreePredicate = unfreePredicate;
-        overlays = [inputs.nix-vscode-extensions.overlays.default];
+        overlays = [
+          inputs.nix-vscode-extensions.overlays.default
+        ];
       };
       extraSpecialArgs = {inherit inputs;};
       modules = [

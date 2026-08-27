@@ -13,6 +13,7 @@
     ./hardware-configuration.nix
     ./modules/nixos
     ./modules/wm/gnome
+    ./modules/wm/niri
     ../../modules/nixos
   ];
 

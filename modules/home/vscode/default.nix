@@ -8,6 +8,7 @@
   vscodeLib = import ./lib.nix {inherit lib globalSettings globalKeybindings;};
   features = builtins.mapAttrs (_: path: import path {inherit pkgs;}) {
     nix = ./features/nix.nix;
+    kdl = ./features/kdl.nix;
     ocaml = ./features/ocaml.nix;
     erlang = ./features/erlang.nix;
     go = ./features/go.nix;
