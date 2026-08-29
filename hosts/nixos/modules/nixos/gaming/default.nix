@@ -42,10 +42,6 @@
     STEAM_FORCE_DESKTOPUI_SCALING = "1";
     STEAM_FORCE_PIPEWIRE_CAPTURE = "1";
     __EGL_VENDOR_LIBRARY_DIRS = "/run/opengl-driver/share/glvnd/egl_vendor.d";
-    GBM_BACKEND = "nvidia-drm";
-    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-    LIBVA_DRIVER_NAME = "nvidia";
-    NVD_BACKEND = "direct";
   };
   # https://mynixos.com/options/programs.steam
   programs.steam = {
@@ -61,7 +57,11 @@
     xdg.desktopEntries = {
       steam = {
         name = "Steam";
-        exec = "steam -pipewire %U";
+        # GBM_BACKEND/NVD_BACKEND/__GLX_VENDOR_LIBRARY_NAME/LIBVA_DRIVER_NAME
+        # scoped here (rather than global sessionVariables) so they only
+        # force nvidia's GBM/VA-API path for Steam/gamescope, not niri
+        # itself and every other app in the session.
+        exec = "env GBM_BACKEND=nvidia-drm __GLX_VENDOR_LIBRARY_NAME=nvidia LIBVA_DRIVER_NAME=nvidia NVD_BACKEND=direct steam -pipewire %U";
         icon = "steam";
         terminal = false;
         categories = [
@@ -183,8 +183,10 @@
     lowLatency = {
       # enable this module
       enable = true;
-      # defaults (no need to be set unless modified)
-      quantum = 64;
+      # raised from 64: a ~1.3ms buffer forced on the whole pipewire graph
+      # at all times (not just while gaming) was a likely cause of
+      # audio xruns/distortion under normal desktop load.
+      quantum = 1024;
       rate = 48000;
     };
   };

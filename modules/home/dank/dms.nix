@@ -10,7 +10,7 @@
     enableSystemMonitoring = true; # System monitoring widgets (dgop)
     enableVPN = true; # VPN management widget
     enableDynamicTheming = true; # Wallpaper-based theming (matugen)
-    enableAudioWavelength = true; # Audio visualizer (cava)
+    enableAudioWavelength = false; # Audio visualizer (cava) - disabled: continuous audio capture + redraw suspected of contributing to pipewire xruns and compositor flicker
     enableCalendarEvents = true; # Calendar integration (khal)
 
     # dank packages
