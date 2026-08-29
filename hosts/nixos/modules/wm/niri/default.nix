@@ -15,7 +15,11 @@
   # IME not working on Electron apps
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
-  # XWayland apps not working
+  # niri auto-spawns xwayland-satellite on demand (since 25.08) as long as the
+  # binary is on PATH - it still needs to be installed, just no manual
+  # spawn-at-startup/DISPLAY wiring. Note: X11 apps that position themselves at
+  # absolute screen coordinates (e.g. game overlays) still won't behave
+  # correctly under this rootless proxy - that needs a nested compositor.
   environment.systemPackages = with pkgs; [
     xwayland-satellite # xwayland support
   ];

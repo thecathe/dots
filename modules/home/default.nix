@@ -5,6 +5,7 @@
 }: {
   imports = [
     ./wm
+    ./dank
     ./git
     ./nvim
     ./stylix

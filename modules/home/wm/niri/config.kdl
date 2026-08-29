@@ -112,7 +112,7 @@ input {
 // https://niri-wm.github.io/niri/Configuration:-Layout
 layout {
     // Set gaps around windows in logical pixels.
-    gaps 16
+    gaps 12
 
     // When to center a column when changing focus, options are:
     // - "never", default behavior, focusing an off-screen column will keep at the left
@@ -269,7 +269,7 @@ layout {
 // See the binds section below for more spawn examples.
 
 // This line starts waybar, a commonly used bar for Wayland compositors.
-spawn-at-startup "waybar"
+// spawn-at-startup "waybar"
 
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
@@ -334,6 +334,19 @@ window-rule {
     // - Flatpak Firefox (app-id is "org.mozilla.firefox")
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
     open-floating true
+}
+
+// Open the nested rootful Xwayland session (used to run Hearthstone and
+// Hearthstone Deck Tracker together so HDT's overlay can position itself
+// absolutely relative to Hearthstone, which niri's own Xwayland integration
+// doesn't support) fullscreen immediately, instead of at the default column
+// width. Also enables on-demand VRR (configured on the output in
+// hosts/nixos/modules/home/monitor.nix) while this session is shown, since
+// it's the one gaming context modeled as its own window here.
+window-rule {
+    match app-id=r#"^org\.freedesktop\.Xwayland$"#
+    open-fullscreen true
+    variable-refresh-rate true
 }
 
 // Example: block out two password managers from screen capture.

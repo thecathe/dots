@@ -26,6 +26,23 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # DankMaterialShell (niri)
+    dms = {
+      url = "github:AvengeMedia/DankMaterialShell/stable";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # (dms) notification
+    dgop = {
+      url = "github:AvengeMedia/dgop";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    dms-plugin-registry = {
+      url = "github:AvengeMedia/dms-plugin-registry";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # for non-nixos hosts
     nixgl.url = "github:nix-community/nixGL";
 
@@ -50,6 +67,9 @@
     nix-snapd,
     nix-gaming,
     stylix,
+    dms,
+    dgop,
+    dms-plugin-registry,
     nixgl,
     nix-vscode-extensions,
     #    onto-nvim,
@@ -80,6 +100,8 @@
         }
         ./hosts/nixos
         inputs.stylix.nixosModules.stylix
+        inputs.dms.nixosModules.dank-material-shell
+        inputs.dms-plugin-registry.nixosModules.default
 
         home-manager.nixosModules.home-manager
         {
@@ -87,6 +109,10 @@
             useGlobalPkgs = true;
             useUserPackages = true;
             extraSpecialArgs = {inherit inputs;};
+            sharedModules = [
+              inputs.dms.homeModules.dank-material-shell
+              inputs.dms-plugin-registry.homeModules.default
+            ];
             users.cathe = import ./hosts/nixos/home.nix;
           };
         }
@@ -111,6 +137,8 @@
       modules = [
         ./hosts/worklaptop/home.nix
         inputs.stylix.homeModules.stylix
+        inputs.dms.homeModules.dank-material-shell
+        inputs.dms-plugin-registry.homeModules.default
       ];
     };
 

@@ -5,5 +5,6 @@
 }: {
   imports = [
     ./gnome-extensions.nix
+    ./monitor.nix
   ];
 }
