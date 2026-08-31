@@ -653,4 +653,23 @@ binds {
     // Powers off the monitors. To turn them back on, do any input like
     // moving the mouse or pressing any other key.
     Mod+Shift+P { power-off-monitors; }
+
+    // hearthstone-with-tracker session controls. All five no-op harmlessly
+    // if no session is currently running (each script checks a latch file
+    // hearthstone-with-tracker itself maintains).
+    Ctrl+Alt+G hotkey-overlay-title="Focus Hearthstone session (if active)" {
+        spawn-sh "hearthstone-focus-session"
+    }
+    Ctrl+Alt+H hotkey-overlay-title="Focus Hearthstone (if session active)" {
+        spawn-sh "hearthstone-focus-window hearthstone"
+    }
+    Ctrl+Alt+B hotkey-overlay-title="Focus Battle.net (if session active)" {
+        spawn-sh "hearthstone-focus-window battlenet"
+    }
+    Ctrl+Alt+T hotkey-overlay-title="Focus HDT (if session active)" {
+        spawn-sh "hearthstone-focus-window hdt"
+    }
+    Ctrl+Alt+R hotkey-overlay-title="Restart HDT (if session active)" {
+        spawn-sh "hearthstone-restart-tracker"
+    }
 }
