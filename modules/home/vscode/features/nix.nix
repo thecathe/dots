@@ -21,12 +21,14 @@
               "alejandra"
             ];
           };
+          # builtins.getFlake fails on the ~/dots symlink ("path is a symlink")
+          # so these use the real repo path instead.
           "options" = {
             "nixos" = {
-              "expr" = "(builtins.getFlake \"/home/cathe/dots\").nixosConfigurations.nixos.options";
+              "expr" = "(builtins.getFlake \"/home/cathe/Documents/git/thecathe/dots\").nixosConfigurations.nixos.options";
             };
             "home_manager" = {
-              "expr" = "(builtins.getFlake \"/home/cathe/dots\").nixosConfigurations.nixos.options.home-manager.users.cathe";
+              "expr" = "(builtins.getFlake \"/home/cathe/Documents/git/thecathe/dots\").nixosConfigurations.nixos.options.home-manager.users.type.getSubOptions []";
             };
           };
         };
