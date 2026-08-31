@@ -11,7 +11,6 @@
       # neovim.enable = false;
       zathura.enable = false;
       ## disable for gnome
-      qt.enable = false;
       gnome.enable = false;
       gtk.enable = false;
       ## gnome-shell.enable = false;
