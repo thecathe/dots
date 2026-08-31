@@ -216,7 +216,6 @@
     zsh-nix-shell
     tmux
     xplr
-    rmpc
 
     fzf
     gh

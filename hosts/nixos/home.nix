@@ -46,13 +46,7 @@
     ## https://github.com/ilyamiro/nixos-configuration/blob/master/home.nix
     adwaita-icon-theme
 
-    ## music players?
-    # musicus
     adw-gtk3
-    # musicpod
-    # resonance
-    # recordbox
-    # amarok
 
     # minecraft launcher
     (prismlauncher.override {
