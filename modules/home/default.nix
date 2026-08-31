@@ -6,6 +6,7 @@
   imports = [
     ./wm
     ./dank
+    ./music
     ./git
     ./nvim
     ./stylix

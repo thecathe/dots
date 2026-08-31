@@ -6,5 +6,6 @@
   imports = [
     ./gnome-extensions.nix
     ./monitor.nix
+    ./music.nix
   ];
 }
