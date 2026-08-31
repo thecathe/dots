@@ -12,20 +12,22 @@
       "enableLanguageServer" = true;
       "serverPath" = "nixd";
       "serverSettings" = {
-        "nixpkgs" = {
-          "expr" = "import <nixpkgs> {}";
-        };
-        "formatting" = {
-          "command" = [
-            "alejandra"
-          ];
-        };
-        "options" = {
-          "nixos" = {
-            "expr" = "(builtins.getFlake \"/home/cathe/dots\").nixosConfigurations.nixos.options";
+        "nixd" = {
+          "nixpkgs" = {
+            "expr" = "import <nixpkgs> {}";
           };
-          "home_manager" = {
-            "expr" = "(builtins.getFlake \"/home/cathe/dots\").homeConfigurations.nixos.options";
+          "formatting" = {
+            "command" = [
+              "alejandra"
+            ];
+          };
+          "options" = {
+            "nixos" = {
+              "expr" = "(builtins.getFlake \"/home/cathe/dots\").nixosConfigurations.nixos.options";
+            };
+            "home_manager" = {
+              "expr" = "(builtins.getFlake \"/home/cathe/dots\").nixosConfigurations.nixos.options.home-manager.users.cathe";
+            };
           };
         };
       };
