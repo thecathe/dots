@@ -167,6 +167,46 @@
         sleep 3
         DISPLAY=":$display_num" "$steam_run" bash "$scriptdir/hdt.sh" &
 
+        # Nothing automatically receives X11 input focus without a window
+        # manager to hand it over - it just stays on the root window
+        # (nowhere) until something explicitly claims it (confirmed live:
+        # `xdotool getwindowfocus` returned the root window id after HDT had
+        # been up for minutes). HDT's own UI appears to depend on actually
+        # receiving that focus/activation to consider itself active - without
+        # it, it's visually present but doesn't respond to clicks at all.
+        # Wait for its window and focus it proactively so it's usable
+        # immediately instead of requiring Ctrl+Alt+T first.
+        (
+          for _ in $(seq 1 30); do
+            win=$(DISPLAY=":$display_num" ${pkgs.xdotool}/bin/xdotool search --name '^Hearthstone Deck Tracker$' 2>/dev/null | head -1)
+            if [ -n "$win" ]; then
+              DISPLAY=":$display_num" ${pkgs.xdotool}/bin/xdotool windowfocus "$win" 2>/dev/null
+              break
+            fi
+            sleep 1
+          done
+        ) &
+
+        # Same reasoning, for whenever Hearthstone itself gets launched (via
+        # HDT's "Start Hearthstone" button, at a time this script doesn't
+        # control): focus it once, the first time its window appears, so it
+        # picks up keyboard/mouse input without needing Ctrl+Alt+H first.
+        # Not raising it (see hearthstone-focus-window) - would cover HDT's
+        # overlay, since there's no window manager to keep it on top.
+        (
+          focused=0
+          while kill -0 "$xwayland_pid" 2>/dev/null; do
+            if [ "$focused" = 0 ]; then
+              win=$(DISPLAY=":$display_num" ${pkgs.xdotool}/bin/xdotool search --name '^Hearthstone$' 2>/dev/null | head -1)
+              if [ -n "$win" ]; then
+                DISPLAY=":$display_num" ${pkgs.xdotool}/bin/xdotool windowfocus "$win" 2>/dev/null
+                focused=1
+              fi
+            fi
+            sleep 2
+          done
+        ) &
+
         # Battle.net's main launcher window relies on a window manager to
         # service its "minimize" request once the game launches, and we
         # deliberately run without one here (needed so HDT's overlay can
@@ -258,7 +298,19 @@
         # order are independent in X11, so focusing without raising still
         # directs keyboard/mouse input to Hearthstone while leaving the
         # overlay visually on top.
-        if [ "$1" != "hearthstone" ]; then
+        if [ "$1" = "hearthstone" ]; then
+          # HDT's main window (title "Hearthstone Deck Tracker") is a
+          # separate, regular window from its overlay (title
+          # "HearthstoneOverlay", confirmed distinct via live xdotool
+          # inspection) - raising it (e.g. via Ctrl+Alt+T) can leave it
+          # stuck on top of Hearthstone indefinitely, since nothing here
+          # raises Hearthstone above it and a plain click doesn't restack
+          # without a window manager. Lower it specifically when switching
+          # back to Hearthstone - this never touches the overlay, which has
+          # a different title and is left alone.
+          hdt_main=$(DISPLAY=":$display_num" ${pkgs.xdotool}/bin/xdotool search --name '^Hearthstone Deck Tracker$' 2>/dev/null | head -1)
+          [ -n "$hdt_main" ] && DISPLAY=":$display_num" ${pkgs.xdotool}/bin/xdotool windowlower "$hdt_main" 2>/dev/null
+        else
           DISPLAY=":$display_num" ${pkgs.xdotool}/bin/xdotool windowraise "$win"
         fi
         DISPLAY=":$display_num" ${pkgs.xdotool}/bin/xdotool windowfocus "$win"
@@ -340,16 +392,24 @@
         [ -f "$latch" ] || exit 0
         display_num=$(cat "$latch")
 
-        # This exact string is far too specific to collide with anything
+        # Two patterns, both far too specific to collide with anything
         # unrelated (unlike the broad patterns that caused real problems
-        # earlier in this project) - anchored both ends against HDT's own,
-        # highly distinctive argv. Note: since Hearthstone now launches as
-        # HDT's own child (via its "Start Hearthstone" button, see
-        # hearthstone-with-tracker), killing HDT here may or may not take
-        # Hearthstone down with it depending on how HDT spawns it - if
-        # Hearthstone survives as an orphan, the fresh HDT instance this
-        # starts won't automatically reattach to it; use "Start Hearthstone"
-        # again from inside it if so.
+        # earlier in this project): the launch chain shows a Linux absolute
+        # path (umu-run, umu.exe, and everything in between) right up until
+        # the real exe takes over and self-reports a Windows-style path
+        # instead (how wine represents its own argv). Matching only the
+        # final form (as before) misses anything still stuck mid-bootstrap
+        # from a previous attempt that never made it that far - confirmed in
+        # practice: a stuck bootstrap-stage chain from an earlier restart
+        # survived indefinitely because this didn't catch it, while new
+        # restart attempts kept piling up alongside it. Note: since
+        # Hearthstone now launches as HDT's own child (via its "Start
+        # Hearthstone" button, see hearthstone-with-tracker), killing HDT
+        # here may or may not take Hearthstone down with it depending on how
+        # HDT spawns it - if Hearthstone survives as an orphan, the fresh
+        # HDT instance this starts won't automatically reattach to it; use
+        # "Start Hearthstone" again from inside it if so.
+        pkill -f "$HOME/Games/battlenet/drive_c/Hearthstone Deck Tracker/Hearthstone Deck Tracker\.exe" 2>/dev/null
         pkill -f '^C:.Hearthstone Deck Tracker.Hearthstone Deck Tracker\.exe$' 2>/dev/null
 
         mkdir -p "$HOME/.cache"
@@ -358,6 +418,20 @@
 
         export PATH="${pkgs.python3}/bin:$PATH"
         DISPLAY=":$display_num" ${pkgs.steam-run}/bin/steam-run bash "$scriptdir/hdt.sh" &
+
+        # Proactively focus it once up, same reasoning as
+        # hearthstone-with-tracker - nothing gets X11 input focus
+        # automatically without a window manager to hand it over.
+        (
+          for _ in $(seq 1 30); do
+            win=$(DISPLAY=":$display_num" ${pkgs.xdotool}/bin/xdotool search --name '^Hearthstone Deck Tracker$' 2>/dev/null | head -1)
+            if [ -n "$win" ]; then
+              DISPLAY=":$display_num" ${pkgs.xdotool}/bin/xdotool windowfocus "$win" 2>/dev/null
+              break
+            fi
+            sleep 1
+          done
+        ) &
       '')
     ];
   };
