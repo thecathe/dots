@@ -10,3 +10,4 @@ modules/home/shell/zsh/aliases.local.zsh
 modules/home/shell/zsh/dirs.local.zsh
 # allows local settings to be overridden
 modules/home/claude/settings.local.json
+modules/home/dank/session.local.json
