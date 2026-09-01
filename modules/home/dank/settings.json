@@ -787,7 +787,10 @@
         "showAnalogNumbers": false,
         "showAnalogSeconds": true,
         "displayPreferences": [
-          "all"
+          {
+            "model": "24G4",
+            "name": "DP-1"
+          }
         ],
         "showOnOverlay": false,
         "showOnOverview": false,
