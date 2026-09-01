@@ -846,25 +846,26 @@
         ],
         "showPressure": true,
         "showHourlyForecast": true,
-        "viewMode": "forecast",
+        "viewMode": "detailed",
         "colorMode": "primary",
-        "showLocation": false,
+        "showLocation": true,
         "showCondition": true,
         "showFeelsLike": true,
         "showSunTimes": true,
         "showForecast": true,
         "forecastDays": 5,
-        "clickThrough": true,
-        "hourlyCount": 12,
+        "clickThrough": false,
+        "hourlyCount": 24,
         "showOnOverviewOnly": true,
-        "showOnOverview": false
+        "showOnOverview": false,
+        "showOnOverlay": false
       },
       "positions": {
         "DP-1": {
-          "width": 280,
-          "height": 320,
-          "x": 20.0390625,
-          "y": 746.47265625
+          "width": 280.0,
+          "height": 380.0,
+          "x": 16.3203125,
+          "y": 704.05078125
         }
       }
     }
