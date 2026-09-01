@@ -13,4 +13,10 @@
         variable-refresh-rate on-demand=true
     }
   '';
+
+  # This host's dank desktop-widget positions/displayPreferences for the same
+  # "DP-1" monitor, kept host-scoped so it doesn't mix with worklaptop's
+  # "eDP-1" data in the shared modules/home/dank/settings.json - see
+  # modules/home/dank/dms.nix.
+  dank.settingsOverlay = builtins.fromJSON (builtins.readFile ./dank-monitor.json);
 }

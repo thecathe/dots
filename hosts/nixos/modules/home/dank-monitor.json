@@ -1,0 +1,42 @@
+{
+  "desktopWidgetInstances": {
+    "dw_1788197051345_mlrmpcoj3": {
+      "config": {
+        "displayPreferences": [
+          {
+            "name": "DP-1",
+            "model": "24G4"
+          }
+        ]
+      },
+      "positions": {
+        "DP-1": {
+          "width": 237.7890625,
+          "height": 119.87109375,
+          "x": 1656.78125,
+          "y": 938.52734375
+        }
+      }
+    },
+    "dw_1788197061017_h4xwgi0ls": {
+      "positions": {
+        "DP-1": {
+          "width": 228.08984375,
+          "height": 324.58984375,
+          "x": 1662.68359375,
+          "y": 29.34765625
+        }
+      }
+    },
+    "dw_1788204403608_4ycfrzy1q": {
+      "positions": {
+        "DP-1": {
+          "width": 280,
+          "height": 380,
+          "x": 16.3203125,
+          "y": 704.05078125
+        }
+      }
+    }
+  }
+}

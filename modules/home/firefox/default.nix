@@ -1,9 +1,20 @@
-{ pkgs, config, ... }:
+{
+  pkgs,
+  config,
+  inputs,
+  ...
+}:
 
 {
   # https://mynixos.com/home-manager/options/programs.firefox
   programs.firefox = {
     enable = true;
+    # Pinned ahead of the main nixpkgs input (see flake.nix's nixpkgs-firefox
+    # comment) - a migrated real profile last written by Firefox 154.0.1 hit
+    # NS_ERROR_FAILURE/getItem storage errors on Outlook/Microsoft sites when
+    # opened with the main input's older 153.0.1. Drop this override once the
+    # main nixpkgs input catches up to >=154.0.1.
+    package = inputs.nixpkgs-firefox.legacyPackages.${pkgs.stdenv.hostPlatform.system}.firefox;
     profiles = import ./profiles.nix { inherit pkgs; };
     configPath = "${config.xdg.configHome}/mozilla/firefox";
     policies = {

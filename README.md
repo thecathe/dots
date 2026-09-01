@@ -2,6 +2,7 @@
 
 ## todo
 
+- drop the `nixpkgs-firefox` input (`flake.nix`) and the `programs.firefox.package` override (`modules/home/firefox/default.nix`) once the main `nixpkgs` input's Firefox catches up to >=154.0.1 - it was only pinned ahead to fix Outlook/Microsoft-site storage errors on a profile last written by a newer Firefox than nixpkgs had at the time
 - fix gnome wayland issues, e.g., steamlink fullscreen not capturing
 - unpack templates into dots shells and templates that reuse them. allows for more modular project setups e.g., in the case a project uses multiple languages
 

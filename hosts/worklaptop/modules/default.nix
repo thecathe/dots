@@ -5,6 +5,8 @@
 }: {
   imports = [
     ./xmodmap
+    ./wm/niri.nix
+    ./home
     # ./shell-overrides
   ];
 }

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Niri (nixGL)
+Comment=A scrollable-tiling Wayland compositor
+Exec=/home/USER/.nix-profile/bin/niri-nixgl
+Type=Application
+DesktopNames=niri

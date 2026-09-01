@@ -46,6 +46,13 @@
     # for non-nixos hosts
     nixgl.url = "github:nix-community/nixGL";
 
+    # Pinned ahead of the main nixpkgs input specifically for a newer Firefox:
+    # a migrated real profile (from Firefox 154.0.1) hit storage/IndexedDB
+    # errors on Microsoft/Outlook sites when opened with the main input's
+    # older 153.0.1 (see modules/home/firefox/default.nix). Drop this once
+    # the main nixpkgs input catches up to >=154.0.1.
+    nixpkgs-firefox.url = "github:nixos/nixpkgs/34ab99075ac4f7e40cf037eef32cb1c360bb85e9";
+
     # vscode extensions
     nix-vscode-extensions = {
       url = "github:nix-community/nix-vscode-extensions";
