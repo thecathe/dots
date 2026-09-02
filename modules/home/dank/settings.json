@@ -460,7 +460,7 @@
   "dockUseOverlayLayer": true,
   "dockGroupByApp": true,
   "dockRestoreSpecialWorkspaceOnClick": false,
-  "dockOpenOnOverview": true,
+  "dockOpenOnOverview": false,
   "dockPosition": 1,
   "dockSpacing": 8,
   "dockBottomGap": 34,
