@@ -1,12 +1,88 @@
 {
+  "activeDisplayProfile": {
+    "niri": "profile_1788345366818_int0q93"
+  },
+  "desktopWidgetGridSettings": {
+    "eDP-1": {
+      "enabled": true
+    }
+  },
   "desktopWidgetInstances": {
+    "dw_1788197051345_mlrmpcoj3": {
+      "config": {
+        "displayPreferences": [
+          {
+            "name": "eDP-1",
+            "model": "0xE3AC"
+          }
+        ],
+        "positions": {
+          "eDP-1": {
+            "width": 160,
+            "height": 70,
+            "x": 688,
+            "y": 445
+          }
+        }
+      }
+    },
     "dw_1788197061017_h4xwgi0ls": {
-      "positions": {
-        "eDP-1": {
-          "width": 320,
-          "height": 480,
-          "x": 800,
-          "y": 360
+      "config": {
+        "displayPreferences": [
+          {
+            "name": "eDP-1",
+            "model": "0xE3AC"
+          }
+        ],
+        "positions": {
+          "eDP-1": {
+            "width": 160,
+            "height": 360,
+            "x": 1320,
+            "y": 40
+          },
+          "DP-3": {
+            "width": 320,
+            "height": 480,
+            "x": 380,
+            "y": 720
+          },
+          "HDMI-A-1": {
+            "width": 320,
+            "height": 480,
+            "x": 1506.41015625,
+            "y": 80.375
+          }
+        }
+      }
+    },
+    "dw_1788204403608_4ycfrzy1q": {
+      "config": {
+        "displayPreferences": [
+          {
+            "name": "eDP-1",
+            "model": "0xE3AC"
+          }
+        ],
+        "positions": {
+          "eDP-1": {
+            "width": 280,
+            "height": 320,
+            "x": 40,
+            "y": 40
+          },
+          "DP-3": {
+            "width": 200,
+            "height": 200,
+            "x": 440,
+            "y": 860
+          },
+          "HDMI-A-1": {
+            "width": 200,
+            "height": 200,
+            "x": 860,
+            "y": 440
+          }
         }
       }
     }

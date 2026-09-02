@@ -1,4 +1,9 @@
 {
+  "desktopWidgetGridSettings": {
+    "DP-1": {
+      "enabled": true
+    }
+  },
   "desktopWidgetInstances": {
     "dw_1788197051345_mlrmpcoj3": {
       "config": {
@@ -7,34 +12,50 @@
             "name": "DP-1",
             "model": "24G4"
           }
-        ]
-      },
-      "positions": {
-        "DP-1": {
-          "width": 237.7890625,
-          "height": 119.87109375,
-          "x": 1656.78125,
-          "y": 938.52734375
+        ],
+        "positions": {
+          "DP-1": {
+            "x": 1600,
+            "y": 880,
+            "width": 280,
+            "height": 160
+          }
         }
       }
     },
     "dw_1788197061017_h4xwgi0ls": {
-      "positions": {
-        "DP-1": {
-          "width": 228.08984375,
-          "height": 324.58984375,
-          "x": 1662.68359375,
-          "y": 29.34765625
+      "config": {
+        "displayPreferences": [
+          {
+            "name": "DP-1",
+            "model": "24G4"
+          }
+        ],
+        "positions": {
+          "DP-1": {
+            "x": 40,
+            "y": 440,
+            "width": 160,
+            "height": 360
+          }
         }
       }
     },
     "dw_1788204403608_4ycfrzy1q": {
-      "positions": {
-        "DP-1": {
-          "width": 280,
-          "height": 380,
-          "x": 16.3203125,
-          "y": 704.05078125
+      "config": {
+        "displayPreferences": [
+          {
+            "name": "DP-1",
+            "model": "24G4"
+          }
+        ],
+        "positions": {
+          "DP-1": {
+            "x": 40,
+            "y": 40,
+            "width": 280,
+            "height": 360
+          }
         }
       }
     }

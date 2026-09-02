@@ -767,11 +767,7 @@
   ],
   "systemMonitorVariants": [],
   "desktopWidgetPositions": {},
-  "desktopWidgetGridSettings": {
-    "DP-1": {
-      "enabled": true
-    }
-  },
+  "desktopWidgetGridSettings": {},
   "desktopWidgetInstances": [
     {
       "id": "dw_1788197051345_mlrmpcoj3",
@@ -786,31 +782,11 @@
         "showDate": true,
         "showAnalogNumbers": false,
         "showAnalogSeconds": true,
-        "displayPreferences": [
-          {
-            "model": "24G4",
-            "name": "DP-1"
-          }
-        ],
         "showOnOverlay": false,
         "showOnOverview": false,
         "showDigitalSeconds": false,
         "showOnOverviewOnly": true,
         "clickThrough": false
-      },
-      "positions": {
-        "eDP-1": {
-          "width": 248.140625,
-          "height": 128.6015625,
-          "x": 1261.67578125,
-          "y": 792.484375
-        },
-        "DP-1": {
-          "x": 1600,
-          "y": 880,
-          "width": 280,
-          "height": 160
-        }
       }
     },
     {
@@ -838,24 +814,7 @@
         "topProcessSortBy": "cpu",
         "layoutMode": "auto",
         "graphInterval": 60,
-        "displayPreferences": [
-          "all"
-        ],
         "showOnOverviewOnly": true
-      },
-      "positions": {
-        "eDP-1": {
-          "width": 172.48828125,
-          "height": 400.74609375,
-          "x": 1341.28515625,
-          "y": 24.484375
-        },
-        "DP-1": {
-          "x": 40,
-          "y": 440,
-          "width": 160,
-          "height": 360
-        }
       }
     },
     {
@@ -864,9 +823,6 @@
       "name": "Dank Desktop Weather",
       "enabled": true,
       "config": {
-        "displayPreferences": [
-          "all"
-        ],
         "showPressure": true,
         "showHourlyForecast": true,
         "viewMode": "detailed",
@@ -882,20 +838,6 @@
         "showOnOverviewOnly": true,
         "showOnOverview": false,
         "showOnOverlay": false
-      },
-      "positions": {
-        "eDP-1": {
-          "width": 200,
-          "height": 200,
-          "x": 30.19921875,
-          "y": 729.0859375
-        },
-        "DP-1": {
-          "x": 40,
-          "y": 40,
-          "width": 280,
-          "height": 360
-        }
       }
     }
   ],
