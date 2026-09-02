@@ -673,4 +673,10 @@ binds {
     Ctrl+Alt+R hotkey-overlay-title="Restart HDT (if session active)" {
         spawn-sh "hearthstone-restart-tracker"
     }
+
+    // Manual DMS dock visibility toggle (independent of any session - e.g.
+    // silence it before a game/screenshare, bring it back after).
+    Super+Alt+D hotkey-overlay-title="Toggle DMS Dock" {
+        spawn-sh "dank-dock-toggle"
+    }
 }

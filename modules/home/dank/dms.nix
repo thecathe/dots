@@ -72,6 +72,22 @@
       };
     };
 
+    # Manual dock visibility toggle (bound to Super+Alt+D in niri), independent
+    # of dockSmartAutoHide - just flips SettingsData.showDock via DMS's own IPC
+    # and toasts (also via DMS's IPC) which way it went, so it can be silenced
+    # on demand for anything (games, screenshares) without touching settings.
+    home.packages = [
+      (pkgs.writeShellScriptBin "dank-dock-toggle" ''
+        set -u
+        result="$(${config.programs.dank-material-shell.package}/bin/dms ipc call dock toggle)"
+        case "$result" in
+          DOCK_SHOW_SUCCESS) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast info "Dock shown" ;;
+          DOCK_HIDE_SUCCESS) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast info "Dock hidden" ;;
+          *) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast warn "Dock toggle: unexpected response ($result)" ;;
+        esac
+      '')
+    ];
+
     # settings.json is tracked directly: symlinked straight into the dots repo so the
     # DMS settings app can write to it (Qt's QSaveFile resolves symlinks and writes
     # through them), instead of nix's default read-only nix-store-backed symlink.
