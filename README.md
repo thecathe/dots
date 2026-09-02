@@ -26,3 +26,13 @@
 - `./bin/` -> scripts
 - `./system/` -> `configuration.nix` programs
 - `./modules/` -> home-manager configurations
+
+## manual setup (non-nix)
+
+Steps needed on hosts that can't be captured by home-manager/NixOS config, e.g. because they touch root-owned files outside home-manager's reach (standalone home-manager has no `/etc` management).
+
+- `worklaptop` (ubuntu, standalone home-manager): swaylock must be installed via apt, not Nix. `programs.swaylock.package` is forced to `null` for this host (`hosts/worklaptop/modules/wm/niri.nix`, following home-manager's own documented recommendation for this exact case) because the Nix-built swaylock links against Nix's own linux-pam, which can never authenticate on a non-NixOS host - its `pam_unix.so` needs a setuid-root `unix_chkpwd` helper to read `/etc/shadow`, and Nix doesn't ship setuid binaries in the store (only NixOS's `security.wrappers` provides that). It doesn't error, it just silently rejects every password, correct or not - and if you kill the stuck lock client instead of unlocking properly, niri's session-lock protocol keeps the whole session locked (solid red screen) until that specific niri process is killed and a fresh one starts. `enable` stays `true` so Stylix still themes `~/.config/swaylock/config`; only the package (and its PATH-shadowing symlink) is dropped, so PATH falls through to apt's binary, which reads the same config file. Recreate by hand after reprovisioning:
+  ```
+  sudo apt install swaylock
+  ```
+  This also installs `/etc/pam.d/swaylock` (`auth include login`), which apt manages automatically from here on.

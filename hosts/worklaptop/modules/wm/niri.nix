@@ -7,6 +7,23 @@
   nixgl = inputs.nixgl;
   nixGLPrefix = "${nixgl.packages.${pkgs.stdenv.hostPlatform.system}.nixGLIntel}/bin/nixGLIntel";
 in {
+  # The Nix-built swaylock (modules/home/wm/niri/default.nix) links against Nix's
+  # own linux-pam, which resolves PAM modules from the Nix store rather than
+  # /lib/x86_64-linux-gnu/security. Its pam_unix.so needs a setuid-root
+  # unix_chkpwd helper to read /etc/shadow, but Nix never ships setuid binaries
+  # in the store (only NixOS's security.wrappers provides that, and this host is
+  # standalone home-manager, not NixOS) - so it can never actually verify a
+  # password here. It doesn't error, it just rejects every password, correct or
+  # not.
+  # home-manager's own module docs recommend exactly this for non-NixOS hosts:
+  # keep `enable = true` (so Stylix's theming still writes
+  # ~/.config/swaylock/config) but set `package = null` so home-manager stops
+  # installing/symlinking its own binary, leaving PATH to resolve to apt's
+  # swaylock instead (linked against the system libpam, same working stack as
+  # su/sudo/login). See the "manual setup (non-nix)" section in README.md for
+  # the apt-install step this depends on.
+  programs.swaylock.package = lib.mkForce null;
+
   # The wayland-session Exec= target (templates/wayland-sessions/niri.desktop).
   # Two things a bare `exec niri` misses on a non-NixOS login:
   #  - GDM doesn't source a login shell for a custom Exec=, so PATH/XDG_DATA_DIRS
