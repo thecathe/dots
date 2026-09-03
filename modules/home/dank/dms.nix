@@ -4,7 +4,16 @@
   lib,
   pkgs,
   ...
-}: {
+}: let
+  # Keys in settings.json that are state, not config (DMS persists them into
+  # the same file as everything else, but they churn independently of any
+  # rebuild - e.g. showDock is flipped ad hoc by dank-dock-toggle). Tracked
+  # settings.json never carries these; they live in the gitignored
+  # settings.local.json instead. Plain list, not a mkOption: this is a fact
+  # about DMS's own schema, not a per-host fact like dank.settingsOverlay.
+  dankSettingsStateKeys = ["showDock"];
+  dankSettingsStateDefaults = {showDock = true;};
+in {
   options.dank.settingsOverlay = lib.mkOption {
     type = lib.types.attrsOf lib.types.anything;
     default = {};
@@ -152,6 +161,47 @@
                    * (if (($patch.config.displayPreferences? // null) != null) and ($item.config.displayPreferences == ["all"]) then {config: {displayPreferences: $patch.config.displayPreferences}} else {} end)
                )' "$settingsFile" > "$tmpFile"
           mv "$tmpFile" "$settingsFile"
+        fi
+      '';
+
+    # dankSettingsStateKeys (currently just showDock) are seeded once into the
+    # gitignored settings.local.json, same pattern as session.json/session.local.json.
+    home.activation.dankMaterialShellSettingsLocal = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      target="$HOME/dots/modules/home/dank/settings.local.json"
+      if [ ! -e "$target" ]; then
+        install -Dm644 ${pkgs.writeText "dank-settings-local-default.json" (builtins.toJSON dankSettingsStateDefaults)} "$target"
+      fi
+    '';
+
+    # Round-trips dankSettingsStateKeys between the tracked settings.json (which DMS
+    # writes to live) and the untracked settings.local.json, so those keys never sit
+    # committed in git but DMS still always finds a value:
+    # 1. capture - pull whatever DMS last wrote for these keys out of settings.json
+    #    into settings.local.json first, so a toggle made earlier this session isn't
+    #    reverted by the restore step below.
+    # 2. restore - force settings.local.json's value back into settings.json. Right
+    #    after this runs the two files agree, so `git diff` on settings.json is clean
+    #    for these keys until the next live toggle changes it again.
+    home.activation.dankMaterialShellSettingsState =
+      lib.hm.dag.entryAfter ["dankMaterialShellSettingsLocal" "dankMaterialShellSettingsOverlay"] ''
+        settingsFile="$HOME/dots/modules/home/dank/settings.json"
+        localFile="$HOME/dots/modules/home/dank/settings.local.json"
+        if [ -e "$settingsFile" ] && [ -e "$localFile" ]; then
+          tmpLocal="$(mktemp)"
+          ${pkgs.jq}/bin/jq \
+            --argjson keys '${builtins.toJSON dankSettingsStateKeys}' \
+            --slurpfile settings "$settingsFile" \
+            'reduce $keys[] as $k (.; if ($settings[0] | has($k)) then .[$k] = $settings[0][$k] else . end)' \
+            "$localFile" > "$tmpLocal"
+          mv "$tmpLocal" "$localFile"
+
+          tmpSettings="$(mktemp)"
+          ${pkgs.jq}/bin/jq \
+            --argjson keys '${builtins.toJSON dankSettingsStateKeys}' \
+            --slurpfile local "$localFile" \
+            'reduce $keys[] as $k (.; .[$k] = $local[0][$k])' \
+            "$settingsFile" > "$tmpSettings"
+          mv "$tmpSettings" "$settingsFile"
         fi
       '';
   };

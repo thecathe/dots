@@ -12,14 +12,14 @@
             "name": "DP-1",
             "model": "24G4"
           }
-        ],
-        "positions": {
-          "DP-1": {
-            "x": 1600,
-            "y": 880,
-            "width": 280,
-            "height": 160
-          }
+        ]
+      },
+      "positions": {
+        "DP-1": {
+          "x": 1600,
+          "y": 880,
+          "width": 280,
+          "height": 160
         }
       }
     },
@@ -30,14 +30,14 @@
             "name": "DP-1",
             "model": "24G4"
           }
-        ],
-        "positions": {
-          "DP-1": {
-            "x": 40,
-            "y": 440,
-            "width": 160,
-            "height": 360
-          }
+        ]
+      },
+      "positions": {
+        "DP-1": {
+          "x": 40,
+          "y": 440,
+          "width": 160,
+          "height": 360
         }
       }
     },
@@ -48,14 +48,14 @@
             "name": "DP-1",
             "model": "24G4"
           }
-        ],
-        "positions": {
-          "DP-1": {
-            "x": 40,
-            "y": 40,
-            "width": 280,
-            "height": 360
-          }
+        ]
+      },
+      "positions": {
+        "DP-1": {
+          "x": 40,
+          "y": 40,
+          "width": 280,
+          "height": 360
         }
       }
     }

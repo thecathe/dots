@@ -454,7 +454,6 @@
     }
   },
   "matugenTemplateNeovimSetBackground": true,
-  "showDock": true,
   "dockAutoHide": false,
   "dockSmartAutoHide": true,
   "dockUseOverlayLayer": true,
@@ -767,7 +766,11 @@
   ],
   "systemMonitorVariants": [],
   "desktopWidgetPositions": {},
-  "desktopWidgetGridSettings": {},
+  "desktopWidgetGridSettings": {
+    "DP-1": {
+      "enabled": true
+    }
+  },
   "desktopWidgetInstances": [
     {
       "id": "dw_1788197051345_mlrmpcoj3",
@@ -787,6 +790,14 @@
         "showDigitalSeconds": false,
         "showOnOverviewOnly": true,
         "clickThrough": false
+      },
+      "positions": {
+        "DP-1": {
+          "width": 160,
+          "height": 70,
+          "x": 1720,
+          "y": 960
+        }
       }
     },
     {
@@ -815,6 +826,14 @@
         "layoutMode": "auto",
         "graphInterval": 60,
         "showOnOverviewOnly": true
+      },
+      "positions": {
+        "DP-1": {
+          "width": 320,
+          "height": 480,
+          "x": 1560,
+          "y": 40
+        }
       }
     },
     {
@@ -838,6 +857,14 @@
         "showOnOverviewOnly": true,
         "showOnOverview": false,
         "showOnOverlay": false
+      },
+      "positions": {
+        "DP-1": {
+          "width": 200,
+          "height": 200,
+          "x": 40,
+          "y": 840
+        }
       }
     }
   ],
@@ -880,5 +907,6 @@
   "barInsetPaddingShared": -1,
   "barInsetPaddingSyncAll": false,
   "frameBarInsetPadding": -1,
-  "configVersion": 13
+  "configVersion": 13,
+  "showDock": false
 }
