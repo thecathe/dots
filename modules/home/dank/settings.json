@@ -454,6 +454,7 @@
     }
   },
   "matugenTemplateNeovimSetBackground": true,
+  "showDock": true,
   "dockAutoHide": false,
   "dockSmartAutoHide": true,
   "dockUseOverlayLayer": true,
@@ -882,6 +883,5 @@
   "barInsetPaddingShared": -1,
   "barInsetPaddingSyncAll": false,
   "frameBarInsetPadding": -1,
-  "configVersion": 13,
-  "showDock": true
+  "configVersion": 13
 }
