@@ -7,27 +7,66 @@
 }: let
   # Keys in settings.json that are state, not config (DMS persists them into
   # the same file as everything else, but they churn independently of any
-  # rebuild - e.g. showDock is flipped ad hoc by dank-dock-toggle). Tracked
-  # settings.json never carries these; they live in the gitignored
-  # settings.local.json instead. Plain list, not a mkOption: this is a fact
-  # about DMS's own schema, not a per-host fact like dank.settingsOverlay.
-  dankSettingsStateKeys = ["showDock" "activeDisplayProfile" "browserUsageHistory"];
+  # rebuild - e.g. showDock is flipped ad hoc by dank-dock-toggle). Consulted
+  # by both dankSettingsCleanFilter (resets them to these defaults on the way
+  # into git) and dankMaterialShellSettingsOverlay (seeds a host's real value
+  # back in if it's still at the default, e.g. right after a fresh clone).
+  # Plain list, not a mkOption: this is a fact about DMS's own schema, not a
+  # per-host fact like dank.settingsOverlay.
+  dankSettingsStateKeys = ["activeDisplayProfile" "browserUsageHistory" "desktopWidgetGridSettings" "showDock"];
   dankSettingsStateDefaults = {
-    showDock = true;
     activeDisplayProfile = {};
     browserUsageHistory = {};
+    desktopWidgetGridSettings = {};
+    showDock = true;
   };
+
+  # git clean filter for settings.json (wired up via .gitattributes +
+  # programs.git.settings.filter below): strips dankSettingsStateKeys back to
+  # their canonical defaults, and desktopWidgetInstances[*].positions/
+  # .config.displayPreferences back to a pristine/no-override shape, on the
+  # way INTO git - git applies this to the working-tree content whenever it
+  # needs to compute what would be staged/hashed (git add/diff/status/commit),
+  # so none of this per-host/session churn ever enters git history, full stop
+  # - not even as a one-off snapshot. DMS's live writes to the file (via the
+  # out-of-store symlink below) are completely untouched by this; the filter
+  # only affects what git sees, never the file on disk.
+  #
+  # smudge (blob -> working tree, on checkout) is deliberately the identity
+  # `cat`: right after a fresh clone/checkout the file just has these
+  # canonical defaults, and dankMaterialShellSettingsOverlay below re-seeds
+  # this host's real values on the very next activation.
+  dankSettingsCleanFilter = pkgs.writeShellScript "dank-settings-clean" ''
+    ${pkgs.jq}/bin/jq \
+      --argjson keys '${builtins.toJSON dankSettingsStateKeys}' \
+      --argjson defaults '${builtins.toJSON dankSettingsStateDefaults}' \
+      '(reduce $keys[] as $k (.; .[$k] = $defaults[$k]))
+       | .desktopWidgetInstances |= map(
+           .positions = {}
+           | del(.config.displayPreferences)
+         )'
+  '';
 in {
   options.dank.settingsOverlay = lib.mkOption {
     type = lib.types.attrsOf lib.types.anything;
     default = {};
     description = ''
-      Host-specific overrides merged into the tracked settings.json on every
-      activation: desktopWidgetInstances position/displayPreferences data
-      (keyed by widget id), plus any other top-level key a host needs to set.
-      Keeps per-host facts from leaking into the shared file the same way
-      hosts/nixos/modules/home/monitor.nix does for niri's own output config.
-      See hosts/*/modules/home/dank-monitor.json.
+      Host-specific values seeded into settings.json on every activation.
+      customThemeFile is always overwritten (a purely computed Nix store
+      path, nothing of the user's to preserve). Everything else - the
+      dankSettingsStateKeys (e.g. desktopWidgetGridSettings,
+      activeDisplayProfile) and desktopWidgetInstances position/
+      displayPreferences data (keyed by widget id) - is seeded only where
+      settings.json doesn't already carry a real value (still at its
+      canonical default, or missing for that output), so a live DMS GUI
+      change always wins over this overlay.
+      None of this data is ever tracked by git in the first place - see
+      .gitattributes and dankSettingsCleanFilter above, which strip it back
+      to canonical defaults on every git add/diff/status/commit; this
+      overlay exists purely to repopulate real per-host values into the live
+      file after a fresh clone/checkout. Keeps per-host facts from leaking
+      into the shared file the same way hosts/nixos/modules/home/monitor.nix
+      does for niri's own output config. See hosts/*/modules/home/dank-monitor.json.
     '';
   };
 
@@ -101,6 +140,17 @@ in {
       '')
     ];
 
+    # Registers the clean/smudge commands for the "dank-settings" filter named
+    # in .gitattributes, in this user's own ~/.config/git/config rather than
+    # the repo. A cloned .gitattributes can only ever name a filter, never
+    # supply the command to run (git deliberately keeps the two separate, for
+    # exactly this security reason) - so this is what actually makes the
+    # filter live, per host, with zero manual setup after a clone.
+    programs.git.settings.filter."dank-settings" = {
+      clean = "${dankSettingsCleanFilter}";
+      smudge = "${pkgs.coreutils}/bin/cat";
+    };
+
     # settings.json is tracked directly: symlinked straight into the dots repo so the
     # DMS settings app can write to it (Qt's QSaveFile resolves symlinks and writes
     # through them), instead of nix's default read-only nix-store-backed symlink.
@@ -124,23 +174,14 @@ in {
     xdg.stateFile."DankMaterialShell/session.json".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dots/modules/home/dank/session.local.json";
 
-    # settings.json's desktopWidgetInstances positions/displayPreferences are
-    # per-monitor, and customThemeFile is a Nix store path that stylix computes
-    # per-host (see inputs.stylix's dank-material-shell hm target) - both would
-    # otherwise leak between hosts or go stale in the shared tracked file (see
-    # hosts/nixos/modules/home/monitor.nix for the same concern solved for
-    # niri's own output config). Seed this host's own values into the tracked
-    # file on every activation, leaving everything else (theme name, font,
-    # dock/bar layout, etc) as the untouched shared source of truth.
-    #
-    # positions/displayPreferences are seed-only-if-missing, not an overwrite:
-    # the live file's existing value always wins on conflict (jq's `*` takes
-    # the right-hand operand), so once the user drags a widget via the DMS
-    # GUI that position sticks across rebuilds - the seed only fills in an
-    # output key that isn't there yet (e.g. a fresh clone's empty `positions:
-    # {}`, or a displayPreferences still at the generic `["all"]` default).
-    # customThemeFile is always overwritten - it's a purely computed value,
-    # never user-edited, so there's nothing of the user's to preserve there.
+    # Seeds this host's real values into the live settings.json on every
+    # activation - the only reason this is needed at all is that the clean
+    # filter above means a fresh clone/checkout starts from canonical
+    # defaults (empty positions, no displayPreferences, etc), so something
+    # has to repopulate real per-host data. Never touches customThemeFile's
+    # unconditional-overwrite semantics or the seed-only-where-still-default/
+    # missing semantics for everything else - see dank.settingsOverlay's
+    # description above for the full rationale.
     home.activation.dankMaterialShellSettingsOverlay = let
       overlay =
         config.dank.settingsOverlay
@@ -155,57 +196,26 @@ in {
           tmpFile="$(mktemp)"
           ${pkgs.jq}/bin/jq \
             --argjson overlay "$(cat "${overlayFile}")" \
-            '(. * ($overlay | del(.desktopWidgetInstances))) as $withTopLevel
-             | $withTopLevel
+            --argjson stateKeys '${builtins.toJSON dankSettingsStateKeys}' \
+            --argjson stateDefaults '${builtins.toJSON dankSettingsStateDefaults}' \
+            '.customThemeFile = $overlay.customThemeFile
+             | (reduce $stateKeys[] as $k (.;
+                 if (($overlay | has($k)) and (.[$k] == $stateDefaults[$k]))
+                 then .[$k] = $overlay[$k]
+                 else . end
+               ))
              | .desktopWidgetInstances |= map(
                  . as $item
                  | (($overlay.desktopWidgetInstances // {})[$item.id] // {}) as $patch
                  | $item
-                   * (if $patch.positions then {positions: ($patch.positions * $item.positions)} else {} end)
-                   * (if (($patch.config.displayPreferences? // null) != null) and ($item.config.displayPreferences == ["all"]) then {config: {displayPreferences: $patch.config.displayPreferences}} else {} end)
-               )' "$settingsFile" > "$tmpFile"
+                   * (if $patch.positions then {positions: ($patch.positions * ($item.positions // {}))} else {} end)
+                 | if ((.config.displayPreferences // null) == null) and (($patch.config.displayPreferences // null) != null)
+                   then .config.displayPreferences = $patch.config.displayPreferences
+                   else . end
+               )' \
+            "$settingsFile" > "$tmpFile"
           mv "$tmpFile" "$settingsFile"
         fi
       '';
-
-    # dankSettingsStateKeys (currently just showDock) are seeded once into the
-    # gitignored settings.local.json, same pattern as session.json/session.local.json.
-    home.activation.dankMaterialShellSettingsLocal = lib.hm.dag.entryAfter ["writeBoundary"] ''
-      target="$HOME/dots/modules/home/dank/settings.local.json"
-      if [ ! -e "$target" ]; then
-        install -Dm644 ${pkgs.writeText "dank-settings-local-default.json" (builtins.toJSON dankSettingsStateDefaults)} "$target"
-      fi
-    '';
-
-    # Round-trips dankSettingsStateKeys between the tracked settings.json (which DMS
-    # writes to live) and the untracked settings.local.json, so those keys never sit
-    # committed in git but DMS still always finds a value:
-    # 1. capture - pull whatever DMS last wrote for these keys out of settings.json
-    #    into settings.local.json first, so a toggle made earlier this session isn't
-    #    reverted by the restore step below.
-    # 2. restore - force settings.local.json's value back into settings.json. Right
-    #    after this runs the two files agree, so `git diff` on settings.json is clean
-    #    for these keys until the next live toggle changes it again.
-    home.activation.dankMaterialShellSettingsState = lib.hm.dag.entryAfter ["dankMaterialShellSettingsLocal" "dankMaterialShellSettingsOverlay"] ''
-      settingsFile="$HOME/dots/modules/home/dank/settings.json"
-      localFile="$HOME/dots/modules/home/dank/settings.local.json"
-      if [ -e "$settingsFile" ] && [ -e "$localFile" ]; then
-        tmpLocal="$(mktemp)"
-        ${pkgs.jq}/bin/jq \
-          --argjson keys '${builtins.toJSON dankSettingsStateKeys}' \
-          --slurpfile settings "$settingsFile" \
-          'reduce $keys[] as $k (.; if ($settings[0] | has($k)) then .[$k] = $settings[0][$k] else . end)' \
-          "$localFile" > "$tmpLocal"
-        mv "$tmpLocal" "$localFile"
-
-        tmpSettings="$(mktemp)"
-        ${pkgs.jq}/bin/jq \
-          --argjson keys '${builtins.toJSON dankSettingsStateKeys}' \
-          --slurpfile local "$localFile" \
-          'reduce $keys[] as $k (.; .[$k] = $local[0][$k])' \
-          "$settingsFile" > "$tmpSettings"
-        mv "$tmpSettings" "$settingsFile"
-      fi
-    '';
   };
 }

@@ -766,11 +766,7 @@
   ],
   "systemMonitorVariants": [],
   "desktopWidgetPositions": {},
-  "desktopWidgetGridSettings": {
-    "DP-1": {
-      "enabled": true
-    }
-  },
+  "desktopWidgetGridSettings": {},
   "desktopWidgetInstances": [
     {
       "id": "dw_1788197051345_mlrmpcoj3",
@@ -791,14 +787,7 @@
         "showOnOverviewOnly": true,
         "clickThrough": false
       },
-      "positions": {
-        "DP-1": {
-          "width": 160,
-          "height": 70,
-          "x": 1720,
-          "y": 960
-        }
-      }
+      "positions": {}
     },
     {
       "id": "dw_1788197061017_h4xwgi0ls",
@@ -827,14 +816,7 @@
         "graphInterval": 60,
         "showOnOverviewOnly": true
       },
-      "positions": {
-        "DP-1": {
-          "width": 320,
-          "height": 480,
-          "x": 1560,
-          "y": 40
-        }
-      }
+      "positions": {}
     },
     {
       "id": "dw_1788204403608_4ycfrzy1q",
@@ -858,14 +840,7 @@
         "showOnOverview": false,
         "showOnOverlay": false
       },
-      "positions": {
-        "DP-1": {
-          "width": 200,
-          "height": 200,
-          "x": 40,
-          "y": 840
-        }
-      }
+      "positions": {}
     }
   ],
   "desktopWidgetGroups": [],
@@ -908,5 +883,5 @@
   "barInsetPaddingSyncAll": false,
   "frameBarInsetPadding": -1,
   "configVersion": 13,
-  "showDock": false
+  "showDock": true
 }
