@@ -11,8 +11,12 @@
   # settings.json never carries these; they live in the gitignored
   # settings.local.json instead. Plain list, not a mkOption: this is a fact
   # about DMS's own schema, not a per-host fact like dank.settingsOverlay.
-  dankSettingsStateKeys = ["showDock"];
-  dankSettingsStateDefaults = {showDock = true;};
+  dankSettingsStateKeys = ["showDock" "activeDisplayProfile" "browserUsageHistory"];
+  dankSettingsStateDefaults = {
+    showDock = true;
+    activeDisplayProfile = {};
+    browserUsageHistory = {};
+  };
 in {
   options.dank.settingsOverlay = lib.mkOption {
     type = lib.types.attrsOf lib.types.anything;
@@ -182,27 +186,26 @@ in {
     # 2. restore - force settings.local.json's value back into settings.json. Right
     #    after this runs the two files agree, so `git diff` on settings.json is clean
     #    for these keys until the next live toggle changes it again.
-    home.activation.dankMaterialShellSettingsState =
-      lib.hm.dag.entryAfter ["dankMaterialShellSettingsLocal" "dankMaterialShellSettingsOverlay"] ''
-        settingsFile="$HOME/dots/modules/home/dank/settings.json"
-        localFile="$HOME/dots/modules/home/dank/settings.local.json"
-        if [ -e "$settingsFile" ] && [ -e "$localFile" ]; then
-          tmpLocal="$(mktemp)"
-          ${pkgs.jq}/bin/jq \
-            --argjson keys '${builtins.toJSON dankSettingsStateKeys}' \
-            --slurpfile settings "$settingsFile" \
-            'reduce $keys[] as $k (.; if ($settings[0] | has($k)) then .[$k] = $settings[0][$k] else . end)' \
-            "$localFile" > "$tmpLocal"
-          mv "$tmpLocal" "$localFile"
+    home.activation.dankMaterialShellSettingsState = lib.hm.dag.entryAfter ["dankMaterialShellSettingsLocal" "dankMaterialShellSettingsOverlay"] ''
+      settingsFile="$HOME/dots/modules/home/dank/settings.json"
+      localFile="$HOME/dots/modules/home/dank/settings.local.json"
+      if [ -e "$settingsFile" ] && [ -e "$localFile" ]; then
+        tmpLocal="$(mktemp)"
+        ${pkgs.jq}/bin/jq \
+          --argjson keys '${builtins.toJSON dankSettingsStateKeys}' \
+          --slurpfile settings "$settingsFile" \
+          'reduce $keys[] as $k (.; if ($settings[0] | has($k)) then .[$k] = $settings[0][$k] else . end)' \
+          "$localFile" > "$tmpLocal"
+        mv "$tmpLocal" "$localFile"
 
-          tmpSettings="$(mktemp)"
-          ${pkgs.jq}/bin/jq \
-            --argjson keys '${builtins.toJSON dankSettingsStateKeys}' \
-            --slurpfile local "$localFile" \
-            'reduce $keys[] as $k (.; .[$k] = $local[0][$k])' \
-            "$settingsFile" > "$tmpSettings"
-          mv "$tmpSettings" "$settingsFile"
-        fi
-      '';
+        tmpSettings="$(mktemp)"
+        ${pkgs.jq}/bin/jq \
+          --argjson keys '${builtins.toJSON dankSettingsStateKeys}' \
+          --slurpfile local "$localFile" \
+          'reduce $keys[] as $k (.; .[$k] = $local[0][$k])' \
+          "$settingsFile" > "$tmpSettings"
+        mv "$tmpSettings" "$settingsFile"
+      fi
+    '';
   };
 }
