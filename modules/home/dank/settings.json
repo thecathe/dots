@@ -882,5 +882,6 @@
   "barInsetPaddingShared": -1,
   "barInsetPaddingSyncAll": false,
   "frameBarInsetPadding": -1,
-  "configVersion": 13
+  "configVersion": 13,
+  "customThemeFile": "/nix/store/b133x34fa7dha0f9878q0lbpvjlzkzbl-dankMaterialShell-stylix-color-theme.json"
 }
