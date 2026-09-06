@@ -105,6 +105,21 @@ in {
         # and won't function under niri, which both hosts use now - niriWindows
         # is the niri-native equivalent for switching between open windows.
         niriWindows.enable = true;
+        # Daily Bing wallpaper daemon. deleteOld = false + Gnome-compat naming
+        # turns its own image dir into a free "recents" pool (date-prefixed
+        # filenames, never overwritten) - retention is handled separately by
+        # bing-wallpaper-gc (modules/home/wallpaper) rather than this plugin's
+        # own single-previous-file cleanup.
+        wallpaperBing = {
+          enable = true;
+          settings = {
+            notifications = true;
+            deleteOld = false;
+            GnomeExtensionBingWallpaperCompatibility = true;
+            enableDailyRefresh = true;
+            dailyRefreshTime = "09:00";
+          };
+        };
       };
 
       clipboardSettings = {
