@@ -1,12 +1,13 @@
 {
   lib,
   pkgs,
+  config,
   ...
 }: let
   globalSettings = import ./settings/global;
   globalKeybindings = import ./keybindings.nix;
   vscodeLib = import ./lib.nix {inherit lib globalSettings globalKeybindings;};
-  features = builtins.mapAttrs (_: path: import path {inherit pkgs;}) {
+  features = builtins.mapAttrs (_: path: import path {inherit pkgs config;}) {
     nix = ./features/nix.nix;
     kdl = ./features/kdl.nix;
     ocaml = ./features/ocaml.nix;

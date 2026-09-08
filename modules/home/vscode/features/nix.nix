@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 {
   extensions = with pkgs.vscode-extensions; [
     bbenoist.nix
@@ -21,14 +21,16 @@
               "alejandra"
             ];
           };
-          # builtins.getFlake fails on the ~/dots symlink ("path is a symlink")
-          # so these use the real repo path instead.
+          # builtins.getFlake fails on the ~/dots symlink ("path is a symlink"),
+          # so this uses the real repo path instead. Interpolated from
+          # config.home.homeDirectory since this module is shared across
+          # hosts with different usernames (cathe on nixos, jjp38 here).
           "options" = {
             "nixos" = {
-              "expr" = "(builtins.getFlake \"/home/cathe/Documents/git/thecathe/dots\").nixosConfigurations.nixos.options";
+              "expr" = "(builtins.getFlake \"${config.home.homeDirectory}/Documents/git/thecathe/dots\").nixosConfigurations.nixos.options";
             };
             "home_manager" = {
-              "expr" = "(builtins.getFlake \"/home/cathe/Documents/git/thecathe/dots\").nixosConfigurations.nixos.options.home-manager.users.type.getSubOptions []";
+              "expr" = "(builtins.getFlake \"${config.home.homeDirectory}/Documents/git/thecathe/dots\").homeConfigurations.\"cathe@worklaptop\".options";
             };
           };
         };
