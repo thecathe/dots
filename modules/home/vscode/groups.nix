@@ -37,7 +37,10 @@ in let
     ++ defaultGroup;
   javaGroup = [features.java] ++ defaultGroup;
 in {
-  default = defaultGroup;
+  # latex merged in here (rather than into the defaultGroup binding above,
+  # which every other group also extends) until upstream fixes per-profile
+  # extension enablement and the dedicated `latex` profile actually works
+  default = defaultGroup ++ [features.latex];
   latex = latexGroup;
   ocaml = ocamlGroup;
   python = pythonGroup;
