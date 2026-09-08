@@ -60,6 +60,21 @@
 in {
   programs.vscode = {
     enable = true;
+    # Nix never ships setuid-root binaries in the store (only NixOS's
+    # security.wrappers provides that; this host is standalone home-manager,
+    # not NixOS - same class of issue as hosts/worklaptop/modules/wm/niri.nix's
+    # swaylock/unix_chkpwd fix). Electron's chrome-sandbox helper needs to be
+    # setuid-root to use the SUID sandbox, so the unwrapped nix-store vscode
+    # refuses to launch a GUI window at all ("SUID sandbox helper binary...
+    # is not configured correctly"). --no-sandbox skips that requirement.
+    package = pkgs.symlinkJoin {
+      name = "vscode-no-sandbox";
+      paths = [pkgs.vscode];
+      nativeBuildInputs = [pkgs.makeWrapper];
+      postBuild = ''
+        wrapProgram $out/bin/code --add-flags "--no-sandbox"
+      '';
+    };
     mutableExtensionsDir = true;
     enableUpdateCheck = false;
     enableExtensionUpdateCheck = false;
