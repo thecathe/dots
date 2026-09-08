@@ -8,6 +8,7 @@
     ./dank
     ./wallpaper
     ./music
+    ./latex.nix
     ./git
     ./nvim
     ./stylix
