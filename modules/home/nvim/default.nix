@@ -45,7 +45,6 @@
       ### latex
       python314Packages.pylatexenc ## latex2text
       # texlab
-      # tectonic
       ## pdf viewer
       zathura
       ### lua formatter
