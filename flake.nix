@@ -163,6 +163,14 @@
         path = ./templates/go;
         description = "Go project with gopls, gotools and direnv";
       };
+      latex = {
+        path = ./templates/latex;
+        description = "LaTeX project with Tectonic and direnv";
+      };
+      latex-texlive = {
+        path = ./templates/latex-texlive;
+        description = "LaTeX project needing real texlive (packages outside Tectonic's bundle, LuaTeX, etc.) and direnv";
+      };
     };
   };
 }
