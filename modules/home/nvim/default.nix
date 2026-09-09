@@ -37,9 +37,10 @@
     extraPackages = with pkgs; [
       git
       ### nix
+      # nixd + alejandra live in home.packages (modules/home/default.nix) —
+      # they need to be on the real $PATH for VS Code's nixd process too,
+      # not just wrapped into this nvim binary's own PATH.
       nix
-      nixd
-      alejandra
       nix-search-cli
       nix-index
       ### latex

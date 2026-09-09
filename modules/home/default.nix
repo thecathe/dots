@@ -32,6 +32,8 @@
       ## nix
       nix
       nixfmt
+      nixd # nix language server (used by both neovim and vscode)
+      alejandra # nix formatter, also invoked by nixd itself
 
       ## packages
       flatpak # # installer

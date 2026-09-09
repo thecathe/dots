@@ -19,7 +19,9 @@
       # move into profile once extension issue fixed
       extensions = lib.concatMap (f: f.extensions) features;
       profile = {
-        userSettings = globalSettings // (lib.foldl' (acc: f: acc // f.settings or { }) { } features);
+        userSettings = lib.foldl' (
+          acc: f: lib.recursiveUpdate acc (f.settings or { })
+        ) globalSettings features;
         inherit keybindings;
       };
     };
