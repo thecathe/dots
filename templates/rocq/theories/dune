@@ -1,0 +1,11 @@
+(rocq.theory
+ (name MyProject) ; rename to match your project -- this is the module
+                   ; prefix, e.g. `From MyProject Require Import Example.`
+ (theories Stdlib) ; rocq-stdlib is a declared opam dep; Corelib is implicit
+                    ; but Stdlib never is -- without this the theory can't
+                    ; Require anything from it
+ (generate_project_file)) ; generates _RocqProject (gitignored), pointing at
+                           ; _build/default/... for vsrocq -- see
+                           ; dune-project's (using rocq ...) comment for why
+
+(include_subdirs qualified)

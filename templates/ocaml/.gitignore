@@ -1,3 +1,8 @@
 # workspace configs
 .vscode/*
 !.vscode/settings.json
+
+# dune build output and the local opam switch
+_build/
+_opam/
+*.install

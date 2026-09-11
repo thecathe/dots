@@ -1,6 +1,7 @@
 {
   "ocaml.sandbox": {
     "kind": "opam",
-    "switch": "${workspaceFolderBasename}"
-  }
+    "switch": "${workspaceFolder}"
+  },
+  "vsrocq.path": "${workspaceFolder}/_opam/bin/vsrocqtop"
 }

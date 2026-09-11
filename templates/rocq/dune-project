@@ -1,7 +1,14 @@
-(lang dune 3.17)
+(lang dune 3.21)
 ; ^ this must be the literal first line of the file -- dune errors if
 ; anything, even a comment, precedes it. Bump the version as your installed
 ; dune allows.
+
+; Enables the `rocq.theory` stanza (see theories/dune). 0.11 (rather than the
+; newer 0.14 + `(no_corelib)`) is deliberate: 0.14 needs dune >= 3.24, and
+; nixpkgs' currently pinned dune (verified via `nix eval`) is 3.23.1. This
+; combo mirrors a real, working project (rocq-mebi) on this same nix+opam
+; bootstrap architecture.
+(using rocq 0.11)
 
 ; dune can generate .opam files from this specification.
 ; Run `dune build` to regenerate them after editing this file.
@@ -20,13 +27,18 @@
   ; opam's solver will also enforce whatever floor rocq-core needs
   ; transitively; raise this only if solving fails.
   (ocaml (>= 5.2))
-  dune
+  ; Floor matches (lang dune ...) above -- without it opam could install a
+  ; dune too old to even parse this file's own language declaration.
+  (dune (>= 3.21))
   ; Rocq (formerly Coq) proof assistant core + standard library.
   (rocq-core (and (>= 9.2) (< 9.3)))
   (rocq-stdlib (>= 9.1))
   ; `:with-dev-setup` marks these as development-only.
   ; Install them with: opam install . --deps-only --with-dev-setup
   (ocaml-lsp-server (and :with-dev-setup (>= 1.18)))
-  (vsrocq-language-server :with-dev-setup)
+  ; Pinned exactly: the vsrocq VS Code extension and this opam package are
+  ; released independently, and a version mismatch can break LSP init. Must
+  ; match modules/home/vscode/features/vsrocq.nix's pinned extension version.
+  (vsrocq-language-server (and :with-dev-setup (= 2.4.3)))
   ; ocamlformat version must exactly match the `version` key in .ocamlformat.
   (ocamlformat      (and :with-dev-setup (= 0.26.2)))))
