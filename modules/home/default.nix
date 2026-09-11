@@ -18,6 +18,7 @@
     ./vscode
     ./obsidian
     ./claude
+    ./opam
     ./zathura # epub reader?
     ./navi # commadn cheatsheet tool
   ];
