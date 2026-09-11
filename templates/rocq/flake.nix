@@ -53,11 +53,20 @@
           OPAMNODEPEXTS = "1";
 
           shellHook = ''
-            bootstrap='opam switch create . --deps-only --yes && opam install . --deps-only --with-dev-setup --yes'
+            # Most community Rocq packages (equations, mathcomp, stdpp, ...)
+            # aren't in the default opam.ocaml.org repo -- only rocq-core/
+            # rocq-stdlib/rocq-runtime etc. are. Registering rocq-released
+            # here means it's available from the very first switch creation,
+            # on this machine or a fresh clone on another one, without an
+            # extra manual step. `opam repo add` needs a switch to attach to,
+            # so this is done via `opam switch create`'s own --repositories
+            # flag instead, which registers *and* selects it atomically.
+            rocq_repos='default,rocq-released=https://rocq-prover.org/opam/released'
+            bootstrap="opam switch create . --repositories=$rocq_repos --deps-only --yes && opam install . --deps-only --with-dev-setup --yes"
             if ! ls -- *.opam >/dev/null 2>&1; then
               bootstrap="dune build && $bootstrap"
             elif ls -- *.opam.locked >/dev/null 2>&1; then
-              bootstrap='opam switch create . --locked --deps-only --yes && opam install . --locked --deps-only --with-dev-setup --yes'
+              bootstrap="opam switch create . --repositories=$rocq_repos --locked --deps-only --yes && opam install . --locked --deps-only --with-dev-setup --yes"
             fi
 
             # Test for the binary rather than just _opam/, so a half-built
@@ -84,7 +93,7 @@
               fi
             fi
 
-            unset bootstrap
+            unset bootstrap rocq_repos
           '';
         };
       });
