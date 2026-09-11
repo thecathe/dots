@@ -155,6 +155,10 @@
         path = ./templates/ocaml;
         description = "OCaml project with opam, dune and direnv";
       };
+      rocq = {
+        path = ./templates/rocq;
+        description = "Rocq (Coq) project with opam, dune and direnv, extending the OCaml template";
+      };
       erlang = {
         path = ./templates/erlang;
         description = "Erlang/OTP project with rebar3 and direnv";

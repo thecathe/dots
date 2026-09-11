@@ -1,5 +1,5 @@
 {
-  description = "OCaml project";
+  description = "Rocq project";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
@@ -24,22 +24,25 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           # Nix provides opam and the system libraries that opam packages
-          # compile against. OCaml packages themselves are managed by opam
-          # once a local switch exists.
+          # compile against. OCaml/Rocq packages themselves are managed by
+          # opam once a local switch exists.
           nativeBuildInputs = with pkgs; [
             opam
             dune # bootstraps *.opam generation before a switch exists; opam's
                  # own `dune` dependency takes over via PATH once one does
             pkg-config
             git # opam VCS pins, and `dune subst` in the opam build
+            gnumake # rocq-core's own opam build uses a Makefile
           ];
 
           # If an opam package fails to build citing a missing system library,
-          # add it here. Common ones are listed below — uncomment as needed.
+          # add it here. gmp and zlib are required by rocq-core's dependency
+          # chain (zarith -> conf-gmp, conf-zlib); the rest are commented
+          # starting points.
           buildInputs = with pkgs; [
+            gmp
+            zlib
             # openssl
-            # gmp
-            # zlib
             # libffi
           ];
 
@@ -59,7 +62,7 @@
 
             # Test for the binary rather than just _opam/, so a half-built
             # switch is caught too.
-            if [ ! -x "$PWD/_opam/bin/dune" ]; then
+            if [ ! -x "$PWD/_opam/bin/rocq" ]; then
               echo "No local opam switch in ./_opam (or it is incomplete)."
               echo "Create it with:"
               echo "    $bootstrap"

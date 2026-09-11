@@ -17,10 +17,16 @@
  (description "A longer description")
  (depends
   ; Minimum OCaml version — match this to your opam switch version.
+  ; opam's solver will also enforce whatever floor rocq-core needs
+  ; transitively; raise this only if solving fails.
   (ocaml (>= 5.2))
   dune
+  ; Rocq (formerly Coq) proof assistant core + standard library.
+  (rocq-core (and (>= 9.2) (< 9.3)))
+  (rocq-stdlib (>= 9.1))
   ; `:with-dev-setup` marks these as development-only.
   ; Install them with: opam install . --deps-only --with-dev-setup
   (ocaml-lsp-server (and :with-dev-setup (>= 1.18)))
+  (vsrocq-language-server :with-dev-setup)
   ; ocamlformat version must exactly match the `version` key in .ocamlformat.
   (ocamlformat      (and :with-dev-setup (= 0.26.2)))))
