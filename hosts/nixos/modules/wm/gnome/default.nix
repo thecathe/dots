@@ -41,7 +41,6 @@
     gnome-logs
     gnome-text-editor
     gnome-music # never works with off-drive library (maybe because it's window formatted)
-    gnome-photos
     gnome-tour
     gnome-user-docs
     gnome-console
