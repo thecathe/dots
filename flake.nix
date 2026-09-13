@@ -32,12 +32,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # (dms) notification
-    dgop = {
-      url = "github:AvengeMedia/dgop";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     dms-plugin-registry = {
       url = "github:AvengeMedia/dms-plugin-registry";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -75,7 +69,6 @@
     nix-gaming,
     stylix,
     dms,
-    dgop,
     dms-plugin-registry,
     nixgl,
     nix-vscode-extensions,
@@ -85,7 +78,7 @@
     system = "x86_64-linux";
     unfreeAllowList = import ./modules/shared/unfree.nix;
     unfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowList;
-    unfreeAllowListNixOS = unfreeAllowList ++ ["nvidia-x11" "discord" "steam" "steam-unwrapped" "nvidia-settings"];
+    unfreeAllowListNixOS = unfreeAllowList ++ ["nvidia-x11" "discord" "discord-unwrapped" "steam" "steam-unwrapped" "nvidia-settings"];
     unfreePredicateNixOS = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowListNixOS;
   in {
     ###### nixos machine
