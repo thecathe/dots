@@ -24,10 +24,12 @@
             type = "luks";
             name = "crypted";
             settings.allowDiscards = true;
-            # Written once in the live install session (see default.nix's
-            # comment above its hardware-configuration.nix import for the
-            # full install-order caveat), never committed - consumed by
-            # disko during formatting only.
+            # nixos-anywhere kexecs the target into a fresh install
+            # environment before running disko, which wipes anything written
+            # to /tmp in the originally-booted live session - so this path
+            # must instead be supplied on every nixos-anywhere invocation via
+            # `--disk-encryption-keys /tmp/secret.key <source-on-this-desktop>`.
+            # Never committed - consumed by disko during formatting only.
             passwordFile = "/tmp/secret.key";
             content = {
               type = "filesystem";

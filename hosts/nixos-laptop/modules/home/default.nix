@@ -4,5 +4,6 @@
   ...
 }: {
   imports = [
+    ./gnome-extensions.nix
   ];
 }

@@ -1,0 +1,57 @@
+{pkgs, ...}: {
+  qt.platformTheme = "gnome";
+
+  # Enable the GNOME Desktop Environment.
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
+
+  # Enable touchpad support (enabled default in most desktopManager).
+  services.libinput.enable = true;
+
+  # enabling screen cast --
+  # ! still doesn't work for full-screen
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [xdg-desktop-portal-gnome];
+    config = {
+      gnome = {
+        default = ["gnome"];
+        "org.freedesktop.impl.portal.ScreenCast" = ["gnome"];
+        "org.freedesktop.impl.portal.Screenshot" = ["gnome"];
+        "org.freedesktop.impl.portal.RemoteDesktop" = ["gnome"];
+      };
+    };
+  };
+
+  ## default terminal
+  xdg.terminal-exec = {
+    enable = true;
+    settings = {
+      default = ["kitty.desktop"];
+    };
+  };
+
+  # gnome apps
+  services.gnome.core-apps.enable = true;
+  environment.gnome.excludePackages = with pkgs; [
+    gnome-weather
+    gnome-maps
+    gnome-connections
+    gnome-contacts
+    gnome-logs
+    gnome-text-editor
+    gnome-music # never works with off-drive library (maybe because it's window formatted)
+    gnome-tour
+    gnome-user-docs
+    gnome-console
+    gnome-characters
+    gnome-tecla # keyboard viewer
+    decibels # audio
+    epiphany # browser
+    showtime # videos
+    geary # mailbox
+    yelp # help
+  ];
+
+  services.udev.packages = [pkgs.gnome-settings-daemon];
+}
