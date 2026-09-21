@@ -1,6 +1,7 @@
 {
   "currentThemeName": "dynamic",
   "currentThemeCategory": "dynamic",
+  "customThemeFile": "",
   "registryThemeVariants": {},
   "matugenScheme": "scheme-tonal-spot",
   "matugenContrast": 0,
@@ -132,10 +133,25 @@
     {
       "id": "bluetooth",
       "enabled": true,
+      "width": 25
+    },
+    {
+      "id": "doNotDisturb",
+      "enabled": true,
+      "width": 25
+    },
+    {
+      "id": "battery",
+      "enabled": true,
       "width": 50
     },
     {
       "id": "audioOutput",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "builtin_display_profiles",
       "enabled": true,
       "width": 50
     },
@@ -147,12 +163,12 @@
     {
       "id": "nightMode",
       "enabled": true,
-      "width": 50
+      "width": 25
     },
     {
       "id": "darkMode",
       "enabled": true,
-      "width": 50
+      "width": 25
     }
   ],
   "showWorkspaceIndex": true,
@@ -578,12 +594,16 @@
     ]
   },
   "showOnLastDisplay": {},
-  "niriOutputSettings": {},
+  "niriOutputSettings": {
+    "eDP-1": {
+      "focusAtStartup": true
+    }
+  },
   "hyprlandOutputSettings": {},
   "displayProfiles": {},
   "activeDisplayProfile": {},
   "displayProfileAutoSelect": false,
-  "displayShowDisconnected": false,
+  "displayShowDisconnected": true,
   "displaySnapToEdge": true,
   "connectedFrameBarStyleBackups": {},
   "barConfigs": [
@@ -620,15 +640,15 @@
           "mediaSize": 3
         },
         "clock",
-        "weather"
+        "weather",
+        {
+          "id": "dankPomodoroTimer",
+          "enabled": true
+        }
       ],
       "rightWidgets": [
         {
           "id": "privacyIndicator",
-          "enabled": true
-        },
-        {
-          "id": "dankPomodoroTimer",
           "enabled": true
         },
         {
@@ -647,7 +667,7 @@
         "clipboard",
         {
           "id": "memUsage",
-          "enabled": false,
+          "enabled": true,
           "minimumWidth": false,
           "showSwap": false,
           "showInGb": true
@@ -882,6 +902,5 @@
   "barInsetPaddingShared": -1,
   "barInsetPaddingSyncAll": false,
   "frameBarInsetPadding": -1,
-  "configVersion": 13,
-  "customThemeFile": "/nix/store/b133x34fa7dha0f9878q0lbpvjlzkzbl-dankMaterialShell-stylix-color-theme.json"
+  "configVersion": 13
 }
