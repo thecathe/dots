@@ -146,6 +146,37 @@
       "useOverlayLayer": false,
       "maximizeWidgetText": false,
       "attachToScreenEdge": false,
+      "islandHomeLayout": [
+        {
+          "id": "media",
+          "enabled": true
+        },
+        {
+          "id": "weather",
+          "enabled": true
+        },
+        {
+          "id": "clock",
+          "enabled": true
+        },
+        {
+          "id": "notifications",
+          "enabled": true
+        },
+        {
+          "id": "status",
+          "enabled": false
+        },
+        {
+          "id": "volume",
+          "enabled": false
+        },
+        {
+          "id": "brightness",
+          "enabled": false
+        }
+      ],
+      "islandHomeCompactTight": true,
       "island": true
     },
     {
@@ -367,6 +398,12 @@
     },
     "dms_clipboard_search": {
       "trigger": "cb"
+    },
+    "dms_power": {
+      "trigger": "pw"
+    },
+    "dms_qr_generator": {
+      "trigger": "qrg"
     }
   },
   "configVersion": 18
