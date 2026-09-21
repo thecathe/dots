@@ -12,6 +12,7 @@
   "useAutoLocation": true,
   "fontFamily": "UbuntuSans Nerd Font",
   "monoFontFamily": "JetBrainsMono Nerd Font Mono",
+  "showDock": true,
   "dockSmartAutoHide": true,
   "dockUseOverlayLayer": true,
   "dockGroupByApp": true,
@@ -105,7 +106,6 @@
           "id": "network_speed_monitor",
           "enabled": true
         },
-        "notificationButton",
         {
           "id": "controlCenterButton",
           "enabled": true,
@@ -144,7 +144,119 @@
       "removeWidgetPadding": false,
       "widgetOutlineEnabled": false,
       "useOverlayLayer": false,
-      "maximizeWidgetText": false
+      "maximizeWidgetText": false,
+      "attachToScreenEdge": false,
+      "island": true
+    },
+    {
+      "id": "bar1789991121980",
+      "name": "Bar 2",
+      "enabled": true,
+      "position": 0,
+      "screenPreferences": [],
+      "showOnLastDisplay": false,
+      "leftWidgets": [
+        "launcherButton",
+        {
+          "id": "spacer",
+          "enabled": true,
+          "size": 5
+        },
+        "workspaceSwitcher",
+        {
+          "id": "runningApps",
+          "enabled": true,
+          "runningAppsCompactMode": true,
+          "runningAppsGroupByApp": true,
+          "runningAppsCurrentWorkspace": true,
+          "runningAppsCurrentMonitor": true
+        }
+      ],
+      "centerWidgets": [
+        {
+          "id": "music",
+          "enabled": true,
+          "mediaSize": 3
+        },
+        {
+          "id": "clock",
+          "enabled": true,
+          "clockCompactMode": false
+        },
+        "weather"
+      ],
+      "rightWidgets": [
+        {
+          "id": "privacyIndicator",
+          "enabled": true
+        },
+        {
+          "id": "memUsage",
+          "enabled": true,
+          "minimumWidth": true,
+          "showInGb": false
+        },
+        {
+          "id": "network_speed_monitor",
+          "enabled": true
+        },
+        "notificationButton",
+        {
+          "id": "controlCenterButton",
+          "enabled": true,
+          "showAudioPercent": false,
+          "showBrightnessIcon": false,
+          "showBrightnessPercent": false,
+          "showBatteryIcon": true
+        }
+      ],
+      "spacing": 4,
+      "innerPadding": 4,
+      "barLengthPadding": 0,
+      "bottomGap": 0,
+      "attachToScreenEdge": false,
+      "transparency": 1,
+      "widgetTransparency": 1,
+      "squareCorners": false,
+      "noBackground": false,
+      "gothCornersEnabled": false,
+      "gothCornerRadiusOverride": true,
+      "gothCornerRadiusValue": 15,
+      "borderEnabled": true,
+      "borderColor": "secondary",
+      "borderOpacity": 1,
+      "borderThickness": 1,
+      "widgetOutlineEnabled": false,
+      "widgetOutlineColor": "primary",
+      "widgetOutlineOpacity": 1,
+      "widgetOutlineThickness": 1,
+      "widgetPadding": 8,
+      "maximizeWidgetIcons": false,
+      "maximizeWidgetText": false,
+      "removeWidgetPadding": false,
+      "fontScale": 1.04,
+      "iconScale": 1.1,
+      "autoHide": false,
+      "autoHideStrict": false,
+      "autoHideDelay": 250,
+      "showOnWindowsOpen": false,
+      "openOnOverview": false,
+      "visible": true,
+      "popupGapsAuto": true,
+      "popupGapsManual": 4,
+      "maximizeDetection": true,
+      "useOverlayLayer": false,
+      "scrollEnabled": true,
+      "scrollXBehavior": "column",
+      "scrollYBehavior": "workspace",
+      "hoverPopouts": false,
+      "hoverPopoutDelay": 150,
+      "shadowIntensity": 0,
+      "shadowOpacity": 60,
+      "shadowDirectionMode": "inherit",
+      "shadowDirection": "top",
+      "shadowColorMode": "default",
+      "shadowCustomColor": "#000000"
     }
   ],
   "desktopClockCustomColor": {
@@ -257,9 +369,5 @@
       "trigger": "cb"
     }
   },
-  "configVersion": 18,
-  "activeDisplayProfile": {},
-  "browserUsageHistory": {},
-  "desktopWidgetGridSettings": {},
-  "showDock": true
+  "configVersion": 18
 }

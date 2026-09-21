@@ -12,32 +12,55 @@
   # back in if it's still at the default, e.g. right after a fresh clone).
   # Plain list, not a mkOption: this is a fact about DMS's own schema, not a
   # per-host fact like dank.settingsOverlay.
-  dankSettingsStateKeys = ["activeDisplayProfile" "browserUsageHistory" "desktopWidgetGridSettings" "showDock"];
+  #
+  # Used to be 4 keys: a DMS update (dms flake input bump in 051068e) moved
+  # activeDisplayProfile/desktopWidgetGridSettings into session.json (DMS's
+  # own SESSION_MOVED_KEYS) and browserUsageHistory into its cache store
+  # (CACHE_MOVED_KEYS) - confirmed by reading the built package's actual
+  # SettingsStore.js/SessionData.qml/CacheData.qml, not guessed. They're gone
+  # from settings.json's schema outright, not just "omitted while at
+  # default", so there's nothing left here for this module to manage: only
+  # showDock still lives in settings.json. session.json's own live file
+  # (session.local.json below) is gitignored and host-local, so unlike
+  # settings.json it's never reset by a checkout - DMS's normal use already
+  # keeps its moved-in values correct per host with no seeding needed.
+  dankSettingsStateKeys = ["showDock"];
   dankSettingsStateDefaults = {
-    activeDisplayProfile = {};
-    browserUsageHistory = {};
-    desktopWidgetGridSettings = {};
     showDock = true;
   };
 
   # git clean filter for settings.json (wired up via .gitattributes +
   # programs.git.settings.filter below): strips dankSettingsStateKeys and
-  # customThemeFile back to canonical defaults, and desktopWidgetInstances[*].
+  # customThemeFile back to canonical defaults, desktopWidgetInstances[*].
   # positions/.config.displayPreferences back to a pristine/no-override
-  # shape, on the way INTO git - git applies this to the working-tree
-  # content whenever it needs to compute what would be staged/hashed (git
-  # add/diff/status/commit), so none of this per-host/session churn ever
-  # enters git history, full stop - not even as a one-off snapshot. DMS's
-  # live writes to the file (via the out-of-store symlink below) are
-  # completely untouched by this; the filter only affects what git sees,
-  # never the file on disk.
+  # shape, and barConfigs[*].screenPreferences back to per-entry canonical
+  # defaults (see the barConfigs stage below), on the way INTO git - git
+  # applies this to the working-tree content whenever it needs to compute
+  # what would be staged/hashed (git add/diff/status/commit), so none of
+  # this per-host/session churn ever enters git history, full stop - not
+  # even as a one-off snapshot. DMS's live writes to the file (via the
+  # out-of-store symlink below) are completely untouched by this; the
+  # filter only affects what git sees, never the file on disk.
   #
   # customThemeFile is handled here as a standalone assignment rather than
-  # folded into dankSettingsStateKeys/dankSettingsStateDefaults: unlike the
-  # other four, dankMaterialShellSettingsOverlay always force-overwrites it
+  # folded into dankSettingsStateKeys/dankSettingsStateDefaults: unlike
+  # showDock, dankMaterialShellSettingsOverlay always force-overwrites it
   # every activation rather than seeding it only if still at the default (see
-  # that activation block), so it doesn't share their seed-if-still-default
+  # that activation block), so it doesn't share that seed-if-still-default
   # semantics and doesn't belong in a list built for that purpose.
+  #
+  # barConfigs is kept out of dankSettingsStateKeys too, but for a different
+  # reason: each entry mixes genuinely-shared config (widgets, styling -
+  # meant to flow into git normally, evolving via ordinary commits on every
+  # host) with a host-owned sub-field (screenPreferences, i.e. which physical
+  # monitors this bar targets). A whole-key state default would freeze the
+  # shared parts too, so it gets its own per-entry-id jq stage below instead:
+  # canonical default is ["all"] for the id=="default" entry (matches DMS's
+  # own factory bar) and [] for every other entry (matches what DMS itself
+  # assigns a freshly-created bar, and - confirmed against DMS's actual
+  # SettingsData.qml:barConfigCoversScreen, used by the real per-screen bar
+  # loader - means "shown on zero screens" for a bar specifically, unlike the
+  # generic per-component screenPreferences path where [] means "all").
   dankSettingsCleanFilter = pkgs.writeShellScript "dank-settings-clean" ''
     ${pkgs.jq}/bin/jq \
       --argjson keys '${builtins.toJSON dankSettingsStateKeys}' \
@@ -47,7 +70,8 @@
        | .desktopWidgetInstances |= map(
            .positions = {}
            | del(.config.displayPreferences)
-         )'
+         )
+       | .barConfigs |= map(.screenPreferences = (if .id == "default" then ["all"] else [] end))'
   '';
 
   # smudge (blob -> working tree, on checkout/pull/merge) is the identity
@@ -69,10 +93,10 @@
   # Forces the dock visible before every DMS session start (login, reboot,
   # and any restartIfChanged-triggered restart from a rebuild) - wired below
   # via systemd.user.services.dms.Service.ExecStartPre. Deliberately NOT
-  # handled via dank.settingsOverlay seeding (unlike the other state keys):
-  # showDock isn't a host fact to seed a default for, it's a "start every
-  # session the same way" preference, hidden only ad hoc mid-session via
-  # dank-dock-toggle.
+  # handled via dank.settingsOverlay seeding (unlike desktopWidgetInstances/
+  # barConfigs data below): showDock isn't a host fact to seed a default
+  # for, it's a "start every session the same way" preference, hidden only
+  # ad hoc mid-session via dank-dock-toggle.
   dankResetDockScript = pkgs.writeShellScript "dank-reset-dock" ''
     settingsFile="$HOME/dots/modules/home/dank/settings.json"
     if [ -e "$settingsFile" ]; then
@@ -83,8 +107,9 @@
   '';
 
   # Seeds this host's real values (customThemeFile, dankSettingsStateKeys,
-  # desktopWidgetInstances positions/displayPreferences) into the live
-  # settings.json from the tracked host overlay - see options.dank.settingsOverlay's
+  # desktopWidgetInstances positions/displayPreferences, barConfigs
+  # screenPreferences) into the live settings.json from the tracked host
+  # overlay - see options.dank.settingsOverlay's
   # description below for the exact merge semantics per field. Shared between
   # home.activation.dankMaterialShellSettingsOverlay (runs at rebuild time) and
   # the dank-settings-repair systemd path unit below (runs reactively, the
@@ -127,6 +152,14 @@
                | if ((.config.displayPreferences // null) == null) and (($patch.config.displayPreferences // null) != null)
                  then .config.displayPreferences = $patch.config.displayPreferences
                  else . end
+             )
+           | .barConfigs |= map(
+               . as $bc
+               | (if $bc.id == "default" then ["all"] else [] end) as $canonicalDefault
+               | ((($overlay.barConfigs // []) | map(select(.id == $bc.id)))[0].screenPreferences) as $ovPrefs
+               | if ($ovPrefs != null) and ($bc.screenPreferences == $canonicalDefault)
+                 then .screenPreferences = $ovPrefs
+                 else . end
              )' \
           "$settingsFile" > "$tmpFile"
         if ! cmp -s "$tmpFile" "$settingsFile"; then
@@ -141,13 +174,22 @@ in {
     description = ''
       Host-specific values seeded into settings.json on every activation.
       customThemeFile is always overwritten (a purely computed Nix store
-      path, nothing of the user's to preserve). Everything else - the
-      dankSettingsStateKeys (e.g. desktopWidgetGridSettings,
-      activeDisplayProfile) and desktopWidgetInstances position/
-      displayPreferences data (keyed by widget id) - is seeded only where
-      settings.json doesn't already carry a real value (still at its
-      canonical default, or missing for that output), so a live DMS GUI
-      change always wins over this overlay.
+      path, nothing of the user's to preserve). Everything else - showDock
+      (the only remaining dankSettingsStateKeys entry), desktopWidgetInstances
+      position/displayPreferences data (keyed by widget id), and barConfigs
+      screenPreferences (keyed by bar id, e.g. [{id: "default",
+      screenPreferences: [{name, model}]}, {id: "<other bar id>",
+      screenPreferences: [...]}] - only the targeted-screens fragment, not a
+      full bar definition, since the rest of a bar's config is genuinely
+      shared and tracked normally) - is seeded only where settings.json
+      doesn't already carry a real value (still at its canonical default,
+      or missing for that output), so a live DMS GUI change always wins
+      over this overlay.
+      activeDisplayProfile/desktopWidgetGridSettings used to be seeded here
+      too, but a DMS update moved them into session.json, which is
+      gitignored/host-local and never reset by a checkout - so DMS's own
+      normal use keeps them correct per host with no seeding needed; don't
+      add them back here.
       None of this data is ever tracked by git in the first place - see
       .gitattributes and dankSettingsCleanFilter above, which strip it back
       to canonical defaults on every git add/diff/status/commit. This overlay
