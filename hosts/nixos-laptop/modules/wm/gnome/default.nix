@@ -54,14 +54,4 @@
   ];
 
   services.udev.packages = [pkgs.gnome-settings-daemon];
-
-  # environment.systemPackages = with pkgs.gnomeExtensions; [
-  #   # blur-my-shell ## breaks with folders
-  #   # just-perfection ## does nothing?
-  #   # arc-menu
-  #   # dynamic-panel ## does nothing?
-  #   # dynamic-music-pill # # does nothing?
-  # ];
-  # programs.geary.enable = false;
-  # programs.epiphany.enable = false;
 }

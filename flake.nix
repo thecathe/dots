@@ -20,6 +20,12 @@
     # nix-gaming
     nix-gaming.url = "github:fufexan/nix-gaming";
 
+    # declarative disk partitioning (used by hosts installed via nixos-anywhere)
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # stylix
     stylix = {
       url = "github:nix-community/stylix";
@@ -29,12 +35,6 @@
     # DankMaterialShell (niri)
     dms = {
       url = "github:AvengeMedia/DankMaterialShell/stable";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # (dms) notification
-    dgop = {
-      url = "github:AvengeMedia/dgop";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -73,9 +73,9 @@
     home-manager,
     nix-snapd,
     nix-gaming,
+    disko,
     stylix,
     dms,
-    dgop,
     dms-plugin-registry,
     nixgl,
     nix-vscode-extensions,
@@ -85,7 +85,7 @@
     system = "x86_64-linux";
     unfreeAllowList = import ./modules/shared/unfree.nix;
     unfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowList;
-    unfreeAllowListNixOS = unfreeAllowList ++ ["nvidia-x11" "discord" "steam" "steam-unwrapped" "nvidia-settings"];
+    unfreeAllowListNixOS = unfreeAllowList ++ ["nvidia-x11" "discord" "discord-unwrapped" "steam" "steam-unwrapped" "nvidia-settings"];
     unfreePredicateNixOS = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowListNixOS;
   in {
     ###### nixos machine
@@ -121,6 +121,50 @@
               inputs.dms-plugin-registry.homeModules.default
             ];
             users.cathe = import ./hosts/nixos/home.nix;
+          };
+        }
+
+        nix-snapd.nixosModules.default
+        {
+          services.snap.enable = true;
+        }
+      ];
+    };
+
+    ###### nixos-laptop
+    nixosConfigurations.nixos-laptop = inputs.nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = {inherit inputs;};
+      modules = [
+        {
+          nix.settings.experimental-features = [
+            "nix-command"
+            "flakes"
+          ];
+          nixpkgs = {
+            config.allowUnfreePredicate = unfreePredicateNixOS;
+            overlays = [
+              inputs.nix-vscode-extensions.overlays.default
+            ];
+          };
+        }
+        ./hosts/nixos-laptop
+        inputs.disko.nixosModules.disko
+        inputs.stylix.nixosModules.stylix
+        inputs.dms.nixosModules.dank-material-shell
+        inputs.dms-plugin-registry.nixosModules.default
+
+        home-manager.nixosModules.home-manager
+        {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            extraSpecialArgs = {inherit inputs;};
+            sharedModules = [
+              inputs.dms.homeModules.dank-material-shell
+              inputs.dms-plugin-registry.homeModules.default
+            ];
+            users.cathe = import ./hosts/nixos-laptop/home.nix;
           };
         }
 

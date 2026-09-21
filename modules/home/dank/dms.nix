@@ -1,5 +1,4 @@
 {
-  inputs,
   config,
   lib,
   pkgs,
@@ -175,9 +174,6 @@ in {
       enableDynamicTheming = true; # Wallpaper-based theming (matugen)
       enableAudioWavelength = false; # Audio visualizer (cava) - disabled: continuous audio capture + redraw suspected of contributing to pipewire xruns and compositor flicker
       enableCalendarEvents = true; # Calendar integration (khal)
-
-      # dank packages
-      dgop.package = inputs.dgop.packages.${pkgs.system}.default;
 
       # niri
       # niri = {

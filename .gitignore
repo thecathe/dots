@@ -14,3 +14,4 @@ modules/home/dank/session.local.json
 
 # host-local backups, not meant to be shared/committed
 /_local_backups/
+CLAUDE.md
