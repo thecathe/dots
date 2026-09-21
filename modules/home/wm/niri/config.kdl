@@ -673,6 +673,15 @@ binds {
     Ctrl+Alt+R hotkey-overlay-title="Restart HDT (if session active)" {
         spawn-sh "hearthstone-restart-tracker"
     }
+    // Last resort: force-clears the whole Wine prefix (HDT, Battle.net,
+    // Hearthstone), not just HDT - for when the prefix itself is wedged
+    // (e.g. concurrent Wine init race), not just a frozen HDT overlay.
+    // Works even with no session latch (e.g. after launching via plain
+    // Lutris shortcuts). One modifier away from Ctrl+Alt+R on purpose - easy
+    // to tell apart, hard to hit by accident.
+    Ctrl+Alt+Shift+R hotkey-overlay-title="Force-reset Hearthstone Wine prefix" {
+        spawn-sh "hearthstone-reset-prefix"
+    }
 
     // Manual DMS dock visibility toggle (independent of any session - e.g.
     // silence it before a game/screenshare, bring it back after).

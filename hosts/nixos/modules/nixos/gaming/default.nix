@@ -6,6 +6,58 @@
 #     builtins.fetchTarball "https://github.com/fufexan/nix-gaming/archive/master.tar.gz"
 #   );
 # in
+let
+  # Shared by hearthstone-with-tracker (read-only pre-flight check),
+  # hearthstone-restart-tracker (HDT-only kill) and hearthstone-reset-prefix
+  # (kill everything attached to the prefix). Matches on the exact absolute
+  # exe path appearing in a process's argv, then expands to that process's
+  # full descendant tree via ps's own ppid column - deliberately not
+  # /proc/PID/environ (confirmed live: unreadable for anything under
+  # steam-run's pressure-vessel sandbox, even to the owning user) and never
+  # a loose pkill -f substring pattern against unrelated processes (a loose
+  # pkill -f "Xwayland :" once matched and killed niri's own shared
+  # Xwayland server elsewhere in this project's history - every PID here is
+  # reached only by exact-path anchoring or parent->child descent from one,
+  # so it structurally cannot reach anything outside the matched launch
+  # chain).
+  hearthstonePrefixLib = ''
+    hearthstone_pids_for_exe() {
+      exe="$1"
+      roots=""
+      while read -r pid rest; do
+        case "$rest" in
+          *"$exe"*) roots="$roots $pid" ;;
+        esac
+      done < <(ps -eo pid,args --no-headers 2>/dev/null)
+      [ -n "$roots" ] || return 0
+      all="$roots"
+      frontier="$roots"
+      while [ -n "$frontier" ]; do
+        new=""
+        while read -r pid ppid; do
+          for f in $frontier; do
+            if [ "$ppid" = "$f" ]; then
+              case " $all " in
+                *" $pid "*) ;;
+                *) all="$all $pid"; new="$new $pid" ;;
+              esac
+            fi
+          done
+        done < <(ps -eo pid,ppid --no-headers 2>/dev/null)
+        frontier="$new"
+      done
+      echo "$all"
+    }
+
+    hearthstone_kill_pids() {
+      pids="$1"
+      [ -n "$pids" ] || return 0
+      for pid in $pids; do kill -TERM "$pid" 2>/dev/null; done
+      sleep 2
+      for pid in $pids; do kill -KILL "$pid" 2>/dev/null; done
+    }
+  '';
+in
 {
   nix.settings = {
     substituters = [ "https://nix-gaming.cachix.org" ];
@@ -96,6 +148,23 @@
     home.packages = [
       (pkgs.writeShellScriptBin "hearthstone-with-tracker" ''
         set -u
+        ${hearthstonePrefixLib}
+
+        # Refuse to start a second, concurrent launch against the same Wine
+        # prefix - HDT and Battle.net/Hearthstone racing to reinitialize the
+        # shared WINEPREFIX at once (e.g. a new GE-Proton build appearing
+        # while a previous attempt hasn't fully exited) is what deadlocked
+        # things entirely on 2026-09-13: two independent wineserver
+        # processes ended up attached to the same prefix simultaneously,
+        # both stuck forever in wineboot --init, neither app's own log
+        # gaining a single new line from that point on. Read-only check, not
+        # a kill - if something's genuinely stuck rather than just starting
+        # up, Ctrl+Alt+Shift+R (hearthstone-reset-prefix) force-clears it.
+        if [ -n "$(hearthstone_pids_for_exe "$HOME/Games/battlenet/drive_c/Hearthstone Deck Tracker/Hearthstone Deck Tracker.exe")" ] ||
+           [ -n "$(hearthstone_pids_for_exe "$HOME/Games/battlenet/drive_c/Program Files (x86)/Battle.net/Battle.net Launcher.exe")" ]; then
+          echo "hearthstone-with-tracker: HDT and/or Battle.net already appear to be running against ~/Games/battlenet (or a previous attempt never finished) - refusing to start a second, concurrent launch. If it's genuinely stuck, use Ctrl+Alt+Shift+R (hearthstone-reset-prefix) instead." >&2
+          exit 1
+        fi
 
         # Only HDT gets launched here - use its own "Start Hearthstone"
         # button once it's up to launch the game. Earlier versions of this
@@ -388,32 +457,33 @@
 
       (pkgs.writeShellScriptBin "hearthstone-restart-tracker" ''
         set -u
+        ${hearthstonePrefixLib}
         latch="$XDG_RUNTIME_DIR/hearthstone-with-tracker.display"
         [ -f "$latch" ] || exit 0
         display_num=$(cat "$latch")
 
-        # Two patterns, both far too specific to collide with anything
-        # unrelated (unlike the broad patterns that caused real problems
-        # earlier in this project): the launch chain shows a Linux absolute
-        # path (umu-run, umu.exe, and everything in between) right up until
-        # the real exe takes over and self-reports a Windows-style path
-        # instead (how wine represents its own argv). Matching only the
-        # final form (as before) misses anything still stuck mid-bootstrap
-        # from a previous attempt that never made it that far - confirmed in
+        # HDT only - deliberately never touches Battle.net/Hearthstone, so a
+        # frozen HDT overlay costs a quick restart without losing a live
+        # match (the whole point of this script). Finds the exe's full
+        # process tree (catches anything still stuck mid-bootstrap from a
+        # previous attempt, not just the final wine-argv form - confirmed in
         # practice: a stuck bootstrap-stage chain from an earlier restart
-        # survived indefinitely because this didn't catch it, while new
-        # restart attempts kept piling up alongside it. Note: since
-        # Hearthstone now launches as HDT's own child (via its "Start
-        # Hearthstone" button, see hearthstone-with-tracker), killing HDT
-        # here may or may not take Hearthstone down with it depending on how
-        # HDT spawns it - if Hearthstone survives as an orphan, the fresh
-        # HDT instance this starts won't automatically reattach to it; use
-        # "Start Hearthstone" again from inside it if so.
-        pkill -f "$HOME/Games/battlenet/drive_c/Hearthstone Deck Tracker/Hearthstone Deck Tracker\.exe" 2>/dev/null
-        pkill -f '^C:.Hearthstone Deck Tracker.Hearthstone Deck Tracker\.exe$' 2>/dev/null
+        # once survived indefinitely because a narrower match didn't catch
+        # it) via hearthstone_pids_for_exe, not a pkill -f substring
+        # pattern. Note: since Hearthstone launches as HDT's own child (via
+        # its "Start Hearthstone" button, see hearthstone-with-tracker),
+        # killing HDT here may or may not take Hearthstone down with it
+        # depending on how HDT spawns it - if Hearthstone survives as an
+        # orphan, the fresh HDT instance this starts won't automatically
+        # reattach to it; use "Start Hearthstone" again from inside it if
+        # so. If the whole prefix is actually wedged (not just HDT), use
+        # Ctrl+Alt+Shift+R (hearthstone-reset-prefix) instead - this script
+        # intentionally doesn't escalate to that on its own.
+        hearthstone_kill_pids "$(hearthstone_pids_for_exe "$HOME/Games/battlenet/drive_c/Hearthstone Deck Tracker/Hearthstone Deck Tracker.exe")"
 
         mkdir -p "$HOME/.cache"
         scriptdir=$(mktemp -d -p "$HOME/.cache")
+        trap 'rm -rf "$scriptdir"' EXIT
         (cd "$scriptdir" && lutris --output-script=59 >/dev/null 2>&1)
 
         export PATH="${pkgs.python3}/bin:$PATH"
@@ -432,6 +502,79 @@
             sleep 1
           done
         ) &
+      '')
+
+      (pkgs.writeShellScriptBin "hearthstone-reset-prefix" ''
+        set -u
+        ${hearthstonePrefixLib}
+
+        # Last-resort "the whole Wine prefix is wedged" tool - deliberately
+        # separate from hearthstone-restart-tracker (Ctrl+Alt+R), which is
+        # HDT-only and never touches a live game. This is for when the
+        # whole prefix is stuck, not just HDT's overlay - e.g. two
+        # wineserver processes racing to reinitialize the prefix for a
+        # newly-auto-resolved GE-Proton build, as happened on 2026-09-13
+        # (confirmed live: neither app's own log gained a single new line
+        # from that point on - every attempt since hung identically before
+        # either app got far enough to log anything). Not latch-gated,
+        # unlike the other session scripts - needs to work even when
+        # nothing was launched through hearthstone-with-tracker at all,
+        # e.g. via plain Lutris shortcuts, which is exactly what triggered
+        # the 2026-09-13 incident.
+        hdt_exe="$HOME/Games/battlenet/drive_c/Hearthstone Deck Tracker/Hearthstone Deck Tracker.exe"
+        bnet_exe="$HOME/Games/battlenet/drive_c/Program Files (x86)/Battle.net/Battle.net Launcher.exe"
+
+        # Best-effort polite shutdown first, reaching the prefix's own wine
+        # IPC socket even for a PID our own enumeration might miss. The
+        # wineserver binary bundled with GE-Proton is itself a plain,
+        # non-NixOS dynamically-linked executable (confirmed live - running
+        # it directly fails with NixOS's usual "cannot run dynamically
+        # linked executables" error), so it needs steam-run too, same as
+        # everything else here.
+        build=$(cat "$HOME/Games/battlenet/version" 2>/dev/null || true)
+        if [ -n "$build" ]; then
+          for ws in "$HOME/.local/share/Steam/compatibilitytools.d/$build"*/files/bin/wineserver; do
+            [ -x "$ws" ] || continue
+            WINEPREFIX="$HOME/Games/battlenet" timeout 5 ${pkgs.steam-run}/bin/steam-run "$ws" -k 2>/dev/null || true
+            break
+          done
+        fi
+
+        # Deterministic guarantee: the full descendant tree of both launch
+        # chains, TERM then KILL - the wineserver -k above is only ever a
+        # best-effort head start, this is the actual fix.
+        hearthstone_kill_pids "$(hearthstone_pids_for_exe "$hdt_exe")"
+        hearthstone_kill_pids "$(hearthstone_pids_for_exe "$bnet_exe")"
+
+        # If a hearthstone-with-tracker session's latch is present, its
+        # rootful Xwayland is part of the same wedged state - clear it too,
+        # via the same environ-based DISPLAY matching
+        # hearthstone-with-tracker's own cleanup uses, so this can't reach
+        # anything outside that specific display (e.g. niri's own :0). No
+        # latch means there's no display we can safely attribute to a stray
+        # session - guessing risks the exact kind of unscoped match this
+        # project has been burned by before, so this step is skipped rather
+        # than guessed at.
+        latch="$XDG_RUNTIME_DIR/hearthstone-with-tracker.display"
+        if [ -f "$latch" ]; then
+          display_num=$(cat "$latch")
+          for proc in /proc/[0-9]*; do
+            pid="''${proc#/proc/}"
+            if tr '\0' '\n' < "$proc/environ" 2>/dev/null | grep -qx "DISPLAY=:$display_num"; then
+              kill -TERM "$pid" 2>/dev/null
+            fi
+          done
+          sleep 2
+          for proc in /proc/[0-9]*; do
+            pid="''${proc#/proc/}"
+            if tr '\0' '\n' < "$proc/environ" 2>/dev/null | grep -qx "DISPLAY=:$display_num"; then
+              kill -KILL "$pid" 2>/dev/null
+            fi
+          done
+          rm -f "$latch"
+        fi
+
+        dms ipc call toast info "Hearthstone prefix reset" >/dev/null 2>&1 || true
       '')
     ];
   };
