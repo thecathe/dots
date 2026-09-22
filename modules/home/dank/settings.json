@@ -9,7 +9,9 @@
   "showWorkspaceIndex": true,
   "showWorkspacePadding": true,
   "mediaUseAlbumArtAccent": true,
+  "launcherUseOverlayLayer": true,
   "useAutoLocation": true,
+  "launcherLogoMode": "os",
   "fontFamily": "UbuntuSans Nerd Font",
   "monoFontFamily": "JetBrainsMono Nerd Font Mono",
   "showDock": true,
@@ -177,7 +179,21 @@
         }
       ],
       "islandHomeCompactTight": true,
-      "island": true
+      "island": true,
+      "islandOuterGap": 4,
+      "islandReserveThickness": 40,
+      "islandAlongOffset": 0,
+      "islandCompactThickness": 38,
+      "islandCornerRadius": 34,
+      "islandHighContrast": false,
+      "islandSatellitesEnabled": true,
+      "islandSatelliteBackground": false,
+      "islandSatelliteGothCorners": false,
+      "islandSatellitePosition": "edges",
+      "islandHoverOpenDelay": 250,
+      "islandNotificationExpand": false,
+      "islandFloating": false,
+      "islandUseOverlayLayer": false
     },
     {
       "id": "bar1789991121980",

@@ -387,7 +387,22 @@ binds {
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
     Mod+B hotkey-overlay-title="Open a Browser: firefox" { spawn "firefox"; }
-    Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+    // Matches DMS's own default niri bind (core/internal/config/embedded/niri-binds.kdl
+    // in the dms flake input, rev fe293b7 at time of writing) - "dms ipc call spotlight
+    // toggle" toggles DMS's Spotlight app launcher. Verified from source rather than
+    // going through DMS's own "First Time Setup", which fails here since config.kdl is
+    // a nix-store-backed read-only symlink; this manual bind still satisfies its
+    // detection check (it parses the live config, doesn't track a separate "done" flag).
+    Mod+Space hotkey-overlay-title="Application Launcher: DankMaterialShell Spotlight" { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
+    // Same reasoning as the Spotlight bind above (also from niri-binds.kdl, same rev):
+    // "dms ipc call dash toggle wallpaper" opens DMS's wallpaper picker. With the "island"
+    // bar layout (barConfigs[].island in settings.json) this expands the island itself into
+    // a wallpaper-picker activity - the island has no clickable central widget to reach it
+    // from otherwise, unlike the "frame"/"standard" layouts' central clock/media popout,
+    // which bundles a Wallpaper tab alongside Media/Weather. With those other layouts this
+    // same IPC call falls back to opening that popout's Wallpaper tab instead, so the bind
+    // keeps working if the bar layout changes again later.
+    Mod+Y hotkey-overlay-title="Browse Wallpapers: DankMaterialShell" { spawn "dms" "ipc" "call" "dash" "toggle" "wallpaper"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
