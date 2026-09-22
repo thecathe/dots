@@ -88,4 +88,15 @@
   };
 
   fonts.fontconfig.enable = true;
+
+  programs.zsh = {
+    enable = true;
+    shellAliases = {
+      rebuild = ''
+        (cd ~/dots && sudo nixos-rebuild switch --flake .#nixos-laptop);
+        printf "Press Enter to continue...";
+        read -r _
+      '';
+    };
+  };
 }

@@ -163,10 +163,14 @@
 
   fonts.fontconfig.enable = true;
 
-  #######
-
-  #  programs.steam.enable = true;
-
-  # Neovim
-  #  myConfig.onto-nvimPlugin.enable = true;
+  programs.zsh = {
+    enable = true;
+    shellAliases = {
+      rebuild = ''
+        (cd ~/dots && sudo nixos-rebuild switch --flake .#nixos);
+        printf "Press Enter to continue...";
+        read -r _
+      '';
+    };
+  };
 }
