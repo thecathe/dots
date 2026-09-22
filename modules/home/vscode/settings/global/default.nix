@@ -55,12 +55,26 @@ in
     # blank, this will fall back to the default workbench font family.
     "notebook.markup.fontFamily" = "UbuntuSans Nerd Font";
 
+    # Controls whether an inline chat affordance is shown when text is selected.
+    #  - off: No affordance is shown.
+    #  - editor: Show an affordance in the editor at the cursor position.
+    "inlineChat.affordance" = "off";
+
+    # Controls whether files in a chat editing session use Ask in Chat instead of Inline Chat.
+    "inlineChat.askInChat" = false;
+
+    # Controls whether the Fix action is shown for diagnostics in the editor.
+    "inlineChat.fixDiagnostics" = false;
+
     # chat.*
     # Controls whether the Open in Agents Window button is shown in the title bar.
     "chat.titleBar.openInAgentsWindow.enabled" = false;
 
     # Enables chat participant autodetection for panel chat.
     "chat.detectParticipant.enabled" = false;
+
+    # Disable and hide built-in AI features provided by GitHub Copilot, including chat and inline suggestions.
+    "chat.disableAIFeatures" = true;
 
     # Controls the font family in chat messages.
     "chat.fontFamily" = "UbuntuSans Nerd Font";
@@ -89,4 +103,29 @@ in
     #    options, when no proxy found.
     #  - override: Enable proxy support for extensions, override request options.
     "http.proxySupport" = "off";
+
+    #
+    # Controls Visual Studio Code telemetry, first-party extension telemetry, and participating third-party extension telemetry. Some third party extensions might not respect this setting. Consult the specific extension's documentation to be sure. Telemetry helps us better understand how Visual Studio Code is performing, where improvements need to be made, and how features are being used. Read more about the [data we collect](https://aka.ms/vscode-telemetry) and our [privacy statement](https://go.microsoft.com/fwlink/?LinkId=521839). A full restart of the application is necessary for crash reporting changes to take effect.
+    #
+    # &nbsp;
+    #
+    # The following table outlines the data sent with each setting:
+    #
+    # |       | Crash Reports | Error Telemetry | Usage Data |
+    # |:------|:-------------:|:---------------:|:----------:|
+    # | all   |       ✓       |        ✓        |     ✓      |
+    # | error |       ✓       |        ✓        |     -      |
+    # | crash |       ✓       |        -        |     -      |
+    # | off   |       -       |        -        |     -      |
+    #
+    #
+    # &nbsp;
+    #
+    # ****Note:*** If this setting is 'off', no telemetry will be sent regardless of other telemetry settings. If this setting is set to anything except 'off' and telemetry is disabled with deprecated settings, no telemetry will be sent.*
+    #
+    #  - all: Sends usage data, errors, and crash reports.
+    #  - error: Sends general error telemetry and crash reports.
+    #  - crash: Sends OS level crash reports.
+    #  - off: Disables all product telemetry.
+    "telemetry.telemetryLevel" = "error";
   }
