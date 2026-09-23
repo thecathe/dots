@@ -58,7 +58,7 @@
       rmpc # # kitty music-player?
 
       ## software
-      audacity
+      audacity_3
 
       ## cloud storage
       onedrive
