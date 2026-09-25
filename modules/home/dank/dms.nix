@@ -280,6 +280,60 @@ in {
           *) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast warn "Dock toggle: unexpected response ($result)" ;;
         esac
       '')
+
+      # Saves the current clipboard image to ~/Pictures/Saved/NAME.png. DMS-specific
+      # (uses dms clipboard paste), so it lives here rather than dots/bin - only
+      # exists when this module is enabled, mirroring dank-dock-toggle above. Also
+      # bound to Ctrl+Alt+S in niri (modules/home/wm/niri/config.kdl), which
+      # supplies a timestamp as NAME - see the comment there for why that bind
+      # isn't DMS-gated.
+      #
+      # `dms clipboard paste`'s output format depends on what it's reading, not
+      # just fixed - confirmed by reproducing live (niri msg action
+      # screenshot-screen, then immediately dms clipboard paste): a genuinely
+      # fresh clipboard offer (e.g. right after a screenshot, before DMS's own
+      # history has ingested it) gets dumped as raw PNG bytes on stdout, while a
+      # history-backed entry (e.g. after clicking it in DMS's clipboard widget)
+      # instead prints a ~/.cache/dms/clipboard/<id>.png path string. Piping
+      # straight into `cp` (as if it were always a path) silently fails on the
+      # first case - cp errors on the binary "path", and with nothing checking
+      # its exit code the notification below still claimed success with no file
+      # ever written. Handled here by sniffing the PNG magic bytes and branching:
+      # write raw bytes directly, or treat the output as a path and copy that.
+      (pkgs.writeShellScriptBin "clipsave" ''
+        set -u
+        name="''${1:-}"
+        if [ -z "$name" ]; then
+          echo "usage: clipsave NAME" >&2
+          exit 1
+        fi
+        dest="$HOME/Pictures/Saved/''${name}.png"
+        mkdir -p "$(dirname "$dest")"
+
+        raw="$(mktemp)"
+        trap 'rm -f "$raw"' EXIT
+        ${config.programs.dank-material-shell.package}/bin/dms clipboard paste > "$raw"
+
+        magic="$(head -c4 "$raw" | od -An -tx1 | tr -d ' \n')"
+        if [ "$magic" = "89504e47" ]; then
+          mv "$raw" "$dest"
+        else
+          path="$(tr -d '\n' < "$raw")"
+          if [ -n "$path" ] && [ -f "$path" ]; then
+            cp "$path" "$dest"
+          fi
+        fi
+
+        if [ -s "$dest" ]; then
+          action="$(${pkgs.libnotify}/bin/notify-send -a clipsave -t 4000 -A "default=Open folder" "Clipboard image saved" "$dest")"
+          if [ "$action" = "default" ]; then
+            ${pkgs.nautilus}/bin/nautilus --select "$dest"
+          fi
+        else
+          ${pkgs.libnotify}/bin/notify-send -a clipsave -u critical -t 4000 "clipsave failed" "No image found on the clipboard"
+          exit 1
+        fi
+      '')
     ];
 
     # Registers the clean/smudge commands for the "dank-settings" filter named

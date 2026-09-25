@@ -703,4 +703,15 @@ binds {
     Super+Alt+D hotkey-overlay-title="Toggle DMS Dock" {
         spawn-sh "dank-dock-toggle"
     }
+
+    // Save the current clipboard image to ~/Pictures/Saved, timestamped. Like
+    // Super+Alt+D above, this is DMS-specific (clipsave, modules/home/dank/dms.nix)
+    // but lives in this shared file rather than being contributed per-module: niri
+    // only allows a single top-level binds{} node (confirmed via `niri validate` -
+    // a second binds{} block from another module errors with "duplicate node
+    // binds"), so there's no way for dms.nix to own this entry without templating
+    // this whole file. Harmless no-op (command not found) on a host without DMS.
+    Ctrl+Alt+S hotkey-overlay-title="Save Clipboard Image" {
+        spawn-sh "clipsave $(date +%Y%m%d-%H%M%S)"
+    }
 }
