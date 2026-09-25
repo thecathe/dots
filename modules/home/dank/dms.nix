@@ -217,12 +217,6 @@ in {
       enableAudioWavelength = false; # Audio visualizer (cava) - disabled: continuous audio capture + redraw suspected of contributing to pipewire xruns and compositor flicker
       enableCalendarEvents = true; # Calendar integration (khal)
 
-      # niri
-      # niri = {
-      #   enableKeybinds = true;
-      #   enableSpawn = true;
-      # };
-
       # DMS plugins, previously "installed" ad hoc via the settings GUI (which
       # just writes into a local, untracked runtime dir the settings.json
       # snapshot can't capture, so nothing came with a fresh clone). Declared
