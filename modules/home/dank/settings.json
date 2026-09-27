@@ -2,6 +2,7 @@
   "currentThemeName": "dynamic",
   "currentThemeCategory": "dynamic",
   "customThemeFile": "",
+  "mouseAccelProfile": "flat",
   "windSpeedUnit": "ms",
   "barElevationEnabled": false,
   "wallpaperFillMode": "Scrolling",
@@ -106,6 +107,10 @@
         },
         {
           "id": "network_speed_monitor",
+          "enabled": true
+        },
+        {
+          "id": "notificationButton",
           "enabled": true
         },
         {
