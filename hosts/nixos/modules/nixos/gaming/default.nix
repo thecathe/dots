@@ -1,5 +1,8 @@
-{ pkgs, inputs, ... }:
-
+{
+  pkgs,
+  inputs,
+  ...
+}:
 # let
 #   ## https://github.com/fufexan/nix-gaming#nix-stable
 #   nix-gaming = import (
@@ -57,11 +60,10 @@ let
       for pid in $pids; do kill -KILL "$pid" 2>/dev/null; done
     }
   '';
-in
-{
+in {
   nix.settings = {
-    substituters = [ "https://nix-gaming.cachix.org" ];
-    trusted-public-keys = [ "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4=" ];
+    substituters = ["https://nix-gaming.cachix.org"];
+    trusted-public-keys = ["nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="];
   };
   boot.kernelPackages = pkgs.linuxKernel.packages.linux_zen;
   imports = with inputs.nix-gaming.nixosModules; [
@@ -69,22 +71,21 @@ in
     pipewireLowLatency
     platformOptimizations
   ];
-  environment.systemPackages =
-    with pkgs;
-    # with nix-gaming.packages.${pkgs.stdenv.hostPlatform.system};
-    with inputs.nix-gaming.packages.${pkgs.stdenv.hostPlatform.system};
-    [
-      wine
-      mo2installer
-      mangohud
-      protonup-ng
-      lutris
-      wineWow64Packages.staging
-      winetricks
-      vulkan-tools
-      protonup-qt
-      protontricks
-    ];
+  environment.systemPackages = with pkgs;
+  # with nix-gaming.packages.${pkgs.stdenv.hostPlatform.system};
+  with inputs.nix-gaming.packages.${pkgs.stdenv.hostPlatform.system}; [
+    sdl3.lib
+    wine
+    mo2installer
+    mangohud
+    protonup-ng
+    lutris
+    wineWow64Packages.staging
+    winetricks
+    vulkan-tools
+    protonup-qt
+    protontricks
+  ];
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
@@ -102,7 +103,7 @@ in
     dedicatedServer.openFirewall = true;
     platformOptimizations.enable = true;
     gamescopeSession.enable = true;
-    extraCompatPackages = with pkgs; [ proton-ge-bin ];
+    extraCompatPackages = with pkgs; [proton-ge-bin];
     protontricks.enable = true;
   };
   home-manager.users.cathe = {
@@ -141,7 +142,7 @@ in
         exec = "hearthstone-with-tracker";
         icon = "lutris_hearthstone";
         terminal = false;
-        categories = [ "Game" ];
+        categories = ["Game"];
       };
     };
 
