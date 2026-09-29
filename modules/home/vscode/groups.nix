@@ -20,8 +20,16 @@ in let
     [
       ocaml
       disable-breakpoint
+      unicode-math-symbols
     ]
     ++ defaultGroup;
+  rocqGroup = with features;
+    [
+      vsrocq
+      disable-breakpoint
+      unicode-math-symbols
+    ]
+    ++ defaultGroup ++ ocamlGroup;
   pythonGroup = [features.python] ++ defaultGroup;
   goGroup = with features;
     [
@@ -43,6 +51,7 @@ in {
   default = defaultGroup ++ [features.latex];
   latex = latexGroup;
   ocaml = ocamlGroup;
+  rocq = rocqGroup;
   python = pythonGroup;
   go = goGroup;
   erlang = erlangGroup;
@@ -58,13 +67,7 @@ in {
     ++ erlangGroup
     ++ goGroup
     ++ pythonGroup;
-  mebi = with features;
-    [
-      vsrocq
-      disable-breakpoint
-    ]
-    ++ defaultGroup
-    ++ ocamlGroup;
+  mebi = defaultGroup ++ rocqGroup;
   cloakaml = defaultGroup ++ ocamlGroup ++ erlangGroup;
   webserver = with features;
     [
