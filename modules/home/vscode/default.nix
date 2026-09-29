@@ -26,6 +26,7 @@
     languagetool = ./features/languagetool.nix;
     better-comments = ./features/better-comments.nix;
     disable-breakpoint = ./features/disable-breakpoint.nix;
+    unicode-math-symbols = ./features/unicode-math-symbols.nix;
     claude = ./features/claude.nix;
     theme = ./features/theme.nix;
     utils = ./features/utils.nix;
