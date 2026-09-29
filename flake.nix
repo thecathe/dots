@@ -95,7 +95,11 @@
     system = "x86_64-linux";
     unfreeAllowList = import ./modules/shared/unfree.nix;
     unfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowList;
-    unfreeAllowListNixOS = unfreeAllowList ++ ["nvidia-x11" "discord" "discord-unwrapped" "steam" "steam-unwrapped" "nvidia-settings"];
+    # "minecraft-server": the Fabric server (minecraft flake input) builds on
+    # the actual Mojang vanilla server jar, unlike Paper which is an
+    # independently-licensed (GPL3) rebuild - see the minecraft repo's
+    # modules/nixos/default.nix for details.
+    unfreeAllowListNixOS = unfreeAllowList ++ ["nvidia-x11" "discord" "discord-unwrapped" "steam" "steam-unwrapped" "nvidia-settings" "minecraft-server"];
     unfreePredicateNixOS = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowListNixOS;
   in {
     ###### nixos machine
