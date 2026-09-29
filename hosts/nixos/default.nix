@@ -274,7 +274,9 @@
   # services.openssh.enable = true;
 
   # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 25565 ]; # Minecraft LAN
+  # (Minecraft's ports are opened declaratively via
+  # services.minecraft-servers.servers.paper.openFirewall, see the
+  # minecraft flake input's modules/nixos/default.nix)
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;

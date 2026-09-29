@@ -17,6 +17,15 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Minecraft server + client tooling (self-hosted, nixos host only).
+    # Local path input for zero-friction iteration while developing it
+    # alongside dots. Once pushed to GitHub, switch to:
+    #   url = "github:thecathe/minecraft";
+    minecraft = {
+      url = "/home/cathe/Documents/git/thecathe/minecraft";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # nix-gaming
     nix-gaming.url = "github:fufexan/nix-gaming";
 
@@ -79,6 +88,7 @@
     dms-plugin-registry,
     nixgl,
     nix-vscode-extensions,
+    minecraft,
     #    onto-nvim,
     ...
   } @ inputs: let
@@ -128,6 +138,8 @@
         {
           services.snap.enable = true;
         }
+
+        minecraft.nixosModules.default
       ];
     };
 

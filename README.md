@@ -36,3 +36,7 @@ Steps needed on hosts that can't be captured by home-manager/NixOS config, e.g. 
   sudo apt install swaylock
   ```
   This also installs `/etc/pam.d/swaylock` (`auth include login`), which apt manages automatically from here on.
+
+- `nixos` (Minecraft server manual setup - RCON secret, world migration, packwiz
+  bridge): see the `minecraft` flake input's own README
+  (`~/Documents/git/thecathe/minecraft`, consumed here via `inputs.minecraft`).
