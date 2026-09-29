@@ -231,7 +231,21 @@ in {
         echo "$display_num" > "$latch"
         trap 'rm -f "$latch"' EXIT
 
-        ${pkgs.xwayland}/bin/Xwayland ":$display_num" -geometry 1920x1080 &
+        # -noreset is load-bearing: without it, Xwayland's default behaviour
+        # is to fully reset itself (tearing down and recreating its Wayland
+        # surface, printing the "N objects still allocated at reset"
+        # diagnostic) any time its connected-client count hits zero, even
+        # momentarily. The focus/lower pollers below each spawn a fresh,
+        # short-lived xdotool process every 1-2s - during startup, before
+        # HDT/Hearthstone have connected as a persistent client, each one of
+        # those xdotool processes exiting drops the client count to zero and
+        # triggered a reset. Confirmed live: a single ~75s launch attempt
+        # produced 158 resets, which niri's Wayland integration surfaced as
+        # the reported "flickering black window reopening" - the window
+        # being destroyed and recreated on every reset, often faster than
+        # HDT/Hearthstone could ever finish connecting, so it never
+        # converged.
+        ${pkgs.xwayland}/bin/Xwayland ":$display_num" -geometry 1920x1080 -noreset &
         xwayland_pid=$!
 
         sleep 3
