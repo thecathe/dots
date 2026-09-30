@@ -386,11 +386,12 @@
         "nix-minecraft": "nix-minecraft",
         "nixpkgs": [
           "nixpkgs"
-        ]
+        ],
+        "packwiz2nix": "packwiz2nix"
       },
       "locked": {
-        "lastModified": 1790710557,
-        "narHash": "sha256-DFqWVFhpE5aFzioj5IqmUFdRHcLi9Ez8GyXWE2RAeys=",
+        "lastModified": 1790799997,
+        "narHash": "sha256-LGRWgKDptRg03Zb2pDIPe3I1M+W3DJHFKFcvLJu0e70=",
         "path": "/home/cathe/Documents/git/thecathe/minecraft",
         "type": "path"
       },
@@ -619,6 +620,21 @@
       "original": {
         "owner": "nix-community",
         "repo": "NUR",
+        "type": "github"
+      }
+    },
+    "packwiz2nix": {
+      "locked": {
+        "lastModified": 1683887515,
+        "narHash": "sha256-eYxlzal5DNUvpv3F9W42wREdRi6h1hceOcgoiN6gvRg=",
+        "owner": "getchoo",
+        "repo": "packwiz2nix",
+        "rev": "1c9c0ef2e40fbd1a921b446d8fe5884e645e4308",
+        "type": "github"
+      },
+      "original": {
+        "owner": "getchoo",
+        "repo": "packwiz2nix",
         "type": "github"
       }
     },
