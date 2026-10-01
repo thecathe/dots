@@ -3,6 +3,7 @@
     nix
     git
     markdown
+    forester
     better-comments
     json
     kdl

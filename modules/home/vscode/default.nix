@@ -23,6 +23,7 @@
     latex = ./features/latex.nix;
     vsrocq = ./features/vsrocq.nix;
     markdown = ./features/markdown.nix;
+    forester = ./features/forester.nix;
     languagetool = ./features/languagetool.nix;
     better-comments = ./features/better-comments.nix;
     disable-breakpoint = ./features/disable-breakpoint.nix;
