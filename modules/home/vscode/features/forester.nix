@@ -1,6 +1,23 @@
-{pkgs, ...}: {
-  extensions = with pkgs.vscode-extensions; [
-    pkgs.nix-vscode-extensions.vscode-marketplace-release-universal.kaierikniermann.forest-keeper
+{pkgs, ...}: let
+  # forest-keeper's compiled LTeX integration hardcodes the extension ID
+  # "valentjn.vscode-ltex" (both in out/languageToolIntegration.js and the
+  # bundled out/extension.js) to find-and-force-activate the LTeX companion,
+  # bypassing that extension's own activationEvents entirely. We run
+  # ltex-plus.vscode-ltex-plus instead (the actively maintained fork, see
+  # modules/home/vscode/features/languagetool.nix), so patch forest-keeper's
+  # compiled JS to look for that ID instead, keeping the enable-prompt,
+  # auto-trigger-on-open/save and "Check All Tree Files" command working.
+  forestKeeper = pkgs.nix-vscode-extensions.vscode-marketplace-release-universal.kaierikniermann.forest-keeper.overrideAttrs (old: {
+    postPatch =
+      (old.postPatch or "")
+      + ''
+        substituteInPlace out/languageToolIntegration.js out/extension.js \
+          --replace-fail 'valentjn.vscode-ltex' 'ltex-plus.vscode-ltex-plus'
+      '';
+  });
+in {
+  extensions = [
+    forestKeeper
   ];
   settings = {
     "forester.completion.showID" = true;
