@@ -1,4 +1,14 @@
 {pkgs, ...}: let
+  # Pinned to an explicit marketplace version+hash, rather than
+  # pkgs.nix-vscode-extensions...kaierikniermann.forest-keeper, which always
+  # resolves to whatever version happens to be cached in that flake input's
+  # daily-refreshed snapshot. The patch below targets exact string literals
+  # inside this version's *compiled* JS; an unpinned reference could silently
+  # pick up a newer forest-keeper build on a future `nix flake update` whose
+  # minified output no longer matches those literals, breaking the patch
+  # without any obvious error. Bump the version/hash here deliberately when
+  # actually upgrading, so that's a conscious, re-verified step.
+  #
   # forest-keeper's compiled LTeX integration hardcodes the extension ID
   # "valentjn.vscode-ltex" (both in out/languageToolIntegration.js and the
   # bundled out/extension.js) to find-and-force-activate the LTeX companion,
@@ -7,14 +17,23 @@
   # modules/home/vscode/features/languagetool.nix), so patch forest-keeper's
   # compiled JS to look for that ID instead, keeping the enable-prompt,
   # auto-trigger-on-open/save and "Check All Tree Files" command working.
-  forestKeeper = pkgs.nix-vscode-extensions.vscode-marketplace-release-universal.kaierikniermann.forest-keeper.overrideAttrs (old: {
-    postPatch =
-      (old.postPatch or "")
-      + ''
-        substituteInPlace out/languageToolIntegration.js out/extension.js \
-          --replace-fail 'valentjn.vscode-ltex' 'ltex-plus.vscode-ltex-plus'
-      '';
-  });
+  forestKeeper =
+    (pkgs.vscode-utils.buildVscodeMarketplaceExtension {
+      mktplcRef = {
+        publisher = "KaiErikNiermann";
+        name = "forest-keeper";
+        version = "0.4.17";
+        hash = "sha256-VYdoEHWbSO2nABtCKEXuektljnxx32O/5IXvEImHDmU=";
+      };
+    }).overrideAttrs
+    (old: {
+      postPatch =
+        (old.postPatch or "")
+        + ''
+          substituteInPlace out/languageToolIntegration.js out/extension.js \
+            --replace-fail 'valentjn.vscode-ltex' 'ltex-plus.vscode-ltex-plus'
+        '';
+    });
 in {
   extensions = [
     forestKeeper
