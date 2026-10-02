@@ -2,6 +2,24 @@
 {
   extensions = [ pkgs.vscode-extensions.ltex-plus.vscode-ltex-plus ];
   settings = {
+    "ltex.enabled" = [
+      "bibtex"
+      "context"
+      "context.tex"
+      "html"
+      "latex"
+      "markdown"
+      "mdx"
+      "typst"
+      "asciidoc"
+      "neorg"
+      "org"
+      "quarto"
+      "restructuredtext"
+      "rsweave"
+      "forester"
+    ];
+
     #### below was for older ltex extension -- likely unrelated
     # "ltex" = {
     #                   "disabledRules" = {

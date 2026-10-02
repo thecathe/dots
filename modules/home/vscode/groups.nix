@@ -4,6 +4,7 @@
     git
     markdown
     forester
+    languagetool
     better-comments
     json
     kdl
