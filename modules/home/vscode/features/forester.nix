@@ -40,6 +40,7 @@
       "editor.tabSize" = 2;
       "editor.wordBasedSuggestions" = "off";
       "editor.formatOnSave" = false;
+      "editor.formatOnPaste" = false;
       "editor.defaultFormatter" = "KaiErikNiermann.forest-keeper";
     };
   };
