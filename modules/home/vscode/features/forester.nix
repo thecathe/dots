@@ -78,6 +78,11 @@ in {
       "editor.formatOnSave" = false;
       "editor.formatOnPaste" = false;
       "editor.defaultFormatter" = "KaiErikNiermann.forest-keeper";
+      # forest-keeper's language-configuration.json treats every "{"..."}" pair as a
+      # folding region (not just block macros), so VS Code's minimap region-header
+      # feature renders each macro name (e.g. \meta, \p) as an oversized header in
+      # the minimap, clipped by the tiny per-line height. Suppress it for .tree files.
+      "editor.minimap.showRegionSectionHeaders" = false;
     };
   };
 }
