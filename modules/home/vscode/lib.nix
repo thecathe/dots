@@ -16,12 +16,11 @@
       dupes == { }
     ) "duplicate vscode keybindings: ${toString (lib.attrNames dupes)}";
     {
-      # move into profile once extension issue fixed
-      extensions = lib.concatMap (f: f.extensions) features;
       profile = {
         userSettings = lib.foldl' (
           acc: f: lib.recursiveUpdate acc (f.settings or { })
         ) globalSettings features;
+        extensions = lib.concatMap (f: f.extensions) features;
         inherit keybindings;
       };
     };

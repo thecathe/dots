@@ -46,20 +46,6 @@
   goProfile = vscodeLib.mkProfile (groups.go);
   erlangProfile = vscodeLib.mkProfile (groups.erlang);
   javaProfile = vscodeLib.mkProfile (groups.java);
-  ### all extensions -- temp, waiting for upstream fix of profile extensions being respected
-  allExtensions = lib.unique (
-    defaultProfile.extensions
-    ++ indimoProfile.extensions
-    ++ mebiProfile.extensions
-    ++ cloakamlProfile.extensions
-    ++ webserverProfile.extensions
-    ++ latexProfile.extensions
-    ++ ocamlProfile.extensions
-    ++ pythonProfile.extensions
-    ++ goProfile.extensions
-    ++ erlangProfile.extensions
-    ++ javaProfile.extensions
-  );
 in {
   programs.vscode = {
     enable = true;
@@ -75,13 +61,25 @@ in {
       paths = [pkgs.vscode];
       nativeBuildInputs = [pkgs.makeWrapper];
       postBuild = ''
-        wrapProgram $out/bin/code --add-flags "--no-sandbox"
+        wrapProgram $out/bin/code \
+          --add-flags "--no-sandbox" \
+          --prefix PATH : ${lib.makeBinPath [pkgs.beamPackages.erlang pkgs.beamPackages.rebar3]}
       '';
+      # TODO(erlang): the PATH prefix above exists because pgourlain.erlang
+      # unconditionally shells out to `rebar3`/`escript` to compile its "Erlang
+      # bridge" on activation. As of the extensions-per-profile scoping fix
+      # (see lib.nix), it should only be active in the `erlang`/`indimo`/
+      # `cloakaml` profiles, but per-profile extension activation is a known
+      # upstream weak point (nix-community/home-manager#7880, #8793) so this
+      # stays as a safety net. Remove it once that's confirmed reliable and/or
+      # fixed upstream.
     };
-    mutableExtensionsDir = true;
+    # false because profiles beyond `default` are declared below; the module
+    # itself only supports mutableExtensionsDir=true when no non-default
+    # profiles exist (otherwise it's a no-op with a warning anyway).
+    mutableExtensionsDir = false;
     enableUpdateCheck = false;
     enableExtensionUpdateCheck = false;
-    extensions = allExtensions;
     profiles = {
       # must set icons manually in vscode
       default = defaultProfile.profile;
