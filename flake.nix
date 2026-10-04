@@ -21,6 +21,15 @@
     # Local path input for zero-friction iteration while developing it
     # alongside dots. Once pushed to GitHub, switch to:
     #   url = "github:thecathe/minecraft";
+    #
+    # `nixos-rebuild switch` does NOT refresh this input's flake.lock pin on
+    # its own - a `path:` input's narHash gets locked just like any other,
+    # and changes to the minecraft repo (e.g. a new mod added to its packwiz
+    # pack) are silently invisible to dots builds until you explicitly run
+    # `nix flake update minecraft` here. Learned the hard way: several
+    # rounds of "successful" rebuilds/switches turned out to be rebuilding
+    # the same frozen Sep-30 snapshot, so none of a session's mod additions
+    # ever reached the live server despite every build reporting success.
     minecraft = {
       url = "/home/cathe/Documents/git/thecathe/minecraft";
       inputs.nixpkgs.follows = "nixpkgs";

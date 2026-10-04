@@ -390,8 +390,8 @@
         "packwiz2nix": "packwiz2nix"
       },
       "locked": {
-        "lastModified": 1790799997,
-        "narHash": "sha256-LGRWgKDptRg03Zb2pDIPe3I1M+W3DJHFKFcvLJu0e70=",
+        "lastModified": 1791114517,
+        "narHash": "sha256-l2xVU4ZNgBueEtEI587yX7uXnAvBwdiqNV0FF0LdkOM=",
         "path": "/home/cathe/Documents/git/thecathe/minecraft",
         "type": "path"
       },
