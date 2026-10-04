@@ -14,6 +14,7 @@
     ./firefox.nix
     ./nautilus.nix
     ./docker.nix
+    ./nix-ld.nix
     ./vscode.nix
     ./claude.nix
     ./network-sharing.nix
