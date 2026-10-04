@@ -50,8 +50,14 @@ in
     with pkgs.vscode-extensions;
     [ ]
     ++ (with pkgs.nix-vscode-extensions.vscode-marketplace-release-universal; [
+      # erlang-ls dropped: upstream archived/unmaintained since Aug 2025
+      # (pointing users to ELP), and its bundled prebuilt escript crashes on
+      # startup here (`application:ensure_all_started` failure inside
+      # erlang_ls.erl) against this system's OTP 28 -- classic OTP-version
+      # skew for an abandoned release, not something worth pinning an extra
+      # Erlang version for. erlang-language-platform (ELP) already covers
+      # its LSP functionality and is erlang-ls's own recommended successor.
       erlang-language-platform.erlang-language-platform
-      erlang-ls.erlang-ls
     ])
     ++ [ erlangExtWithBridge ];
   settings = {
