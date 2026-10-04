@@ -10,6 +10,7 @@
     kdl
     theme
     utils
+    claude
   ];
 in let
   latexGroup = with features;
@@ -62,7 +63,6 @@ in {
     [
       web
       sql
-      claude
       disable-breakpoint
     ]
     ++ defaultGroup
