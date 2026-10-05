@@ -3,8 +3,6 @@
     nix
     git
     markdown
-    forester
-    languagetool
     better-comments
     json
     kdl
@@ -16,6 +14,7 @@ in let
   latexGroup = with features;
     [
       latex
+      languagetool
       disable-breakpoint
     ]
     ++ defaultGroup;
@@ -29,6 +28,14 @@ in let
   rocqGroup = with features;
     [
       vsrocq
+      disable-breakpoint
+      unicode-math-symbols
+    ]
+    ++ defaultGroup ++ ocamlGroup;
+  foresterGroup = with features;
+    [
+      forester
+      languagetool
       disable-breakpoint
       unicode-math-symbols
     ]
@@ -55,6 +62,7 @@ in {
   latex = latexGroup;
   ocaml = ocamlGroup;
   rocq = rocqGroup;
+  forester = foresterGroup;
   python = pythonGroup;
   go = goGroup;
   erlang = erlangGroup;
