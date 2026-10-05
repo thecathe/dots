@@ -42,6 +42,7 @@
   # languages
   latexProfile = vscodeLib.mkProfile (groups.latex);
   ocamlProfile = vscodeLib.mkProfile (groups.ocaml);
+  rocqProfile = vscodeLib.mkProfile (groups.rocq);
   pythonProfile = vscodeLib.mkProfile (groups.python);
   goProfile = vscodeLib.mkProfile (groups.go);
   erlangProfile = vscodeLib.mkProfile (groups.erlang);
@@ -88,6 +89,7 @@ in {
       "cloakaml" = cloakamlProfile.profile;
       "webserver" = webserverProfile.profile;
       "ocaml" = ocamlProfile.profile;
+      "rocq" = rocqProfile.profile;
       "latex" = latexProfile.profile;
       "python" = pythonProfile.profile;
       "go" = goProfile.profile;
