@@ -44,6 +44,9 @@ in {
     "forester.create.author" = "cathe";
     "forester.create.openNewTreeMode" = "active";
     "forester.create.random" = true;
+    "forester.decorations.enabled" = true;
+    "forester.defaultPrefix" = "";
+    "forester.defaultTemplate" = "(No template)";
     "forester.formatter.autoScanMacros" = true;
     "forester.formatter.ignoredCommands" = ["meta" "taxon"];
     "forester.graphView.excludedNodes" = [
@@ -104,6 +107,26 @@ in {
           args = "Forester: Touch Date";
         }
       ];
+    }
+    {
+      key = "shift+alt+r";
+      command = "forester.refreshTreeView";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    {
+      key = "ctrl+alt+shift+r";
+      command = "forester.restartLanguageServer";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    {
+      key = "ctrl+t";
+      command = "forester.newTree";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    {
+      key = "ctrl+alt+f";
+      command = "forester.formatAllTrees";
+      when = "editorTextFocus && resourceExtname == '.tree'";
     }
   ];
 }
