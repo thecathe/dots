@@ -8,8 +8,10 @@
 
   programs.git = {
     enable = true;
-    userName = "NEW_USER";
-    userEmail = "replace-me@example.com";
+    settings.user = {
+      name = "NEW_USER";
+      email = "replace-me@example.com";
+    };
   };
 
   home.packages = with pkgs; [
