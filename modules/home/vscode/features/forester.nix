@@ -71,6 +71,13 @@ in {
     "forester.languageTool.language" = "en";
     "forester.path" = "forester";
     "forester.taxonCustomization" = {};
+    # forest-keeper registers two definition providers for the same link (its
+    # own client-side one, plus the bundled Langium language server's, which
+    # deliberately points at a different location "so Peek shows meaningful
+    # content") - two locations for one symbol is what makes VS Code default
+    # to the Peek overlay on Ctrl+click instead of jumping straight there.
+    "editor.gotoLocation.multipleDefinitions" = "goto";
+    "editor.definitionLinkOpensInPeek" = false; # already VS Code's default; explicit for clarity
     "[forester]" = {
       "editor.wordWrap" = "on";
       "editor.tabSize" = 2;
@@ -85,4 +92,18 @@ in {
       "editor.minimap.showRegionSectionHeaders" = false;
     };
   };
+  keybindings = [
+    {
+      key = "ctrl+shift+d";
+      command = "runCommands";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+      args.commands = [
+        "workbench.action.files.save"
+        {
+          command = "workbench.action.tasks.runTask";
+          args = "Forester: Touch Date";
+        }
+      ];
+    }
+  ];
 }
