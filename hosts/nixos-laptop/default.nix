@@ -86,6 +86,50 @@
   # Enable networking
   networking.networkmanager.enable = true;
 
+  # eduroam (cathe only - max sets up his own independently via nmcli/GNOME
+  # Settings, see README.md). The CA cert is public (downloaded from
+  # https://student.kent.ac.uk/studies/wi-fi/manual, confirmed to be Kent's
+  # own self-signed University of Kent Root CA - use the Root CA cert, not
+  # the issuing CA or the wifi server cert itself), so it's committed here;
+  # the identity/password are NOT - they're substituted at activation time
+  # from an out-of-band file. See README.md "manual setup (non-nix)" for the
+  # one-time setup of that file. Kent's docs give the identity format as
+  # <kent-username>@kent.ac.uk and don't mention an anonymous outer identity,
+  # so none is configured here.
+  environment.etc."eduroam-ca.cer" = {
+    source = ./eduroam-ca.cer;
+    mode = "0444";
+  };
+
+  networking.networkmanager.ensureProfiles = {
+    environmentFiles = ["/etc/nixos/secrets/eduroam-cathe.env"];
+    profiles.eduroam-cathe = {
+      connection = {
+        id = "eduroam-cathe";
+        type = "wifi";
+        permissions = "user:cathe:;";
+      };
+      wifi = {
+        ssid = "eduroam";
+        mode = "infrastructure";
+      };
+      wifi-security = {
+        key-mgmt = "wpa-eap";
+      };
+      "802-1x" = {
+        eap = "peap";
+        phase2-auth = "mschapv2";
+        identity = "$EDUROAM_IDENTITY";
+        ca-cert = "/etc/eduroam-ca.cer";
+        # Kent's own guide says the server cert should present
+        # CN=wifi.kent.ac.uk ("if it says something else please contact
+        # us") - pin to that as an extra check beyond just the CA chain.
+        domain-suffix-match = "wifi.kent.ac.uk";
+        password = "$EDUROAM_PASSWORD";
+      };
+    };
+  };
+
   # Set your time zone.
   time.timeZone = "Europe/London";
 

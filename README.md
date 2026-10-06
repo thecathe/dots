@@ -47,12 +47,6 @@ Steps needed on hosts that can't be captured by home-manager/NixOS config, e.g. 
   `templates/home-manager-user` template. Nothing in `thecathe/dots` needs
   updating when he changes his own config - see that template's README.
 
-- `nixos-laptop` (user `max`): account exists (`users.users.max` in
-  `hosts/nixos-laptop/default.nix`), but his home-manager config is entirely
-  self-managed from his own GitHub repo, bootstrapped from this repo's
-  `templates/home-manager-user` template. Nothing in `thecathe/dots` needs
-  updating when he changes his own config - see that template's README.
-
 - `nixos-laptop` (eduroam, user `cathe`): the CA cert
   (`hosts/nixos-laptop/eduroam-ca.cer`) is committed - it's Kent's public,
   self-signed University of Kent Root CA, downloaded from
