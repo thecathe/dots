@@ -101,11 +101,18 @@
     mode = "0444";
   };
 
+  # ensureProfiles.environmentFiles is strictly typed as an absolute path -
+  # it does NOT support systemd's "-" (optional file) prefix. Instead,
+  # pre-create the secrets directory/file declaratively (0600, root-owned,
+  # left alone if it already exists) so the path always exists by the time
+  # NetworkManager-ensure-profiles.service runs, even before it's filled in.
+  systemd.tmpfiles.rules = [
+    "d /etc/nixos/secrets 0700 root root -"
+    "f /etc/nixos/secrets/eduroam-cathe.env 0600 root root -"
+  ];
+
   networking.networkmanager.ensureProfiles = {
-    # Leading "-": systemd's EnvironmentFile treats a missing file as fine
-    # rather than failing the unit (and the whole nixos-rebuild switch) -
-    # this file is created by hand after the first switch, see README.md.
-    environmentFiles = ["-/etc/nixos/secrets/eduroam-cathe.env"];
+    environmentFiles = ["/etc/nixos/secrets/eduroam-cathe.env"];
     profiles.eduroam-cathe = {
       connection = {
         id = "eduroam-cathe";

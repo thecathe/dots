@@ -53,10 +53,11 @@ Steps needed on hosts that can't be captured by home-manager/NixOS config, e.g. 
   https://student.kent.ac.uk/studies/wi-fi/manual (that page also confirms
   the Root CA is the right one to use here, not the issuing CA or the wifi
   server cert, and that the server should present `CN=wifi.kent.ac.uk`).
-  The actual eduroam username/password are NOT committed - create them,
-  once, as root on `nixos-laptop`:
+  The actual eduroam username/password are NOT committed. `systemd.tmpfiles.rules`
+  (`hosts/nixos-laptop/default.nix`) pre-creates `/etc/nixos/secrets/eduroam-cathe.env`
+  (empty, root-only) on every boot/switch, so it's already there after
+  `nixos-rebuild switch` - just fill it in, once, as root on `nixos-laptop`:
   ```
-  sudo install -m 600 /dev/null /etc/nixos/secrets/eduroam-cathe.env
   sudoedit /etc/nixos/secrets/eduroam-cathe.env
   ```
   containing:
@@ -64,6 +65,8 @@ Steps needed on hosts that can't be captured by home-manager/NixOS config, e.g. 
   EDUROAM_IDENTITY=<kent IT account username>@kent.ac.uk
   EDUROAM_PASSWORD=<kent password>
   ```
+  then either `nixos-rebuild switch` again or
+  `sudo systemctl restart NetworkManager-ensure-profiles.service` to pick it up.
   `max` isn't covered by this profile (it's scoped to `cathe` only via
   `connection.permissions`) - he sets up his own eduroam login independently,
   the same way he manages the rest of his account.
