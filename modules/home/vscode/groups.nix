@@ -39,7 +39,7 @@ in let
       disable-breakpoint
       unicode-math-symbols
     ]
-    ++ defaultGroup ++ ocamlGroup;
+    ++ defaultGroup;
   pythonGroup = [features.python] ++ defaultGroup;
   goGroup = with features;
     [
