@@ -670,24 +670,15 @@ binds {
     // moving the mouse or pressing any other key.
     Mod+Shift+P { power-off-monitors; }
 
-    // hearthstone-with-tracker session controls. All five no-op harmlessly
-    // if no session is currently running (each script checks a latch file
-    // hearthstone-with-tracker itself maintains).
-    Ctrl+Alt+G hotkey-overlay-title="Focus Hearthstone session (if active)" {
-        spawn-sh "hearthstone-focus-session"
-    }
-    Ctrl+Alt+H hotkey-overlay-title="Focus Hearthstone (if session active)" {
-        spawn-sh "hearthstone-focus-window hearthstone"
-    }
-    Ctrl+Alt+B hotkey-overlay-title="Focus Battle.net (if session active)" {
-        spawn-sh "hearthstone-focus-window battlenet"
-    }
-    Ctrl+Alt+T hotkey-overlay-title="Focus HDT (if session active)" {
-        spawn-sh "hearthstone-focus-window hdt"
-    }
-    Ctrl+Alt+R hotkey-overlay-title="Restart HDT (if session active)" {
-        spawn-sh "hearthstone-restart-tracker"
-    }
+    // hearthstone-with-tracker's focus-window/-session/-restart-tracker binds
+    // (Ctrl+Alt+G/H/B/T/R) used to live here as static binds that no-op
+    // harmlessly when no session is running. That meant niri permanently
+    // reserved those chords even when idle, making them unavailable to every
+    // other app (e.g. Ctrl+Alt+B in VS Code). They're now defined in
+    // hearthstone-binds.kdl, included below, which hearthstone-with-tracker
+    // itself writes/removes exactly when it creates/removes its latch file -
+    // so the chords are only reserved while a session is actually running.
+    //
     // Last resort: force-clears the whole Wine prefix (HDT, Battle.net,
     // Hearthstone), not just HDT - for when the prefix itself is wedged
     // (e.g. concurrent Wine init race), not just a frozen HDT overlay.
@@ -715,3 +706,11 @@ binds {
         spawn-sh "clipsave $(date +%Y%m%d-%H%M%S)"
     }
 }
+
+// Session-only Hearthstone binds (Ctrl+Alt+G/H/B/T/R) - see the comment
+// above Ctrl+Alt+Shift+R. Must be top-level (niri doesn't allow `include`
+// inside a block); `optional=true` means it's fine for this file not to
+// exist, which is the common case when no session is running. Confirmed
+// live (nested niri instance, 2026-10-06): niri's watcher picks up both
+// this file's appearance and its removal and reloads without a restart.
+include optional=true "~/.local/state/niri/hearthstone-binds.kdl"

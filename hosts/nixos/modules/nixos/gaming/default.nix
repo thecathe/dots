@@ -225,11 +225,40 @@ in {
 
         # Latch: lets hearthstone-focus-window/-session/-restart-tracker
         # (bound to niri keys) know a session is active and which display to
-        # target, and no-op harmlessly if none is running. Removed on any
-        # exit path, not just the clean one.
+        # target. Removed on any exit path, not just the clean one.
         latch="$XDG_RUNTIME_DIR/hearthstone-with-tracker.display"
         echo "$display_num" > "$latch"
-        trap 'rm -f "$latch"' EXIT
+
+        # The Ctrl+Alt+G/H/B/T/R binds themselves live here too, as an
+        # `include optional=true`'d fragment (see config.kdl) rather than
+        # static binds in the main niri config - that way niri only reserves
+        # those chords (e.g. Ctrl+Alt+B, otherwise useful to e.g. VS Code)
+        # while a session is actually running, instead of permanently.
+        # Niri watches included files and live-reloads on both creation and
+        # removal, no compositor restart needed (confirmed live, 2026-10-06).
+        bindsfile="$HOME/.local/state/niri/hearthstone-binds.kdl"
+        mkdir -p "$(dirname "$bindsfile")"
+        cat > "$bindsfile" <<'KDLEOF'
+binds {
+    Ctrl+Alt+G hotkey-overlay-title="Focus Hearthstone session (if active)" {
+        spawn-sh "hearthstone-focus-session"
+    }
+    Ctrl+Alt+H hotkey-overlay-title="Focus Hearthstone (if session active)" {
+        spawn-sh "hearthstone-focus-window hearthstone"
+    }
+    Ctrl+Alt+B hotkey-overlay-title="Focus Battle.net (if session active)" {
+        spawn-sh "hearthstone-focus-window battlenet"
+    }
+    Ctrl+Alt+T hotkey-overlay-title="Focus HDT (if session active)" {
+        spawn-sh "hearthstone-focus-window hdt"
+    }
+    Ctrl+Alt+R hotkey-overlay-title="Restart HDT (if session active)" {
+        spawn-sh "hearthstone-restart-tracker"
+    }
+}
+KDLEOF
+
+        trap 'rm -f "$latch" "$bindsfile"' EXIT
 
         # -noreset is load-bearing: without it, Xwayland's default behaviour
         # is to fully reset itself (tearing down and recreating its Wayland
