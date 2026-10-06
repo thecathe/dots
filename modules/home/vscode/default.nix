@@ -19,6 +19,7 @@
     web = ./features/web.nix;
     ssh = ./features/ssh.nix;
     git = ./features/git.nix;
+    pdf = ./features/pdf.nix;
     json = ./features/json.nix;
     latex = ./features/latex.nix;
     vsrocq = ./features/vsrocq.nix;

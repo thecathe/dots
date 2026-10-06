@@ -38,6 +38,7 @@ in let
       languagetool
       disable-breakpoint
       unicode-math-symbols
+      pdf
     ]
     ++ defaultGroup;
   pythonGroup = [features.python] ++ defaultGroup;
