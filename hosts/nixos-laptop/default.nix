@@ -102,7 +102,10 @@
   };
 
   networking.networkmanager.ensureProfiles = {
-    environmentFiles = ["/etc/nixos/secrets/eduroam-cathe.env"];
+    # Leading "-": systemd's EnvironmentFile treats a missing file as fine
+    # rather than failing the unit (and the whole nixos-rebuild switch) -
+    # this file is created by hand after the first switch, see README.md.
+    environmentFiles = ["-/etc/nixos/secrets/eduroam-cathe.env"];
     profiles.eduroam-cathe = {
       connection = {
         id = "eduroam-cathe";
