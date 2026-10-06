@@ -41,6 +41,18 @@
     ];
   };
 
+  # max manages his own home-manager config independently, from his own
+  # GitHub repo (bootstrapped from the templates#home-manager-user template)
+  # - deliberately NOT wired into home-manager.users here, see README.md.
+  users.users.max = {
+    isNormalUser = true;
+    description = "max";
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+    ];
+  };
+
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;

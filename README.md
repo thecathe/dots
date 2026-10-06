@@ -40,3 +40,36 @@ Steps needed on hosts that can't be captured by home-manager/NixOS config, e.g. 
 - `nixos` (Minecraft server manual setup - RCON secret, world migration, packwiz
   bridge): see the `minecraft` flake input's own README
   (`~/Documents/git/thecathe/minecraft`, consumed here via `inputs.minecraft`).
+
+- `nixos-laptop` (user `max`): account exists (`users.users.max` in
+  `hosts/nixos-laptop/default.nix`), but his home-manager config is entirely
+  self-managed from his own GitHub repo, bootstrapped from this repo's
+  `templates/home-manager-user` template. Nothing in `thecathe/dots` needs
+  updating when he changes his own config - see that template's README.
+
+- `nixos-laptop` (user `max`): account exists (`users.users.max` in
+  `hosts/nixos-laptop/default.nix`), but his home-manager config is entirely
+  self-managed from his own GitHub repo, bootstrapped from this repo's
+  `templates/home-manager-user` template. Nothing in `thecathe/dots` needs
+  updating when he changes his own config - see that template's README.
+
+- `nixos-laptop` (eduroam, user `cathe`): the CA cert
+  (`hosts/nixos-laptop/eduroam-ca.cer`) is committed - it's Kent's public,
+  self-signed University of Kent Root CA, downloaded from
+  https://student.kent.ac.uk/studies/wi-fi/manual (that page also confirms
+  the Root CA is the right one to use here, not the issuing CA or the wifi
+  server cert, and that the server should present `CN=wifi.kent.ac.uk`).
+  The actual eduroam username/password are NOT committed - create them,
+  once, as root on `nixos-laptop`:
+  ```
+  sudo install -m 600 /dev/null /etc/nixos/secrets/eduroam-cathe.env
+  sudoedit /etc/nixos/secrets/eduroam-cathe.env
+  ```
+  containing:
+  ```
+  EDUROAM_IDENTITY=<kent IT account username>@kent.ac.uk
+  EDUROAM_PASSWORD=<kent password>
+  ```
+  `max` isn't covered by this profile (it's scoped to `cathe` only via
+  `connection.permissions`) - he sets up his own eduroam login independently,
+  the same way he manages the rest of his account.

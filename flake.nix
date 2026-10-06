@@ -244,6 +244,10 @@
         path = ./templates/latex-texlive;
         description = "LaTeX project needing real texlive (packages outside Tectonic's bundle, LuaTeX, etc.) and direnv";
       };
+      home-manager-user = {
+        path = ./templates/home-manager-user;
+        description = "Standalone home-manager flake for a new user on a shared NixOS host (e.g. nixos-laptop), independent of this repo's nixosConfigurations";
+      };
     };
   };
 }
