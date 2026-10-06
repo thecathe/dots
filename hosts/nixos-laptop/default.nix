@@ -106,9 +106,31 @@
   # pre-create the secrets directory/file declaratively (0600, root-owned,
   # left alone if it already exists) so the path always exists by the time
   # NetworkManager-ensure-profiles.service runs, even before it's filled in.
-  systemd.tmpfiles.rules = [
+  # "C" rules below seed each account's AccountsService session preference
+  # (/var/lib/AccountsService/users/<name>, the same file GDM's own session
+  # switcher writes to via Session=/SessionType= - confirmed against
+  # accountsservice's own source, src/user.c) so cathe defaults to niri and
+  # max defaults to gnome. "C" only copies the source into place if the
+  # target is missing, so this is just an *initial* default: once
+  # AccountsService itself updates the file (e.g. someone picks a different
+  # session from the GDM switcher), that sticks and is never overwritten
+  # back by this rule. Deliberately NOT using
+  # services.displayManager.defaultSession for this - that forces ALL normal
+  # user accounts to the given session on every single GDM start (gdm.nix's
+  # own preStart comment literally says "ignore session history"), which
+  # would reset cathe's niri choice back on every reboot too.
+  systemd.tmpfiles.rules = let
+    accountsServiceSession = name: session:
+      pkgs.writeText "accountsservice-${name}-session" ''
+        [User]
+        Session=${session}
+        SessionType=wayland
+      '';
+  in [
     "d /etc/nixos/secrets 0700 root root -"
     "f /etc/nixos/secrets/eduroam-cathe.env 0600 root root -"
+    "C /var/lib/AccountsService/users/cathe 0600 root root - ${accountsServiceSession "cathe" "niri"}"
+    "C /var/lib/AccountsService/users/max 0600 root root - ${accountsServiceSession "max" "gnome"}"
   ];
 
   networking.networkmanager.ensureProfiles = {
@@ -176,16 +198,6 @@
       variant = "";
     };
   };
-
-  # GDM has no system-wide default of its own otherwise, so it falls back to
-  # whichever session the greeter last showed - meaning a brand new account
-  # with no recorded preference (e.g. max's, on first login) can end up
-  # dropped into whatever cathe last happened to pick (niri), with none of
-  # cathe's niri home-manager config to make it usable. This only sets the
-  # default for accounts with no session choice of their own recorded yet
-  # (tracked per-user via AccountsService) - it doesn't affect or reset an
-  # account that's already picked a session from the GDM switcher before.
-  services.displayManager.defaultSession = "gnome";
 
   # Configure console keymap
   console.keyMap = "uk";
