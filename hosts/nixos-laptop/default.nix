@@ -117,7 +117,7 @@
       connection = {
         id = "eduroam-cathe";
         type = "wifi";
-        permissions = "user:cathe:;";
+        permissions = "user:cathe";
       };
       wifi = {
         ssid = "eduroam";
