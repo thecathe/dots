@@ -177,6 +177,16 @@
     };
   };
 
+  # GDM has no system-wide default of its own otherwise, so it falls back to
+  # whichever session the greeter last showed - meaning a brand new account
+  # with no recorded preference (e.g. max's, on first login) can end up
+  # dropped into whatever cathe last happened to pick (niri), with none of
+  # cathe's niri home-manager config to make it usable. This only sets the
+  # default for accounts with no session choice of their own recorded yet
+  # (tracked per-user via AccountsService) - it doesn't affect or reset an
+  # account that's already picked a session from the GDM switcher before.
+  services.displayManager.defaultSession = "gnome";
+
   # Configure console keymap
   console.keyMap = "uk";
 
