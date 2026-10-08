@@ -61,6 +61,8 @@
       input = {
         kb_layout = "gb";
         kb_variant = "";
+        # compose:ralt makes right-Alt a Compose key, e.g. Compose ' e -> é
+        kb_options = "compose:ralt";
       };
       "$mod" = "SUPER";
       # "$terminal" = config.sysopts.terminal;

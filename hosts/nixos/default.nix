@@ -162,6 +162,8 @@
     xkb = {
       layout = "gb";
       variant = "";
+      # compose:ralt makes right-Alt a Compose key, e.g. Compose ' e -> é
+      options = "compose:ralt";
     };
 
     # Load nvidia driver for Xorg and Wayland
