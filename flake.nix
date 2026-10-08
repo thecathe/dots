@@ -236,6 +236,10 @@
         path = ./templates/go;
         description = "Go project with gopls, gotools and direnv";
       };
+      haskell = {
+        path = ./templates/haskell;
+        description = "Haskell project with cabal, GHC, haskell-language-server and direnv";
+      };
       latex = {
         path = ./templates/latex;
         description = "LaTeX project with Tectonic and direnv";

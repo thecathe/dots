@@ -1,0 +1,3 @@
+-- Marks this directory as the project root for cabal's "Nix-style local
+-- builds" and lists every local package to build.
+packages: .

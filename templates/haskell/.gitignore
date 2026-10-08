@@ -1,0 +1,9 @@
+# workspace configs
+.vscode/*
+!.vscode/settings.json
+
+# cabal build output
+dist-newstyle/
+.ghc.environment.*
+*.hi
+*.o

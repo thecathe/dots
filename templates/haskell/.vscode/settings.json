@@ -1,0 +1,8 @@
+{
+  // "PATH" = don't let the extension manage its own GHCup-installed
+  // toolchain; use whatever's on PATH. .envrc already puts this devShell's
+  // ghc/cabal-install/haskell-language-server first on PATH once the shell
+  // is entered -- "GHCup" (the extension's own default) would instead try
+  // to download and manage a second, separate toolchain of its own.
+  "haskell.manageHLS": "PATH"
+}

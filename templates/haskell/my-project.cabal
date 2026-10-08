@@ -1,0 +1,26 @@
+cabal-version:      3.0
+name:                my-project
+version:             0.1.0.0
+build-type:          Simple
+-- synopsis:         A short synopsis
+-- description:      A longer description
+
+-- The library is the natural home for most of a project's real code.
+-- Delete/rename MyLib once you have a real module -- it exists purely so
+-- the package has at least one component (cabal has no `(allow_empty)`
+-- equivalent).
+library
+    exposed-modules:  MyLib
+    hs-source-dirs:   src
+    build-depends:    base >=4 && <5
+    default-language: Haskell2010
+
+-- Delete-me smoke test (mirrors templates/rocq's theories/Example.v):
+-- confirms GHC, cabal and the library above resolve and link.
+executable my-project
+    main-is:          Main.hs
+    hs-source-dirs:   app
+    build-depends:
+        base >=4 && <5,
+        my-project
+    default-language: Haskell2010
