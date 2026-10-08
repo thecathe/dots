@@ -48,6 +48,13 @@ in let
       disable-breakpoint
     ]
     ++ defaultGroup;
+  haskellGroup = with features;
+    [
+      haskell
+      disable-breakpoint
+      unicode-math-symbols
+    ]
+    ++ defaultGroup;
   erlangGroup = with features;
     [
       erlang
@@ -66,6 +73,7 @@ in {
   forester = foresterGroup;
   python = pythonGroup;
   go = goGroup;
+  haskell = haskellGroup;
   erlang = erlangGroup;
   java = javaGroup;
   indimo = with features;

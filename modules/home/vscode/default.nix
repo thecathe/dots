@@ -13,6 +13,7 @@
     ocaml = ./features/ocaml.nix;
     erlang = ./features/erlang.nix;
     go = ./features/go.nix;
+    haskell = ./features/haskell.nix;
     python = ./features/python.nix;
     java = ./features/java.nix;
     sql = ./features/sql.nix;
@@ -47,6 +48,7 @@
   rocqProfile = vscodeLib.mkProfile (groups.rocq);
   pythonProfile = vscodeLib.mkProfile (groups.python);
   goProfile = vscodeLib.mkProfile (groups.go);
+  haskellProfile = vscodeLib.mkProfile (groups.haskell);
   erlangProfile = vscodeLib.mkProfile (groups.erlang);
   javaProfile = vscodeLib.mkProfile (groups.java);
 in {
@@ -96,6 +98,7 @@ in {
       "forester" = foresterProfile.profile;
       "python" = pythonProfile.profile;
       "go" = goProfile.profile;
+      "haskell" = haskellProfile.profile;
       "erlang" = erlangProfile.profile;
       "java" = javaProfile.profile;
     };
