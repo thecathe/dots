@@ -111,4 +111,13 @@ in {
   # state.vscdb fails with SQLITE_CANTOPEN, VSCode falls back to in-memory
   # state, and no UI layout is ever persisted for that profile.
   home.file = lib.genAttrs (map (n: ".config/Code/User/profiles/${n}/globalStorage/.keep") nonDefaultProfiles) (_: {text = "";});
+
+  # Bootstrap per-profile UI layout from the default profile (see
+  # seed-ui-state.nix).
+  home.activation.vscodeSeedUiState = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    run ${import ./seed-ui-state.nix {
+      inherit lib pkgs;
+      profileNames = nonDefaultProfiles;
+    }}/bin/vscode-seed-ui-state
+  '';
 }
