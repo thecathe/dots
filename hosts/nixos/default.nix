@@ -129,11 +129,11 @@
     # Modesetting is required (for wayland).
     modesetting.enable = true;
 
-    # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
-    # Enable this if you have graphical corruption issues or application crashes after waking
-    # up from sleep. This fixes it by saving the entire VRAM memory to /tmp/ instead
-    # of just the bare essentials.
-    powerManagement.enable = false;
+    # Nvidia power management. Installs nvidia-suspend/resume/hibernate services and
+    # sets NVreg_PreserveVideoMemoryAllocations=1 so VRAM is saved across sleep.
+    # Without it the GPU is left in a broken state after resume (Xid 13, gnome-shell
+    # hangs on a grey screen), e.g. after GDM suspends the idle login screen.
+    powerManagement.enable = true;
 
     # Fine-grained power management. Turns off GPU when not in use.
     # Experimental and only works on modern Nvidia GPUs (Turing or newer).
