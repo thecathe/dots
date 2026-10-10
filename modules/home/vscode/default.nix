@@ -22,6 +22,7 @@
     git = ./features/git.nix;
     pdf = ./features/pdf.nix;
     json = ./features/json.nix;
+    toml = ./features/toml.nix;
     latex = ./features/latex.nix;
     vsrocq = ./features/vsrocq.nix;
     markdown = ./features/markdown.nix;

@@ -5,6 +5,7 @@
     markdown
     better-comments
     json
+    toml
     kdl
     theme
     utils
