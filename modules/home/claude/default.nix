@@ -23,6 +23,9 @@ in {
   home.file.".claude/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dots/modules/home/claude/settings.local.json";
   programs.claude-code = {
     enable = true;
-    # settings can now be locally overridden
+    # settings.json stays a locally mutable file (see the symlink above), so
+    # `settings` must remain unset here or home-manager will claim that path.
+    # Global instructions are declarative and synced across hosts via git.
+    context = ./global-instructions.md;
   };
 }
