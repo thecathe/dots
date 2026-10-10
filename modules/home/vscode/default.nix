@@ -51,6 +51,7 @@
   haskellProfile = vscodeLib.mkProfile (groups.haskell);
   erlangProfile = vscodeLib.mkProfile (groups.erlang);
   javaProfile = vscodeLib.mkProfile (groups.java);
+  nonDefaultProfiles = builtins.filter (n: n != "default") (builtins.attrNames config.programs.vscode.profiles);
 in {
   programs.vscode = {
     enable = true;
@@ -103,4 +104,11 @@ in {
       "java" = javaProfile.profile;
     };
   };
+
+  # Home-manager registers non-default profiles in storage.json but never
+  # creates their globalStorage dir (VSCode only does that when a profile is
+  # created through its UI). Without it, opening profiles/<name>/globalStorage/
+  # state.vscdb fails with SQLITE_CANTOPEN, VSCode falls back to in-memory
+  # state, and no UI layout is ever persisted for that profile.
+  home.file = lib.genAttrs (map (n: ".config/Code/User/profiles/${n}/globalStorage/.keep") nonDefaultProfiles) (_: {text = "";});
 }
