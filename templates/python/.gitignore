@@ -1,0 +1,14 @@
+# workspace configs
+.vscode/*
+!.vscode/settings.json
+
+# virtual environment and caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# build output
+dist/
+*.egg-info/

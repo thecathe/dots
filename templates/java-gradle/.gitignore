@@ -1,0 +1,11 @@
+# workspace configs
+.vscode/*
+!.vscode/settings.json
+
+# gradle build output and local state
+.gradle/
+build/
+
+# javac output, if compiled by hand
+out/
+*.class

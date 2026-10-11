@@ -1,0 +1,6 @@
+{
+  // uv creates .venv in the project root, so point the Python extension at
+  // it directly. (Unlike some other extensions' settings, this one does
+  // substitute ${workspaceFolder}.)
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python"
+}
