@@ -44,6 +44,33 @@
           #   pkgs.stdenv.cc.cc.lib
           #   pkgs.zlib
           # ];
+
+          shellHook = ''
+            # Test for the interpreter rather than just .venv/, so a
+            # half-built or dangling venv is caught too. Editors (and the
+            # language server) have nothing to attach to until it exists.
+            if [ ! -x "$PWD/.venv/bin/python" ]; then
+              echo "No virtual environment in ./.venv (or it is incomplete)."
+              echo "Create it with:"
+              echo "    uv sync"
+
+              # nix-direnv *executes* this hook, and direnv can inherit the
+              # terminal's stdin -- a bare `read` there would hang every `cd`
+              # into the project. direnv sets DIRENV_IN_ENVRC while evaluating
+              # .envrc, so only prompt outside it, and only on a tty.
+              if [ -z "''${DIRENV_IN_ENVRC:-}" ] && [ -t 0 ]; then
+                printf 'Create it now? [y/N] '
+                read -r reply
+                case "$reply" in
+                  [yY]*) uv sync ;;
+                  *) echo "Skipped." ;;
+                esac
+                unset reply
+              else
+                echo "Run 'nix develop' for an interactive prompt."
+              fi
+            fi
+          '';
         };
       });
     };
