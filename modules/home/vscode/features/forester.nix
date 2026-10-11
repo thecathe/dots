@@ -17,6 +17,18 @@
   # modules/home/vscode/features/languagetool.nix), so patch forest-keeper's
   # compiled JS to look for that ID instead, keeping the enable-prompt,
   # auto-trigger-on-open/save and "Check All Tree Files" command working.
+  #
+  # forest-keeper's "New Tree" also insists on a non-empty prefix: with
+  # forester.defaultPrefix = "" it prompts for one, and an empty answer or
+  # Escape silently cancels, so there is no way to create an unprefixed tree
+  # (`forester new --random` with no `--prefix`, as the CLI allows). Patch
+  # three spots in out/extension.js so that an empty defaultPrefix means "no
+  # prefix": return it without prompting, treat only `undefined` (a real
+  # cancel) as an abort, and omit `--prefix` entirely when it is empty. It is
+  # omitted rather than passed as "" because forester's id allocator treats
+  # `Some ""` as a different namespace from the unprefixed trees, which would
+  # skip its collision check against them. The minified identifiers (vC, i, y)
+  # are specific to 0.4.17; --replace-fail makes a version bump fail loudly.
   forestKeeper =
     (pkgs.vscode-utils.buildVscodeMarketplaceExtension {
       mktplcRef = {
@@ -32,6 +44,11 @@
         + ''
           substituteInPlace out/languageToolIntegration.js out/extension.js \
             --replace-fail 'valentjn.vscode-ltex' 'ltex-plus.vscode-ltex-plus'
+
+          substituteInPlace out/extension.js \
+            --replace-fail 'defaultPrefix");if(e)return e;' 'defaultPrefix");if(e!==void 0)return e;' \
+            --replace-fail 'await vC();if(!i)return;' 'await vC();if(i===void 0)return;' \
+            --replace-fail '"--prefix",i,...y?' '...i?["--prefix",i]:[],...y?'
         '';
     });
 in {
@@ -41,7 +58,10 @@ in {
   settings = {
     "forester.completion.showID" = true;
     "forester.config" = ""; # should be edited per workspace, instead of globally
-    "forester.create.author" = "cathe";
+    # No global author: new trees get theirs from `[forest.new] author` in each
+    # project's forest.toml (written by the forester fork's `forester new`).
+    # forest-keeper only falls back to forester.create.author when no \author
+    # is present, so leaving it unset avoids a stray, differently-spelled one.
     "forester.create.openNewTreeMode" = "active";
     "forester.create.random" = true;
     "forester.decorations.enabled" = true;
