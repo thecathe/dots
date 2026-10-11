@@ -1,0 +1,18 @@
+{
+  "name": "forester-edit",
+  "displayName": "Forester Edit",
+  "description": "Keybound structural insertions (\\li, \\p, \\tag) for Forester .tree files",
+  "version": "0.1.0",
+  "publisher": "thecathe",
+  "engines": { "vscode": "^1.80.0" },
+  "main": "./extension.js",
+  "activationEvents": ["onLanguage:forester"],
+  "contributes": {
+    "commands": [
+      { "command": "forestEdit.insertLi", "title": "Forester: Insert \\li{} in innermost \\ul{}" },
+      { "command": "forestEdit.insertLiOutermost", "title": "Forester: Insert \\li{} in outermost \\ul{}" },
+      { "command": "forestEdit.appendP", "title": "Forester: Append \\p{} at end of tree" },
+      { "command": "forestEdit.insertTag", "title": "Forester: Insert \\tag{} in header" }
+    ]
+  }
+}
