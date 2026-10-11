@@ -6,8 +6,10 @@
 direnv allow .
 ```
 
-This gives your shell `python`, `uv` and `ruff`. Then create the virtual
-environment and install dependencies:
+This gives your shell `python`, `uv` and `ruff`. If there is no `.venv` yet,
+entering the shell tells you so, and running `nix develop` interactively offers
+to create it. To create the virtual environment and install dependencies
+yourself:
 
 ```
 uv sync
