@@ -52,8 +52,9 @@
   haskellProfile = vscodeLib.mkProfile (groups.haskell);
   erlangProfile = vscodeLib.mkProfile (groups.erlang);
   javaProfile = vscodeLib.mkProfile (groups.java);
-  nonDefaultProfiles = builtins.filter (n: n != "default") (builtins.attrNames config.programs.vscode.profiles);
 in {
+  imports = [./profile-ui-state.nix];
+
   programs.vscode = {
     enable = true;
     # Nix never ships setuid-root binaries in the store (only NixOS's
@@ -106,19 +107,7 @@ in {
     };
   };
 
-  # Home-manager registers non-default profiles in storage.json but never
-  # creates their globalStorage dir (VSCode only does that when a profile is
-  # created through its UI). Without it, opening profiles/<name>/globalStorage/
-  # state.vscdb fails with SQLITE_CANTOPEN, VSCode falls back to in-memory
-  # state, and no UI layout is ever persisted for that profile.
-  home.file = lib.genAttrs (map (n: ".config/Code/User/profiles/${n}/globalStorage/.keep") nonDefaultProfiles) (_: {text = "";});
-
-  # Bootstrap per-profile UI layout from the default profile (see
-  # seed-ui-state.nix).
-  home.activation.vscodeSeedUiState = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    run ${import ./seed-ui-state.nix {
-      inherit lib pkgs;
-      profileNames = nonDefaultProfiles;
-    }}/bin/vscode-seed-ui-state
-  '';
+  # UI layout persistence for the profiles above (globalStorage dirs + seeding
+  # from the default profile). Standalone so other configs can import it too.
+  programs.vscode.profileUiState.filesContainer = "workbench.views.service.sidebar.4337fe0b-3e0d-40ce-9701-c62f345cfd7a";
 }
