@@ -248,6 +248,10 @@
         path = ./templates/java;
         description = "Java project with a plain JDK (javac), jdtls and direnv";
       };
+      java-gradle = {
+        path = ./templates/java-gradle;
+        description = "Java project with Gradle (Kotlin DSL), JUnit 5, jdtls and direnv, extending the Java template";
+      };
       latex = {
         path = ./templates/latex;
         description = "LaTeX project with Tectonic and direnv";
