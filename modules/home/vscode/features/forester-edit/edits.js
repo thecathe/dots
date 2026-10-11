@@ -61,11 +61,16 @@ function endsWithBlankSep(text) {
 }
 
 // New `\li{}` inside a `\ul` span; falls back to a fresh `\ul` at EOF.
+// `outermost` picks the outermost enclosing `\ul`, or a fresh one if the
+// cursor is only in a single (root-level) `\ul`.
 function insertLi(text, cursorOff, outermost) {
   const enclosing = scanUls(text).filter(
     (s) => s.open < cursorOff && cursorOff <= s.close,
   );
-  if (enclosing.length === 0) {
+  // Outermost mode means "one level out of the list I'm in": a cursor in a
+  // root-level \ul (nothing outside it) starts a fresh \ul at EOF, exactly
+  // as when there is no \ul at all.
+  if (enclosing.length === 0 || (outermost && enclosing.length === 1)) {
     const sep = text.length === 0 || text.endsWith("\n\n") ? "" : text.endsWith("\n") ? "\n" : "\n\n";
     const ins = `${sep}\\ul{\n  \\li{}\n}\n`;
     const base = text.length;
