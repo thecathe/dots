@@ -240,6 +240,10 @@
         path = ./templates/haskell;
         description = "Haskell project with cabal, GHC, haskell-language-server and direnv";
       };
+      python = {
+        path = ./templates/python;
+        description = "Python project with uv, pyproject.toml, ruff and direnv";
+      };
       latex = {
         path = ./templates/latex;
         description = "LaTeX project with Tectonic and direnv";
