@@ -2,6 +2,9 @@
   lib,
   pkgs,
   profileNames,
+  # ID of the generated container holding the file tree in the default profile,
+  # or null to skip moving Open Editors/Outline/Timeline.
+  filesContainer ? null,
 }:
 # VSCode keeps view layout (which sidebar a view lives in, which containers and
 # views are pinned/hidden, and their order) as profile-scoped UI state in
@@ -9,6 +12,9 @@
 # UI state, so every workspace on a non-default profile came up with VSCode's
 # stock layout. This bootstraps each declared profile's state.vscdb from the
 # default profile, which the user curates by hand.
+#
+# The default profile is only patched where it actually contains `filesContainer`
+# (container IDs are per-install), so this is safe to use from another config.
 #
 # Each profile is seeded once per `version` (tracked by a marker key in its own
 # db). Bump `version` to push a changed default layout out again. Existing
@@ -32,7 +38,7 @@ in
       fi
 
       running=0
-      if pgrep -u "$USER" -f 'vscode.*--no-sandbox' >/dev/null; then
+      if pgrep -u "$USER" -f 'lib/vscode/code' >/dev/null; then
         running=1
       fi
 
@@ -42,7 +48,7 @@ in
       # tree. The default profile is patched in place (VSCode must be closed,
       # same reason as for the profile dbs), then every profile is seeded from
       # it below.
-      files_container="workbench.views.service.sidebar.4337fe0b-3e0d-40ce-9701-c62f345cfd7a"
+      files_container=${lib.escapeShellArg (if filesContainer == null then "" else filesContainer)}
       default_marker="$(sqlite3 "$default_db" "SELECT value FROM ItemTable WHERE key='$marker'" 2>/dev/null || true)"
       if [ "$default_marker" != "${version}" ]; then
         if [ "$running" = 1 ]; then
@@ -55,12 +61,14 @@ in
         '\$.viewLocations."workbench.explorer.openEditorsView"', '$files_container',
         '\$.viewLocations.outline', '$files_container',
         '\$.viewLocations.timeline', '$files_container')
-      WHERE key = 'views.customizations';
+      WHERE key = 'views.customizations'
+        AND json_extract(CAST(value AS TEXT), '\$.viewContainerLocations."$files_container"') IS NOT NULL;
       INSERT OR REPLACE INTO ItemTable (key, value) VALUES ('$marker', '${version}');
       SQL
       fi
 
-      for profile in ${lib.escapeShellArgs profileNames}; do
+      profiles=(${lib.escapeShellArgs profileNames})
+      for profile in "''${profiles[@]}"; do
         storage="$user_dir/profiles/$profile/globalStorage"
         db="$storage/state.vscdb"
 
