@@ -58,7 +58,10 @@ in {
   settings = {
     "forester.completion.showID" = true;
     "forester.config" = ""; # should be edited per workspace, instead of globally
-    "forester.create.author" = "cathe";
+    # No global author: new trees get theirs from `[forest.new] author` in each
+    # project's forest.toml (written by the forester fork's `forester new`).
+    # forest-keeper only falls back to forester.create.author when no \author
+    # is present, so leaving it unset avoids a stray, differently-spelled one.
     "forester.create.openNewTreeMode" = "active";
     "forester.create.random" = true;
     "forester.decorations.enabled" = true;
