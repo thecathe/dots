@@ -18,7 +18,8 @@ gradle build    # compile, test and package
 
 ## Notes
 
-- There is no Gradle wrapper (`gradlew`): Nix provides `gradle`, and the
+- There is no Gradle wrapper (`gradlew`): Nix provides `gradle` (and exports
+  `GRADLE_HOME`, which is how the editor finds it), and the
   wrapper's jar is a binary blob better left out of the repo. Run
   `gradle wrapper` if collaborators without Nix need one.
 - The JDK major version is set in two places: `jdk` in `flake.nix` and
