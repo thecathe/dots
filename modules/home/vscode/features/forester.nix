@@ -63,9 +63,26 @@
             --replace-fail '$.commands.registerCommand("forester.newTree",b=>ag(b,!1)),' '$.commands.registerCommand("forester.newTree",b=>ag(b,!1)),$.commands.registerCommand("forester.newTreeUntitled",b=>ag(b,!1,!0)),'
         '';
     });
+
+  # Local extension (./forester-edit) for structural insertions that need
+  # buffer-level brace matching and cursor placement, which built-in commands
+  # and the on-disk touch_date.py task can't do. Bound in keybindings below.
+  forestEdit = pkgs.vscode-utils.buildVscodeExtension {
+    pname = "forester-edit";
+    version = "0.1.0";
+    # named "extension" because buildVscodeExtension expects that source root
+    src = builtins.path {
+      path = ./forester-edit;
+      name = "extension";
+    };
+    vscodeExtPublisher = "thecathe";
+    vscodeExtName = "forester-edit";
+    vscodeExtUniqueId = "thecathe.forester-edit";
+  };
 in {
   extensions = [
     forestKeeper
+    forestEdit
   ];
   settings = {
     "forester.completion.showID" = true;
@@ -169,6 +186,30 @@ in {
     {
       key = "ctrl+alt+f";
       command = "forester.formatAllTrees";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    # Structural inserts (see ./forester-edit). All leave the cursor between
+    # the new braces. These shadow VS Code's Quick Open (ctrl+p), Trigger
+    # Suggest (ctrl+i) and Toggle Developer Tools (ctrl+shift+i) in .tree
+    # editors only.
+    {
+      key = "ctrl+i";
+      command = "forestEdit.insertLi";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    {
+      key = "ctrl+shift+i";
+      command = "forestEdit.insertLiOutermost";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    {
+      key = "ctrl+p";
+      command = "forestEdit.appendP";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    {
+      key = "ctrl+#";
+      command = "forestEdit.insertTag";
       when = "editorTextFocus && resourceExtname == '.tree'";
     }
   ];
