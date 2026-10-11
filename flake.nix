@@ -244,6 +244,10 @@
         path = ./templates/python;
         description = "Python project with uv, pyproject.toml, ruff and direnv";
       };
+      java = {
+        path = ./templates/java;
+        description = "Java project with a plain JDK (javac), jdtls and direnv";
+      };
       latex = {
         path = ./templates/latex;
         description = "LaTeX project with Tectonic and direnv";

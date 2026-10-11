@@ -1,0 +1,7 @@
+# workspace configs
+.vscode/*
+!.vscode/settings.json
+
+# javac output
+out/
+*.class
