@@ -199,6 +199,11 @@ in {
     }
     {
       key = "ctrl+shift+i";
+      command = "forestEdit.insertLiParent";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    {
+      key = "ctrl+alt+i";
       command = "forestEdit.insertLiOutermost";
       when = "editorTextFocus && resourceExtname == '.tree'";
     }

@@ -17,8 +17,9 @@ async function apply(compute) {
 function activate(context) {
   const reg = (id, fn) =>
     context.subscriptions.push(vscode.commands.registerCommand(id, () => apply(fn)));
-  reg("forestEdit.insertLi", (t, c) => edits.insertLi(t, c, false));
-  reg("forestEdit.insertLiOutermost", (t, c) => edits.insertLi(t, c, true));
+  reg("forestEdit.insertLi", (t, c) => edits.insertLi(t, c, "inner"));
+  reg("forestEdit.insertLiParent", (t, c) => edits.insertLi(t, c, "parent"));
+  reg("forestEdit.insertLiOutermost", (t, c) => edits.insertLi(t, c, "outermost"));
   reg("forestEdit.appendP", (t) => edits.appendP(t));
   reg("forestEdit.insertTag", (t) => edits.insertTag(t));
 }

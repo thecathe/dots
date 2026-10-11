@@ -60,17 +60,23 @@ function endsWithBlankSep(text) {
   return text.length === 0 || /\n\n$/.test(text);
 }
 
-// New `\li{}` inside a `\ul` span; falls back to a fresh `\ul` at EOF.
-// `outermost` picks the outermost enclosing `\ul`, or a fresh one if the
-// cursor is only in a single (root-level) `\ul`.
-function insertLi(text, cursorOff, outermost) {
-  const enclosing = scanUls(text).filter(
-    (s) => s.open < cursorOff && cursorOff <= s.close,
-  );
-  // Outermost mode means "one level out of the list I'm in": a cursor in a
-  // root-level \ul (nothing outside it) starts a fresh \ul at EOF, exactly
-  // as when there is no \ul at all.
-  if (enclosing.length === 0 || (outermost && enclosing.length === 1)) {
+// New `\li{}` inside an enclosing `\ul` span, chosen by `level`:
+//   "inner"     the innermost `\ul` around the cursor
+//   "parent"    one level out from the innermost; a cursor in a root-level
+//               `\ul` (nothing outside it) starts a fresh `\ul` at EOF
+//   "outermost" the outermost `\ul` around the cursor
+// With no enclosing `\ul` at all, every level starts a fresh `\ul` at EOF.
+function insertLi(text, cursorOff, level) {
+  const enclosing = scanUls(text)
+    .filter((s) => s.open < cursorOff && cursorOff <= s.close)
+    .sort((a, b) => a.close - a.open - (b.close - b.open)); // innermost first
+  const ul =
+    level === "outermost"
+      ? enclosing[enclosing.length - 1]
+      : level === "parent"
+        ? enclosing[1]
+        : enclosing[0];
+  if (!ul) {
     const sep = text.length === 0 || text.endsWith("\n\n") ? "" : text.endsWith("\n") ? "\n" : "\n\n";
     const ins = `${sep}\\ul{\n  \\li{}\n}\n`;
     const base = text.length;
@@ -81,8 +87,6 @@ function insertLi(text, cursorOff, outermost) {
       cursor: base + sep.length + "\\ul{\n  \\li{".length,
     };
   }
-  enclosing.sort((a, b) => a.close - a.open - (b.close - b.open));
-  const ul = outermost ? enclosing[enclosing.length - 1] : enclosing[0];
   const ulIndent = indentOf(text, ul.open);
   const body = text.slice(ul.open + 1, ul.close);
   const closeLineStart = lineStart(text, ul.close);
