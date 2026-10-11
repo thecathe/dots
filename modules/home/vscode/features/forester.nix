@@ -29,6 +29,13 @@
   # `Some ""` as a different namespace from the unprefixed trees, which would
   # skip its collision check against them. The minified identifiers (vC, i, y)
   # are specific to 0.4.17; --replace-fail makes a version bump fail loudly.
+  #
+  # The stock "New Tree" always asks for a title and refuses an empty one.
+  # Add a second command, forester.newTreeUntitled, that runs the same flow
+  # with the title prompt skipped (the tree gets \date and \author only), via
+  # a `noTitle` option on createNewTree (qC) threaded through the command
+  # wrapper (ag). forester.newTree itself is left as is, so the two can be
+  # bound separately (see keybindings below).
   forestKeeper =
     (pkgs.vscode-utils.buildVscodeMarketplaceExtension {
       mktplcRef = {
@@ -49,6 +56,11 @@
             --replace-fail 'defaultPrefix");if(e)return e;' 'defaultPrefix");if(e!==void 0)return e;' \
             --replace-fail 'await vC();if(!i)return;' 'await vC();if(i===void 0)return;' \
             --replace-fail '"--prefix",i,...y?' '...i?["--prefix",i]:[],...y?'
+
+          substituteInPlace out/extension.js \
+            --replace-fail 'let o=await MC({prompt:"Enter title for the new tree' 'let o=t.noTitle?{taxon:void 0,title:void 0}:await MC({prompt:"Enter title for the new tree' \
+            --replace-fail 'async function ag(t,e){let n=await qC({destFolder:t,fromTemplate:e});' 'async function ag(t,e,u){let n=await qC({destFolder:t,fromTemplate:e,noTitle:u});' \
+            --replace-fail '$.commands.registerCommand("forester.newTree",b=>ag(b,!1)),' '$.commands.registerCommand("forester.newTree",b=>ag(b,!1)),$.commands.registerCommand("forester.newTreeUntitled",b=>ag(b,!1,!0)),'
         '';
     });
 in {
@@ -140,6 +152,17 @@ in {
     }
     {
       key = "ctrl+t";
+      command = "forester.newTreeUntitled";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    # Frees ctrl+shift+t (VS Code's "Reopen Closed Editor") for the titled
+    # variant below.
+    {
+      key = "ctrl+shift+t";
+      command = "-workbench.action.reopenClosedEditor";
+    }
+    {
+      key = "ctrl+shift+t";
       command = "forester.newTree";
       when = "editorTextFocus && resourceExtname == '.tree'";
     }
