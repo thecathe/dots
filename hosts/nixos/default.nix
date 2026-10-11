@@ -155,6 +155,20 @@
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
+  # Boot-menu A/B entry: the same system with the NVIDIA power-management fix
+  # off (no NVreg_PreserveVideoMemoryAllocations / UseKernelSuspendNotifiers).
+  # Added to test whether preserving VRAM allocations stops the driver from
+  # spilling textures to system RAM, which would explain RimWorld's loading
+  # peak freezing the window (nvidia-drm "Failed to allocate NVKMS memory for
+  # GEM object" -> xwayland-satellite "Error getting buffer") on large modlists.
+  # GDM auto-suspend is also off here so the original suspend failure it fixed
+  # (idle login screen suspending) cannot trigger in this entry.
+  specialisation.no-preserve-vram.configuration = {
+    system.nixos.tags = ["no-preserve-vram"];
+    hardware.nvidia.powerManagement.enable = lib.mkForce false;
+    services.displayManager.gdm.autoSuspend = lib.mkForce false;
+  };
+
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
