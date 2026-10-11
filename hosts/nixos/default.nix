@@ -129,11 +129,15 @@
     # Modesetting is required (for wayland).
     modesetting.enable = true;
 
-    # Nvidia power management. Installs nvidia-suspend/resume/hibernate services and
-    # sets NVreg_PreserveVideoMemoryAllocations=1 so VRAM is saved across sleep.
-    # Without it the GPU is left in a broken state after resume (Xid 13, gnome-shell
-    # hangs on a grey screen), e.g. after GDM suspends the idle login screen.
-    powerManagement.enable = true;
+    # Nvidia power management is deliberately OFF. Enabling it sets
+    # NVreg_PreserveVideoMemoryAllocations=1 (+ UseKernelSuspendNotifiers=1), which
+    # on this machine made RimWorld's texture-loading peak pin all 8 GB of VRAM and
+    # freeze the window (nvidia-drm "Failed to allocate NVKMS memory for GEM object"
+    # -> xwayland-satellite "Error getting buffer"); with it off the same 354-mod
+    # list peaks at ~2.6 GB. The suspend failure it was added for (GPU broken after
+    # GDM suspends the idle login screen, Xid 13) is avoided instead by turning off
+    # GDM auto-suspend, see services.displayManager.gdm.autoSuspend below.
+    powerManagement.enable = false;
 
     # Fine-grained power management. Turns off GPU when not in use.
     # Experimental and only works on modern Nvidia GPUs (Turing or newer).
@@ -155,19 +159,9 @@
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
-  # Boot-menu A/B entry: the same system with the NVIDIA power-management fix
-  # off (no NVreg_PreserveVideoMemoryAllocations / UseKernelSuspendNotifiers).
-  # Added to test whether preserving VRAM allocations stops the driver from
-  # spilling textures to system RAM, which would explain RimWorld's loading
-  # peak freezing the window (nvidia-drm "Failed to allocate NVKMS memory for
-  # GEM object" -> xwayland-satellite "Error getting buffer") on large modlists.
-  # GDM auto-suspend is also off here so the original suspend failure it fixed
-  # (idle login screen suspending) cannot trigger in this entry.
-  specialisation.no-preserve-vram.configuration = {
-    system.nixos.tags = ["no-preserve-vram"];
-    hardware.nvidia.powerManagement.enable = lib.mkForce false;
-    services.displayManager.gdm.autoSuspend = lib.mkForce false;
-  };
+  # Do not let GDM suspend the idle login screen (it left the GPU broken on
+  # resume, see hardware.nvidia.powerManagement above).
+  services.displayManager.gdm.autoSuspend = false;
 
   # Enable the X11 windowing system.
   services.xserver = {
