@@ -407,6 +407,12 @@ binds {
     // keeps working if the bar layout changes again later.
     Mod+Y hotkey-overlay-title="Browse Wallpapers: DankMaterialShell" { spawn "dms" "ipc" "call" "dash" "toggle" "wallpaper"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
+    // "Away" lock: same swaylock, but holds a logind inhibitor (sleep + lid switch) for as long as
+    // swaylock runs, so background jobs keep running even if the lid is closed undocked
+    // (logind's HandleLidSwitch is "suspend" on worklaptop). The inhibitor is released on unlock.
+    // Monitors are then powered off; any input wakes them to the password prompt. The sleep stops
+    // the bind's own key release from waking them straight away.
+    Super+Alt+Shift+L hotkey-overlay-title="Away Lock: swaylock, no suspend, screens off" { spawn-sh "systemd-inhibit --what=sleep:handle-lid-switch --who='niri away lock' --why='Away lock: keep background jobs running' swaylock & sleep 1 && niri msg action power-off-monitors"; }
 
     // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument. It's passed verbatim to `sh -c`.
