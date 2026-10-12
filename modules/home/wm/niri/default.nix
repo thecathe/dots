@@ -128,7 +128,12 @@
   #     </object>
   #   </interface>
   # '';
-  services.mako.enable = true; # notification daemon
+  services.mako = {
+    enable = true; # notification daemon
+    # IBus (autostarted by the GNOME module) pops a setup notice at login that
+    # is irrelevant in niri; hide it here so GNOME's IBus is left untouched.
+    settings."app-name=ibus".invisible = 1;
+  };
   services.polkit-gnome.enable = true; # polkit
   home.packages = with pkgs; [
     swaybg # wallpaper
