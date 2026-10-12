@@ -33,10 +33,13 @@ in let
       unicode-math-symbols
     ]
     ++ defaultGroup ++ ocamlGroup;
+  # spellcheck rather than languagetool: LTeX's JVM costs ~1 GB and
+  # forest-keeper force-starts it on opening any .tree, even though LTeX has
+  # no forester parser and so only sees the trees as plain text.
   foresterGroup = with features;
     [
       forester
-      languagetool
+      spellcheck
       disable-breakpoint
       unicode-math-symbols
       pdf

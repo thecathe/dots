@@ -28,6 +28,7 @@
     markdown = ./features/markdown.nix;
     forester = ./features/forester.nix;
     languagetool = ./features/languagetool.nix;
+    spellcheck = ./features/spellcheck.nix;
     better-comments = ./features/better-comments.nix;
     disable-breakpoint = ./features/disable-breakpoint.nix;
     unicode-math-symbols = ./features/unicode-math-symbols.nix;
