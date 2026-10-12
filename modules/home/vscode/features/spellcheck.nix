@@ -4,8 +4,14 @@
   # isn't worth its cost: LTeX runs LanguageTool in a separate JVM that sits
   # at ~1.1 GB RSS (~750 MB of it live English rule objects), whereas cspell
   # runs as a Node language server with word lists only.
-  extensions = [pkgs.vscode-extensions.streetsidesoftware.code-spell-checker];
+  extensions = [
+    pkgs.vscode-extensions.streetsidesoftware.code-spell-checker
+    pkgs.nix-vscode-extensions.vscode-marketplace-release-universal.streetsidesoftware.code-spell-checker-british-english
+  ];
   settings = {
+    # en-GB needs the dictionary extension above; keep en(-US) too so either
+    # spelling passes.
+    "cSpell.language" = "en,en-GB";
     # cspell's default ("*" = true) already covers forester; listed so it
     # stays enabled if that default ever narrows.
     "cSpell.enabledFileTypes" = {
