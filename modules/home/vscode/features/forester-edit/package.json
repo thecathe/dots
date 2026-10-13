@@ -12,7 +12,9 @@
       { "command": "forestEdit.insertLi", "title": "Forester: Insert \\li{} in innermost \\ul{}" },
       { "command": "forestEdit.insertLiParent", "title": "Forester: Insert \\li{} one \\ul{} out from the innermost (fresh \\ul{} at end of tree if none)" },
       { "command": "forestEdit.insertLiOutermost", "title": "Forester: Insert \\li{} in outermost \\ul{}" },
-      { "command": "forestEdit.appendP", "title": "Forester: Append \\p{} at end of tree" },
+      { "command": "forestEdit.insertLiRoot", "title": "Forester: Insert \\li{} in a fresh \\ul{} at the end of the tree" },
+      { "command": "forestEdit.insertSubtree", "title": "Forester: Insert \\subtree{\\title{}}" },
+      { "command": "forestEdit.appendP", "title": "Forester: Append \\p{} at end of the subtree or tree" },
       { "command": "forestEdit.insertTag", "title": "Forester: Insert \\tag{} in header" }
     ]
   }

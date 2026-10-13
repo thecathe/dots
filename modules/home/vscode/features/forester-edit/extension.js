@@ -20,7 +20,9 @@ function activate(context) {
   reg("forestEdit.insertLi", (t, c) => edits.insertLi(t, c, "inner"));
   reg("forestEdit.insertLiParent", (t, c) => edits.insertLi(t, c, "parent"));
   reg("forestEdit.insertLiOutermost", (t, c) => edits.insertLi(t, c, "outermost"));
-  reg("forestEdit.appendP", (t) => edits.appendP(t));
+  reg("forestEdit.insertLiRoot", (t, c) => edits.insertLi(t, c, "root"));
+  reg("forestEdit.appendP", (t, c) => edits.appendP(t, c));
+  reg("forestEdit.insertSubtree", (t, c) => edits.insertSubtree(t, c));
   reg("forestEdit.insertTag", (t) => edits.insertTag(t));
 }
 

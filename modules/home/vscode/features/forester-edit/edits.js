@@ -5,9 +5,10 @@
 
 const HEADER = /^\s*(%\s*)?\\(date|author|title|taxon|meta|tag)\b/;
 
-// Find every `\ul{...}` as {open, close} offsets of its braces. Skips escaped
-// characters, `%` line comments and verbatim regions.
-function scanUls(text) {
+// Find every `\ul{...}` and `\subtree{...}` / `\subtree[addr]{...}` as
+// {kind, open, close} offsets of its braces. Skips escaped characters, `%`
+// line comments and verbatim regions.
+function scanSpans(text) {
   const spans = [];
   const stack = [];
   let i = 0;
@@ -26,8 +27,14 @@ function scanUls(text) {
         continue;
       }
       if (text.startsWith("\\ul{", i)) {
-        stack.push({ ul: true, open: i + 3 });
+        stack.push({ kind: "ul", open: i + 3 });
         i += 4;
+        continue;
+      }
+      const sub = /^\\subtree(\[[^\]\n]*\])?\s*\{/.exec(text.slice(i, i + 200));
+      if (sub) {
+        stack.push({ kind: "subtree", open: i + sub[0].length - 1 });
+        i += sub[0].length;
         continue;
       }
       i += 2; // escaped char (\{ \} \\ \%) or command name start
@@ -38,10 +45,10 @@ function scanUls(text) {
       i = e < 0 ? text.length : e;
       continue;
     }
-    if (c === "{") stack.push({ ul: false, open: i });
+    if (c === "{") stack.push({ kind: null, open: i });
     else if (c === "}") {
       const top = stack.pop();
-      if (top && top.ul) spans.push({ open: top.open, close: i });
+      if (top && top.kind) spans.push({ kind: top.kind, open: top.open, close: i });
     }
     i++;
   }
@@ -56,37 +63,72 @@ function indentOf(text, off) {
   return /^[ \t]*/.exec(text.slice(lineStart(text, off)))[0];
 }
 
-function endsWithBlankSep(text) {
-  return text.length === 0 || /\n\n$/.test(text);
+// What encloses the cursor: the innermost `\subtree` (the scope that
+// inserts respect, or null at the page root) and the `\ul`s inside that
+// scope, innermost first.
+function contextAt(text, cursorOff) {
+  const spans = scanSpans(text)
+    .filter((s) => s.open < cursorOff && cursorOff <= s.close)
+    .sort((a, b) => a.close - a.open - (b.close - b.open));
+  const scope = spans.find((s) => s.kind === "subtree") || null;
+  const uls = spans.filter((s) => s.kind === "ul" && (!scope || s.open > scope.open));
+  return { scope, uls };
 }
 
-// New `\li{}` inside an enclosing `\ul` span, chosen by `level`:
-//   "inner"     the innermost `\ul` around the cursor
-//   "parent"    one level out from the innermost; a cursor in a root-level
-//               `\ul` (nothing outside it) starts a fresh `\ul` at EOF
-//   "outermost" the outermost `\ul` around the cursor
-// With no enclosing `\ul` at all, every level starts a fresh `\ul` at EOF.
-function insertLi(text, cursorOff, level) {
-  const enclosing = scanUls(text)
-    .filter((s) => s.open < cursorOff && cursorOff <= s.close)
-    .sort((a, b) => a.close - a.open - (b.close - b.open)); // innermost first
-  const ul =
-    level === "outermost"
-      ? enclosing[enclosing.length - 1]
-      : level === "parent"
-        ? enclosing[1]
-        : enclosing[0];
-  if (!ul) {
-    const sep = text.length === 0 || text.endsWith("\n\n") ? "" : text.endsWith("\n") ? "\n" : "\n\n";
-    const ins = `${sep}\\ul{\n  \\li{}\n}\n`;
-    const base = text.length;
-    return {
-      start: base,
-      end: base,
-      text: ins,
-      cursor: base + sep.length + "\\ul{\n  \\li{".length,
-    };
+// Append a block of `lines` (a "\0" marks where the cursor goes) as the last
+// child of `scope`, or at the end of the page when `scope` is null. Child
+// indentation follows the subtree's first existing child line, so both the
+// compact `\subtree{\title{x}` + column-0 children style and indented
+// subtrees are matched. `blankBefore` separates it from preceding children.
+function appendBlock(text, scope, lines, blankBefore) {
+  const finish = (str, start, end) => ({
+    start,
+    end,
+    text: str.replace("\0", ""),
+    cursor: start + str.indexOf("\0"),
+  });
+  if (!scope) {
+    const sep =
+      text.length === 0 || text.endsWith("\n\n") ? "" : text.endsWith("\n") ? "\n" : "\n\n";
+    return finish(sep + lines.join("\n") + "\n", text.length, text.length);
   }
+  const subIndent = indentOf(text, scope.open);
+  const body = text.slice(scope.open, scope.close);
+  const closeLineStart = lineStart(text, scope.close);
+  const closeAlone =
+    closeLineStart > scope.open && /^[ \t]*$/.test(text.slice(closeLineStart, scope.close));
+  if (closeAlone) {
+    const first = /\n([ \t]*)\S/.exec(body);
+    const indent = first ? first[1] : subIndent + "  ";
+    const hasChildren = first !== null;
+    const before = text.slice(0, closeLineStart);
+    const pre = blankBefore && hasChildren && !/\n\n$/.test(before) ? "\n" : "";
+    const str = pre + lines.map((l) => indent + l).join("\n") + "\n";
+    return finish(str, closeLineStart, closeLineStart);
+  }
+  // Closing brace shares a line with content: start a new line and move the
+  // brace down.
+  const indent = subIndent + "  ";
+  const start = scope.open + body.replace(/\s+$/, "").length;
+  const str = "\n" + lines.map((l) => indent + l).join("\n") + "\n" + subIndent;
+  return finish(str, start, scope.close);
+}
+
+// New `\li{}` inside an enclosing `\ul`, chosen by `level` among the `\ul`s
+// inside the cursor's `\subtree` (or the whole page when not in one):
+//   "inner"     the innermost `\ul` around the cursor
+//   "parent"    one level out from the innermost
+//   "outermost" the outermost `\ul` around the cursor
+//   "root"      never an existing `\ul`: a fresh one at the end of the page
+// When there is no such `\ul`, a fresh `\ul{ \li{} }` is appended to the end
+// of the subtree (or of the page).
+function insertLi(text, cursorOff, level) {
+  const { scope, uls } = contextAt(text, cursorOff);
+  const fresh = (sc) => appendBlock(text, sc, ["\\ul{", "  \\li{\0}", "}"]);
+  if (level === "root") return fresh(null);
+  const ul =
+    level === "outermost" ? uls[uls.length - 1] : level === "parent" ? uls[1] : uls[0];
+  if (!ul) return fresh(scope);
   const ulIndent = indentOf(text, ul.open);
   const body = text.slice(ul.open + 1, ul.close);
   const closeLineStart = lineStart(text, ul.close);
@@ -117,15 +159,19 @@ function insertLi(text, cursorOff, level) {
   };
 }
 
-function appendP(text) {
-  const sep = text.length === 0 || text.endsWith("\n\n") ? "" : text.endsWith("\n") ? "\n" : "\n\n";
-  const ins = `${sep}\\p{}\n`;
-  return {
-    start: text.length,
-    end: text.length,
-    text: ins,
-    cursor: text.length + sep.length + "\\p{".length,
-  };
+// `\p{}` at the end of the cursor's `\subtree`, or of the page.
+function appendP(text, cursorOff) {
+  return appendBlock(text, contextAt(text, cursorOff).scope, ["\\p{\0}"]);
+}
+
+// `\subtree{\title{}}` at the end of the cursor's `\subtree`, or of the page.
+function insertSubtree(text, cursorOff) {
+  return appendBlock(
+    text,
+    contextAt(text, cursorOff).scope,
+    ["\\subtree{", "  \\title{\0}", "}"],
+    true,
+  );
 }
 
 // Insert `\tag{}` after the last line of the leading header block.
@@ -181,4 +227,4 @@ function insertTag(text) {
   };
 }
 
-module.exports = { scanUls, insertLi, appendP, insertTag };
+module.exports = { scanSpans, insertLi, appendP, insertSubtree, insertTag };
