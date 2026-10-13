@@ -208,6 +208,16 @@ in {
       when = "editorTextFocus && resourceExtname == '.tree'";
     }
     {
+      key = "ctrl+shift+alt+i";
+      command = "forestEdit.insertLiRoot";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    {
+      key = "ctrl+alt+t";
+      command = "forestEdit.insertSubtree";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+    }
+    {
       key = "ctrl+p";
       command = "forestEdit.appendP";
       when = "editorTextFocus && resourceExtname == '.tree'";
