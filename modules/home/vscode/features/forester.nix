@@ -167,6 +167,20 @@ in {
       command = "forester.restartLanguageServer";
       when = "editorTextFocus && resourceExtname == '.tree'";
     }
+    # Runs the workspace's `build-forest` (from its flake.nix) via a task of the
+    # same name defined in the project's .vscode/tasks.json.
+    {
+      key = "ctrl+alt+r";
+      command = "runCommands";
+      when = "editorTextFocus && resourceExtname == '.tree'";
+      args.commands = [
+        "workbench.action.files.save"
+        {
+          command = "workbench.action.tasks.runTask";
+          args = "Forester: Build Forest";
+        }
+      ];
+    }
     {
       key = "ctrl+t";
       command = "forester.newTreeUntitled";
