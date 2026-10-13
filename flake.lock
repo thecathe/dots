@@ -1046,11 +1046,11 @@
         "systems": "systems_6"
       },
       "locked": {
-        "lastModified": 1791894240,
-        "narHash": "sha256-0icFDs1QShI/weqTOmGSPxabPe4iD6cPjF4niCKE7kM=",
+        "lastModified": 1791895649,
+        "narHash": "sha256-PCeJFbL0X27C6g6s/skSyBasfFy0LtYRASVTl0ijVH0=",
         "owner": "thecathe",
         "repo": "vscode-forester",
-        "rev": "7f4a77ef7d19bc2f2b7a0bad49806bf787ebd68e",
+        "rev": "93fa118af1909ae6a5e8cbcbbdf14d20b6697059",
         "type": "github"
       },
       "original": {
