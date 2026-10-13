@@ -73,12 +73,9 @@
 
     # Forester VS Code setup (forest-keeper pin/patches, forester-edit
     # extension, keybindings, scripts, dev shell) around the ocaml-forester
-    # fork. Local path input while it lives alongside dots, like `minecraft`
-    # above (and with the same caveat: `nix flake update vscode-forester` is
-    # needed to pick up changes). Once pushed to GitHub, switch to:
-    #   url = "github:thecathe/vscode-forester";
+    # fork. Pick up changes with `nix flake update vscode-forester`.
     vscode-forester = {
-      url = "/home/cathe/Documents/git/thecathe/vscode-forester";
+      url = "github:thecathe/vscode-forester";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

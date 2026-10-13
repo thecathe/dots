@@ -1047,13 +1047,16 @@
       },
       "locked": {
         "lastModified": 1791894240,
-        "narHash": "sha256-DjEgjhsV2dZ2xGm1U0u5tJsozOmkvkSmE/BY4pthbiw=",
-        "path": "/home/cathe/Documents/git/thecathe/vscode-forester",
-        "type": "path"
+        "narHash": "sha256-0icFDs1QShI/weqTOmGSPxabPe4iD6cPjF4niCKE7kM=",
+        "owner": "thecathe",
+        "repo": "vscode-forester",
+        "rev": "7f4a77ef7d19bc2f2b7a0bad49806bf787ebd68e",
+        "type": "github"
       },
       "original": {
-        "path": "/home/cathe/Documents/git/thecathe/vscode-forester",
-        "type": "path"
+        "owner": "thecathe",
+        "repo": "vscode-forester",
+        "type": "github"
       }
     }
   },
