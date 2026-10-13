@@ -2,12 +2,13 @@
   lib,
   pkgs,
   config,
+  inputs,
   ...
 }: let
   globalSettings = import ./settings/global;
   globalKeybindings = import ./keybindings.nix;
   vscodeLib = import ./lib.nix {inherit lib globalSettings globalKeybindings;};
-  features = builtins.mapAttrs (_: path: import path {inherit pkgs config;}) {
+  localFeatures = builtins.mapAttrs (_: path: import path {inherit pkgs config;}) {
     nix = ./features/nix.nix;
     kdl = ./features/kdl.nix;
     ocaml = ./features/ocaml.nix;
@@ -26,7 +27,6 @@
     latex = ./features/latex.nix;
     vsrocq = ./features/vsrocq.nix;
     markdown = ./features/markdown.nix;
-    forester = ./features/forester.nix;
     languagetool = ./features/languagetool.nix;
     spellcheck = ./features/spellcheck.nix;
     better-comments = ./features/better-comments.nix;
@@ -36,6 +36,13 @@
     theme = ./features/theme.nix;
     utils = ./features/utils.nix;
   };
+  # forest-keeper pin/patches, forester-edit, settings and keybindings live in
+  # the vscode-forester flake (the single source for the Forester setup).
+  features =
+    localFeatures
+    // {
+      forester = inputs.vscode-forester.lib.vscodeFeature pkgs;
+    };
   groups = import ./groups.nix {inherit features;};
   defaultProfile = vscodeLib.mkProfile (groups.default);
   # projects

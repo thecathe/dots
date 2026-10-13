@@ -71,6 +71,14 @@
     # the main nixpkgs input catches up to >=154.0.1.
     nixpkgs-firefox.url = "github:nixos/nixpkgs/34ab99075ac4f7e40cf037eef32cb1c360bb85e9";
 
+    # Forester VS Code setup (forest-keeper pin/patches, forester-edit
+    # extension, keybindings, scripts, dev shell) around the ocaml-forester
+    # fork. Pick up changes with `nix flake update vscode-forester`.
+    vscode-forester = {
+      url = "github:thecathe/vscode-forester";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # vscode extensions
     nix-vscode-extensions = {
       url = "github:nix-community/nix-vscode-extensions";
