@@ -69,6 +69,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # DankCalendar (dcal): standalone calendar app + sync daemon (Local,
+    # Google, Microsoft, CalDAV, iCloud) in DMS's design language. Has its
+    # own home-manager module (programs.dank-calendar), wired below.
+    dcal = {
+      url = "github:AvengeMedia/dcal";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # for non-nixos hosts
     nixgl.url = "github:nix-community/nixGL";
 
@@ -159,6 +167,7 @@
               inputs.dms.homeModules.dank-material-shell
               inputs.dms-plugin-registry.homeModules.default
               inputs.danksearch.homeModules.default
+              inputs.dcal.homeModules.default
             ];
             users.cathe = import ./hosts/nixos/home.nix;
           };
@@ -206,6 +215,7 @@
               inputs.dms.homeModules.dank-material-shell
               inputs.dms-plugin-registry.homeModules.default
               inputs.danksearch.homeModules.default
+              inputs.dcal.homeModules.default
             ];
             users.cathe = import ./hosts/nixos-laptop/home.nix;
           };
@@ -234,6 +244,7 @@
         inputs.dms.homeModules.dank-material-shell
         inputs.dms-plugin-registry.homeModules.default
         inputs.danksearch.homeModules.default
+        inputs.dcal.homeModules.default
       ];
     };
 
