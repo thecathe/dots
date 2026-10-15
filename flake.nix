@@ -61,6 +61,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # DankSearch (dsearch): the indexed filesystem search DMS's Spotlight
+    # launcher uses for its Files tab / `/` prefix. Home-manager module only
+    # (no nixosModule), wired alongside dms.homeModules below.
+    danksearch = {
+      url = "github:AvengeMedia/danksearch";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # for non-nixos hosts
     nixgl.url = "github:nix-community/nixGL";
 
@@ -150,6 +158,7 @@
             sharedModules = [
               inputs.dms.homeModules.dank-material-shell
               inputs.dms-plugin-registry.homeModules.default
+              inputs.danksearch.homeModules.default
             ];
             users.cathe = import ./hosts/nixos/home.nix;
           };
@@ -196,6 +205,7 @@
             sharedModules = [
               inputs.dms.homeModules.dank-material-shell
               inputs.dms-plugin-registry.homeModules.default
+              inputs.danksearch.homeModules.default
             ];
             users.cathe = import ./hosts/nixos-laptop/home.nix;
           };
@@ -223,6 +233,7 @@
         inputs.stylix.homeModules.stylix
         inputs.dms.homeModules.dank-material-shell
         inputs.dms-plugin-registry.homeModules.default
+        inputs.danksearch.homeModules.default
       ];
     };
 

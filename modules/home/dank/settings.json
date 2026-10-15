@@ -13,6 +13,8 @@
   "launcherUseOverlayLayer": true,
   "useAutoLocation": true,
   "launcherLogoMode": "os",
+  "dankLauncherV2IncludeFilesInAll": true,
+  "dankLauncherV2IncludeFoldersInAll": true,
   "fontFamily": "UbuntuSans Nerd Font",
   "monoFontFamily": "JetBrainsMono Nerd Font Mono",
   "showDock": true,
