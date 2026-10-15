@@ -13,6 +13,8 @@
   "launcherUseOverlayLayer": true,
   "useAutoLocation": true,
   "launcherLogoMode": "os",
+  "dankLauncherV2IncludeFilesInAll": true,
+  "dankLauncherV2IncludeFoldersInAll": true,
   "fontFamily": "UbuntuSans Nerd Font",
   "monoFontFamily": "JetBrainsMono Nerd Font Mono",
   "showDock": true,
@@ -99,6 +101,18 @@
           "enabled": true
         },
         "clipboard",
+        {
+          "id": "usbManager",
+          "enabled": true
+        },
+        {
+          "id": "nixMonitor",
+          "enabled": true
+        },
+        {
+          "id": "dankDiskUsage",
+          "enabled": true
+        },
         {
           "id": "memUsage",
           "enabled": true,

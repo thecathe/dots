@@ -212,7 +212,14 @@ in {
 
       # Core features
       enableSystemMonitoring = true; # System monitoring widgets (dgop)
-      enableVPN = true; # VPN management widget
+      # VPN widget deps - off: all this flag does is put nixpkgs' glib +
+      # networkmanager in the profile (nothing is configured by it, and the
+      # widget itself only ever drives NetworkManager profiles that already
+      # exist). On the Ubuntu host that nix nmcli (1.58.x) shadows /usr/bin's
+      # and mismatches the system daemon (1.54.x); the widget's `.ovpn`/`.conf`
+      # import shells out to whichever `nmcli` is first on PATH. The option
+      # defaults to true, so it has to be set explicitly rather than removed.
+      enableVPN = false;
       enableDynamicTheming = true; # Wallpaper-based theming (matugen)
       enableAudioWavelength = false; # Audio visualizer (cava) - disabled: continuous audio capture + redraw suspected of contributing to pipewire xruns and compositor flicker
       enableCalendarEvents = true; # Calendar integration (khal)
@@ -247,6 +254,28 @@ in {
             dailyRefreshTime = "09:00";
           };
         };
+
+        # Launcher (Spotlight) plugins. calculator/converter need nothing
+        # extra (calculator can optionally use qalc/numbat engines, not
+        # installed).
+        calculator.enable = true;
+        converter.enable = true;
+        # Live `fd` search behind the `,` trigger - no index or inotify
+        # watches, so it covers the repos under ~/Documents/git that dsearch
+        # (search.nix) deliberately doesn't index. `fd` itself is in
+        # home.packages below.
+        fdSearch.enable = true;
+
+        # DankBar widgets - enabling only makes them available; they show up
+        # once added to a bar in settings.json (or, for screenOff, also as a
+        # control-center tile). dankDiskUsage covers disk, ZFS and the Nix
+        # store; nixMonitor the store size and generations.
+        nixMonitor.enable = true;
+        dankDiskUsage.enable = true;
+        # Shells out to udisksctl/lsblk/parted/mkfs.* and polkit, all of
+        # which come from the host (apt on Ubuntu, NixOS udisks2/polkit).
+        usbManager.enable = true;
+        screenOff.enable = true;
       };
 
       clipboardSettings = {
@@ -271,6 +300,10 @@ in {
     # and toasts (also via DMS's IPC) which way it went, so it can be silenced
     # on demand for anything (games, screenshares) without touching settings.
     home.packages = [
+      # Runtime dependency of the fdSearch launcher plugin (programs.dank-
+      # material-shell.plugins above); not packaged by the registry module.
+      pkgs.fd
+
       (pkgs.writeShellScriptBin "dank-dock-toggle" ''
         set -u
         result="$(${config.programs.dank-material-shell.package}/bin/dms ipc call dock toggle)"
