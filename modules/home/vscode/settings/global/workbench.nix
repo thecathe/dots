@@ -41,7 +41,7 @@
   #    enough to show all tabs at once.
   #  - fixed: Make all tabs the same size, while allowing them to get smaller
   #    when the available space is not enough.
-  "workbench.editor.tabSizing" = "shrink";
+  "workbench.editor.tabSizing" = "fit";
 
   # Controls the size of editor groups when splitting them.
   #  - auto: Splits the active editor group to equal parts, unless all editor
