@@ -212,7 +212,14 @@ in {
 
       # Core features
       enableSystemMonitoring = true; # System monitoring widgets (dgop)
-      enableVPN = true; # VPN management widget
+      # VPN widget deps - off: all this flag does is put nixpkgs' glib +
+      # networkmanager in the profile (nothing is configured by it, and the
+      # widget itself only ever drives NetworkManager profiles that already
+      # exist). On the Ubuntu host that nix nmcli (1.58.x) shadows /usr/bin's
+      # and mismatches the system daemon (1.54.x); the widget's `.ovpn`/`.conf`
+      # import shells out to whichever `nmcli` is first on PATH. The option
+      # defaults to true, so it has to be set explicitly rather than removed.
+      enableVPN = false;
       enableDynamicTheming = true; # Wallpaper-based theming (matugen)
       enableAudioWavelength = false; # Audio visualizer (cava) - disabled: continuous audio capture + redraw suspected of contributing to pipewire xruns and compositor flicker
       enableCalendarEvents = true; # Calendar integration (khal)
