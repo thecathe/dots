@@ -102,6 +102,18 @@
         },
         "clipboard",
         {
+          "id": "usbManager",
+          "enabled": true
+        },
+        {
+          "id": "nixMonitor",
+          "enabled": true
+        },
+        {
+          "id": "dankDiskUsage",
+          "enabled": true
+        },
+        {
           "id": "memUsage",
           "enabled": true,
           "minimumWidth": true,
