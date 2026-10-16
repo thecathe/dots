@@ -61,7 +61,7 @@
   erlangProfile = vscodeLib.mkProfile (groups.erlang);
   javaProfile = vscodeLib.mkProfile (groups.java);
 in {
-  imports = [./profile-ui-state.nix];
+  imports = [./profile-ui-state.nix ./workspaces.nix];
 
   programs.vscode = {
     enable = true;
@@ -118,4 +118,8 @@ in {
   # UI layout persistence for the profiles above (globalStorage dirs + seeding
   # from the default profile). Standalone so other configs can import it too.
   programs.vscode.profileUiState.filesContainer = "workbench.views.service.sidebar.4337fe0b-3e0d-40ce-9701-c62f345cfd7a";
+
+  # Pinned workspaces: data lives in a private repo at ~/workspaces (absent for
+  # anyone without it, in which case this is a no-op).
+  programs.vscode.workspaces.dir = "${config.home.homeDirectory}/workspaces/vscode";
 }
