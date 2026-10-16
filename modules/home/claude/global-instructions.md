@@ -64,3 +64,19 @@ standing branch. When the project's practice is unclear, ask before acting.
   branch into the integration branch provided the work went as planned and agreed.
 - If the outcome deviates meaningfully from the plan, or could have unintended
   side effects, get explicit approval from the user before merging.
+
+## Design write-ups
+- When a session's design work was interesting or insightful (trade-offs weighed,
+  approaches rejected, surprising findings), record it in the project's
+  `DEVELOPMENT.md`, however little got built. If the project already keeps an
+  equivalent log (e.g. `ASSISTED-CHANGES.md`), use that instead. Record the date,
+  context, decisions and why, alternatives considered, open questions, and commits.
+- When returning to a project after a gap, or at the end of a substantial session,
+  offer once to revisit past entries: what held up, and what could be improved or
+  iterated on.
+
+## AI-generated published content
+- Any page Claude writes or substantially edits for a published site is explicitly
+  marked as AI-generated, using the project's marker convention if it has one.
+  The marker records the model, the effort level (or "unrecorded"), the date first
+  generated, and the date last edited.
