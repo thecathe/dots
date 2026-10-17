@@ -97,12 +97,22 @@
   # barConfigs data below): showDock isn't a host fact to seed a default
   # for, it's a "start every session the same way" preference, hidden only
   # ad hoc mid-session via dank-dock-toggle.
+  #
+  # Replaces the file only if jq succeeded AND produced output. On input that
+  # is not valid JSON (conflict markers left by a git merge, a half-written
+  # file) jq fails and leaves $tmp empty; an unguarded mv would then truncate
+  # the live settings.json to 0 bytes. Exits 0 either way: this is dms's
+  # ExecStartPre, where a failure would stop the shell from starting.
   dankResetDockScript = pkgs.writeShellScript "dank-reset-dock" ''
     settingsFile="$HOME/dots/modules/home/dank/settings.json"
     if [ -e "$settingsFile" ]; then
       tmp="$(mktemp)"
-      ${pkgs.jq}/bin/jq '.showDock = true' "$settingsFile" > "$tmp"
-      mv "$tmp" "$settingsFile"
+      trap 'rm -f "$tmp"' EXIT
+      if ${pkgs.jq}/bin/jq '.showDock = true' "$settingsFile" > "$tmp" && [ -s "$tmp" ]; then
+        mv "$tmp" "$settingsFile"
+      else
+        echo "dank-reset-dock: $settingsFile is not valid JSON; left untouched" >&2
+      fi
     fi
   '';
 
@@ -121,6 +131,13 @@
   # path unit forever. Once one real repair has run, a second consecutive run
   # against its own output is a true no-op (nothing left to seed), so the
   # write - and hence the retrigger - stops there.
+  #
+  # Likewise only writes when jq succeeded and produced output, and exits 0
+  # either way (a failing oneshot would count against the path unit's trigger
+  # limit and could stop it reacting even after the file is valid again). Without
+  # the guard, a settings.json that is not valid JSON at that moment - conflict
+  # markers after a git merge, say - made jq fail, leaving an empty $tmpFile that
+  # then replaced the live file, truncating it to 0 bytes.
   dankSettingsOverlayScript = let
     overlay =
       config.dank.settingsOverlay
@@ -134,7 +151,7 @@
       if [ -e "$settingsFile" ]; then
         tmpFile="$(mktemp)"
         trap 'rm -f "$tmpFile"' EXIT
-        ${pkgs.jq}/bin/jq \
+        if ${pkgs.jq}/bin/jq \
           --argjson overlay "$(cat "${overlayFile}")" \
           --argjson stateKeys '${builtins.toJSON dankSettingsStateKeys}' \
           --argjson stateDefaults '${builtins.toJSON dankSettingsStateDefaults}' \
@@ -161,9 +178,12 @@
                  then .screenPreferences = $ovPrefs
                  else . end
              )' \
-          "$settingsFile" > "$tmpFile"
-        if ! cmp -s "$tmpFile" "$settingsFile"; then
-          cp "$tmpFile" "$settingsFile"
+          "$settingsFile" > "$tmpFile" && [ -s "$tmpFile" ]; then
+          if ! cmp -s "$tmpFile" "$settingsFile"; then
+            cp "$tmpFile" "$settingsFile"
+          fi
+        else
+          echo "dank-settings-overlay-seed: $settingsFile is not valid JSON; left untouched" >&2
         fi
       fi
     '';
