@@ -17,24 +17,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Minecraft server + client tooling (self-hosted, nixos host only).
-    # Local path input for zero-friction iteration while developing it
-    # alongside dots. Once pushed to GitHub, switch to:
-    #   url = "github:thecathe/minecraft";
-    #
-    # `nixos-rebuild switch` does NOT refresh this input's flake.lock pin on
-    # its own - a `path:` input's narHash gets locked just like any other,
-    # and changes to the minecraft repo (e.g. a new mod added to its packwiz
-    # pack) are silently invisible to dots builds until you explicitly run
-    # `nix flake update minecraft` here. Learned the hard way: several
-    # rounds of "successful" rebuilds/switches turned out to be rebuilding
-    # the same frozen Sep-30 snapshot, so none of a session's mod additions
-    # ever reached the live server despite every build reporting success.
-    minecraft = {
-      url = "/home/cathe/Documents/git/thecathe/minecraft";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # nix-gaming
     nix-gaming.url = "github:fufexan/nix-gaming";
 
@@ -109,28 +91,11 @@
     #   };
   };
 
-  outputs = {
-    nixpkgs,
-    home-manager,
-    nix-snapd,
-    nix-gaming,
-    disko,
-    stylix,
-    dms,
-    dms-plugin-registry,
-    nixgl,
-    nix-vscode-extensions,
-    minecraft,
-    #    onto-nvim,
-    ...
-  } @ inputs: let
+  # dots defines no machines. Each host lives in its own flake (my own are in the
+  # `hosts` repo) and consumes the constructors and module sets exported here,
+  # reusing this flake's inputs so there is a single set of version pins.
+  outputs = {...} @ inputs: let
     hostLib = import ./lib/hosts.nix {inherit inputs;};
-
-    # "minecraft-server": the Fabric server (minecraft flake input) builds on
-    # the actual Mojang vanilla server jar, unlike Paper which is an
-    # independently-licensed (GPL3) rebuild - see the minecraft repo's
-    # modules/nixos/default.nix for details.
-    unfreeNixOS = ["nvidia-x11" "discord" "discord-unwrapped" "steam" "steam-unwrapped" "nvidia-settings" "minecraft-server"];
   in {
     # Constructors for the wiring every host shares; a host supplies only what
     # is specific to it. See lib/hosts.nix.
@@ -140,29 +105,9 @@
       fonts = import ./modules/shared/fonts.nix;
     };
 
-    # The shared module sets a host imports (see hosts/*/home.nix and default.nix).
+    # The shared module sets a host imports.
     homeModules.default = ./modules/home;
     nixosModules.default = ./modules/nixos;
-
-    ###### nixos machine
-    nixosConfigurations.nixos = hostLib.mkNixos {
-      modules = [./hosts/nixos];
-      modulesAfter = [minecraft.nixosModules.default];
-      home = ./hosts/nixos/home.nix;
-      unfreeExtra = unfreeNixOS;
-    };
-
-    ###### nixos-laptop
-    nixosConfigurations.nixos-laptop = hostLib.mkNixos {
-      modules = [./hosts/nixos-laptop inputs.disko.nixosModules.disko];
-      home = ./hosts/nixos-laptop/home.nix;
-      unfreeExtra = unfreeNixOS;
-    };
-
-    ###### worklaptop (ubuntu)
-    homeConfigurations."cathe@worklaptop" = hostLib.mkHome {
-      modules = [./hosts/worklaptop/home.nix];
-    };
 
     ###### project templates
     templates = {
