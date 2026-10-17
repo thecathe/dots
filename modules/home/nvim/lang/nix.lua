@@ -6,16 +6,10 @@ vim.lsp.config("nixd", {
 			formatting = { command = { "alejandra" } },
 			nixpkgs = {
 				-- Lets nixd evaluate nixpkgs for accurate package completions
-				expr = '(builtins.getFlake "@@DOTS_PATH@@").inputs.nixpkgs.legacyPackages.${builtins.currentSystem}',
+				expr = '@@NIXPKGS_EXPR@@',
 			},
-			options = {
-				nixos = {
-					expr = '(builtins.getFlake "@@DOTS_PATH@@").nixosConfigurations.nixos.options',
-				},
-				home_manager = {
-					expr = '(builtins.getFlake "@@DOTS_PATH@@").homeConfigurations."cathe@worklaptop".options',
-				},
-			},
+			-- NixOS / home-manager option completion; filled in from dots.nixd (modules/home/nixd.nix)
+			options = @@OPTIONS@@,
 		},
 	},
 })

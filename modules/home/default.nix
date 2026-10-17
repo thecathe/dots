@@ -4,6 +4,7 @@
   ...
 }: {
   imports = [
+    ./nixd.nix
     ./wm
     ./dank
     ./wallpaper
