@@ -16,6 +16,8 @@ let
       "import <nixpkgs> {}";
 in
 {
+  # dots.nixd is declared here too so this works when imported on its own.
+  imports = [ ../../nixd.nix ];
   xdg.configFile."nvim/lua/lang/nix.lua".text = builtins.replaceStrings
     [ "@@NIXPKGS_EXPR@@" "@@OPTIONS@@" ]
     [ nixpkgsExpr (lib.generators.toLua { } hostOptions) ]

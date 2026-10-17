@@ -61,7 +61,9 @@
   erlangProfile = vscodeLib.mkProfile (groups.erlang);
   javaProfile = vscodeLib.mkProfile (groups.java);
 in {
-  imports = [./profile-ui-state.nix ./workspaces.nix];
+  # ../nixd.nix declares dots.nixd, which features/nix.nix reads: imported here so the
+  # vscode module also works when imported on its own (modules dedupe by path).
+  imports = [./profile-ui-state.nix ./workspaces.nix ../nixd.nix];
 
   programs.vscode = {
     enable = true;
