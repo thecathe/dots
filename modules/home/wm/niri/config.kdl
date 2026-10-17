@@ -345,7 +345,7 @@ window-rule {
 // absolutely relative to Hearthstone, which niri's own Xwayland integration
 // doesn't support) fullscreen immediately, instead of at the default column
 // width. Also enables on-demand VRR (configured on the output in
-// hosts/nixos/modules/home/monitor.nix) while this session is shown, since
+// the hosts repo's nixos/modules/home/monitor.nix) while this session is shown, since
 // it's the one gaming context modeled as its own window here.
 window-rule {
     match app-id=r#"^org\.freedesktop\.Xwayland$"#
