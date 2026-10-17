@@ -111,7 +111,7 @@
 
     # dots cannot see what depends on it. These stand in for consumers; the real
     # test of the hosts is `check` in the hosts repo.
-    checks.x86_64-linux.consumer-imports = import ./checks/consumer.nix {inherit inputs;};
+    checks.x86_64-linux = import ./checks/consumer.nix {inherit inputs;};
 
     ###### project templates
     templates = {

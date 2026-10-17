@@ -1,29 +1,98 @@
-# Evaluation-only check for downstream flakes that import part of dots by file
+# Evaluation-only checks standing in for downstream flakes that use dots by file
 # path instead of through the host constructors. dots cannot see such consumers,
-# so this stands in for them: a minimal home-manager config importing just the
-# shell and vscode modules, the way a user of this repo's modules might.
+# so these reproduce how one actually does it (modelled on a real downstream
+# flake): the shell and nvim modules imported by path, and a vscode module of its
+# own that builds profiles from dots' individual feature files, `groups.nix`,
+# `lib.nix`, `keybindings.nix` and `settings/global`, never importing dots'
+# `modules/home/vscode/default.nix`.
 #
-# It only evaluates the configuration (the derivation path is written to a file,
-# nothing is built), so `nix flake check` stays cheap.
+# Only the derivation path is computed (written to a file, nothing is built), so
+# `nix flake check` stays cheap.
 {inputs}: let
   system = "x86_64-linux";
+  dots = inputs.self;
   pkgs = import inputs.nixpkgs {
     inherit system;
     overlays = [inputs.nix-vscode-extensions.overlays.default];
     config.allowUnfree = true;
   };
-  consumer = inputs.home-manager.lib.homeManagerConfiguration {
-    inherit pkgs;
-    extraSpecialArgs = {inputs = inputs // {dots = inputs.self;};};
-    modules = [
-      {
-        home.username = "consumer";
-        home.homeDirectory = "/home/consumer";
-        home.stateVersion = "25.11";
-      }
-      "${inputs.self}/modules/home/shell"
-      "${inputs.self}/modules/home/vscode"
-    ];
+
+  base = {
+    home.username = "consumer";
+    home.homeDirectory = "/home/consumer";
+    home.stateVersion = "25.11";
   };
-in
-  pkgs.writeText "consumer-imports-evaluate" (builtins.unsafeDiscardStringContext consumer.activationPackage.drvPath)
+
+  # A downstream vscode module: deep imports of dots' files, own list of profiles.
+  vscodeModule = {
+    pkgs,
+    config,
+    lib,
+    ...
+  }: let
+    dotsVscode = "${dots}/modules/home/vscode";
+    globalSettings = import "${dotsVscode}/settings/global";
+    globalKeybindings = import "${dotsVscode}/keybindings.nix";
+    vscodeLib = import "${dotsVscode}/lib.nix" {inherit lib globalSettings globalKeybindings;};
+    features =
+      builtins.mapAttrs (_: path: import path {inherit pkgs config;})
+      (lib.genAttrs [
+          "nix"
+          "git"
+          "markdown"
+          "better-comments"
+          "toml"
+          "json"
+          "kdl"
+          "theme"
+          "utils"
+          "claude"
+          "latex"
+          "java"
+          "python"
+          "vsrocq"
+          "haskell"
+          "ocaml"
+          "disable-breakpoint"
+          "unicode-math-symbols"
+        ]
+        (name: "${dotsVscode}/features/${name}.nix"));
+    groups = import "${dotsVscode}/groups.nix" {inherit features;};
+  in {
+    imports = ["${dotsVscode}/profile-ui-state.nix"];
+    programs.vscode = {
+      enable = true;
+      mutableExtensionsDir = false;
+      profiles = {
+        default = (vscodeLib.mkProfile groups.default).profile;
+        java = (vscodeLib.mkProfile groups.java).profile;
+        python = (vscodeLib.mkProfile groups.python).profile;
+        rocq = (vscodeLib.mkProfile groups.rocq).profile;
+        haskell = (vscodeLib.mkProfile groups.haskell).profile;
+      };
+    };
+  };
+
+  consumer = modules:
+    (inputs.home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
+      extraSpecialArgs = {inputs = inputs // {inherit dots;};};
+      modules = [base] ++ modules;
+    }).activationPackage.drvPath;
+
+  check = name: modules:
+    pkgs.writeText name (builtins.unsafeDiscardStringContext (consumer modules));
+in {
+  # shell + nvim by path, plus the vscode module above: the full downstream shape.
+  consumer-full = check "consumer-full-evaluates" [
+    "${dots}/modules/home/shell"
+    "${dots}/modules/home/nvim"
+    vscodeModule
+  ];
+  # The same without nvim: the shell module plus the vscode module. Nothing here may
+  # rely on the nvim module happening to declare an option that others read.
+  consumer-no-nvim = check "consumer-no-nvim-evaluates" [
+    "${dots}/modules/home/shell"
+    vscodeModule
+  ];
+}
