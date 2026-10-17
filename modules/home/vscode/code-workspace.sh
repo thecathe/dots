@@ -25,8 +25,30 @@ die() {
   exit 1
 }
 
+warn() {
+  echo "code-workspace: warning: $*" >&2
+  command -v notify-send >/dev/null && notify-send -a code-workspace "code-workspace" "$*" || true
+}
+
+# The relative folder paths in the workspace files are right for exactly one
+# location of those files. VSCode resolves them against the path a file was opened
+# by: a launcher or the CLI keeps a symlink's path, but VSCode's own file dialog
+# hands back the real path, so through a symlink one file means two different
+# things (and one of them points at folders that don't exist). It also writes any
+# new relative path relative to whichever it was opened by. So $root must be a real
+# directory: true when resolving symlinks leaves its position under $HOME unchanged
+# (a symlinked $HOME itself is fine, it shifts both sides alike).
+real_root() {
+  local real home_real
+  [ -d "$root" ] || return 0
+  real=$(realpath "$root") && home_real=$(realpath "$HOME") || return 1
+  [ "${real#"$home_real"/}" = "${root#"$HOME"/}" ]
+}
+
+SYMLINK_MSG="$root is reached through a symlink, so a workspace opened from VSCode's file dialog resolves its folders against a different path than one opened from the launcher. Make it a real directory (see the workspaces repo README)."
+
 # Folder paths of a workspace as repo-relative-to-$HOME paths. Collapsed
-# lexically (realpath -s): VSCode resolves against the symlink location.
+# lexically (realpath -s), which is where VSCode resolves them as long as real_root holds.
 folders() {
   jq -r '.folders[].path' "$root/$1.code-workspace" | while read -r p; do
     abs=$(realpath -m -s "$root/$p")
@@ -102,6 +124,7 @@ profile_of() {
 launch() {
   local name=$1 profile
   [ -f "$root/$name.code-workspace" ] || die "no workspace '$name' in $root"
+  real_root || warn "$SYMLINK_MSG"
   find_missing "$name"
   if [ -n "$to_clone" ]; then
     n=$(printf '%s\n' "$to_clone" | grep -c .)
@@ -178,6 +201,10 @@ EOF
 check() {
   local bad=0 n rel known
   [ -f "$manifest" ] || die "no manifest at $manifest"
+  if ! real_root; then
+    echo "workspace dir: $SYMLINK_MSG"
+    bad=1
+  fi
   for n in $(workspace_names); do
     while read -r rel; do
       if [ -z "$(repo_for "$rel")" ] && ! is_untracked "$rel"; then
