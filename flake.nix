@@ -17,24 +17,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Minecraft server + client tooling (self-hosted, nixos host only).
-    # Local path input for zero-friction iteration while developing it
-    # alongside dots. Once pushed to GitHub, switch to:
-    #   url = "github:thecathe/minecraft";
-    #
-    # `nixos-rebuild switch` does NOT refresh this input's flake.lock pin on
-    # its own - a `path:` input's narHash gets locked just like any other,
-    # and changes to the minecraft repo (e.g. a new mod added to its packwiz
-    # pack) are silently invisible to dots builds until you explicitly run
-    # `nix flake update minecraft` here. Learned the hard way: several
-    # rounds of "successful" rebuilds/switches turned out to be rebuilding
-    # the same frozen Sep-30 snapshot, so none of a session's mod additions
-    # ever reached the live server despite every build reporting success.
-    minecraft = {
-      url = "/home/cathe/Documents/git/thecathe/minecraft";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # nix-gaming
     nix-gaming.url = "github:fufexan/nix-gaming";
 
@@ -109,144 +91,27 @@
     #   };
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    home-manager,
-    nix-snapd,
-    nix-gaming,
-    disko,
-    stylix,
-    dms,
-    dms-plugin-registry,
-    nixgl,
-    nix-vscode-extensions,
-    minecraft,
-    #    onto-nvim,
-    ...
-  } @ inputs: let
-    system = "x86_64-linux";
-    unfreeAllowList = import ./modules/shared/unfree.nix;
-    unfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowList;
-    # "minecraft-server": the Fabric server (minecraft flake input) builds on
-    # the actual Mojang vanilla server jar, unlike Paper which is an
-    # independently-licensed (GPL3) rebuild - see the minecraft repo's
-    # modules/nixos/default.nix for details.
-    unfreeAllowListNixOS = unfreeAllowList ++ ["nvidia-x11" "discord" "discord-unwrapped" "steam" "steam-unwrapped" "nvidia-settings" "minecraft-server"];
-    unfreePredicateNixOS = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowListNixOS;
+  # dots defines no machines. Each host lives in its own flake (my own are in the
+  # `hosts` repo) and consumes the constructors and module sets exported here,
+  # reusing this flake's inputs so there is a single set of version pins.
+  outputs = {...} @ inputs: let
+    hostLib = import ./lib/hosts.nix {inherit inputs;};
   in {
-    ###### nixos machine
-    nixosConfigurations.nixos = inputs.nixpkgs.lib.nixosSystem {
-      inherit system;
-      specialArgs = {inherit inputs;};
-      modules = [
-        {
-          nix.settings.experimental-features = [
-            "nix-command"
-            "flakes"
-          ];
-          nixpkgs = {
-            config.allowUnfreePredicate = unfreePredicateNixOS;
-            overlays = [
-              inputs.nix-vscode-extensions.overlays.default
-            ];
-          };
-        }
-        ./hosts/nixos
-        inputs.stylix.nixosModules.stylix
-        inputs.dms.nixosModules.dank-material-shell
-        inputs.dms-plugin-registry.nixosModules.default
-
-        home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            extraSpecialArgs = {inherit inputs;};
-            sharedModules = [
-              inputs.dms.homeModules.dank-material-shell
-              inputs.dms-plugin-registry.homeModules.default
-              inputs.danksearch.homeModules.default
-              inputs.dcal.homeModules.default
-            ];
-            users.cathe = import ./hosts/nixos/home.nix;
-          };
-        }
-
-        nix-snapd.nixosModules.default
-        {
-          services.snap.enable = true;
-        }
-
-        minecraft.nixosModules.default
-      ];
+    # Constructors for the wiring every host shares; a host supplies only what
+    # is specific to it. See lib/hosts.nix.
+    lib = {
+      inherit (hostLib) mkNixos mkHome;
+      # Font packages shared by every host: `dots.lib.fonts pkgs`.
+      fonts = import ./modules/shared/fonts.nix;
     };
 
-    ###### nixos-laptop
-    nixosConfigurations.nixos-laptop = inputs.nixpkgs.lib.nixosSystem {
-      inherit system;
-      specialArgs = {inherit inputs;};
-      modules = [
-        {
-          nix.settings.experimental-features = [
-            "nix-command"
-            "flakes"
-          ];
-          nixpkgs = {
-            config.allowUnfreePredicate = unfreePredicateNixOS;
-            overlays = [
-              inputs.nix-vscode-extensions.overlays.default
-            ];
-          };
-        }
-        ./hosts/nixos-laptop
-        inputs.disko.nixosModules.disko
-        inputs.stylix.nixosModules.stylix
-        inputs.dms.nixosModules.dank-material-shell
-        inputs.dms-plugin-registry.nixosModules.default
+    # The shared module sets a host imports.
+    homeModules.default = ./modules/home;
+    nixosModules.default = ./modules/nixos;
 
-        home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            extraSpecialArgs = {inherit inputs;};
-            sharedModules = [
-              inputs.dms.homeModules.dank-material-shell
-              inputs.dms-plugin-registry.homeModules.default
-              inputs.danksearch.homeModules.default
-              inputs.dcal.homeModules.default
-            ];
-            users.cathe = import ./hosts/nixos-laptop/home.nix;
-          };
-        }
-
-        nix-snapd.nixosModules.default
-        {
-          services.snap.enable = true;
-        }
-      ];
-    };
-
-    ###### worklaptop (ubuntu)
-    homeConfigurations."cathe@worklaptop" = inputs.home-manager.lib.homeManagerConfiguration {
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfreePredicate = unfreePredicate;
-        overlays = [
-          inputs.nix-vscode-extensions.overlays.default
-        ];
-      };
-      extraSpecialArgs = {inherit inputs;};
-      modules = [
-        ./hosts/worklaptop/home.nix
-        inputs.stylix.homeModules.stylix
-        inputs.dms.homeModules.dank-material-shell
-        inputs.dms-plugin-registry.homeModules.default
-        inputs.danksearch.homeModules.default
-        inputs.dcal.homeModules.default
-      ];
-    };
+    # dots cannot see what depends on it. These stand in for consumers; the real
+    # test of the hosts is `check` in the hosts repo.
+    checks.x86_64-linux.consumer-imports = import ./checks/consumer.nix {inherit inputs;};
 
     ###### project templates
     templates = {

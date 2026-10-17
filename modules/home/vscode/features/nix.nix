@@ -1,4 +1,20 @@
 { pkgs, config, ... }:
+let
+  inherit (pkgs) lib;
+  cfg = config.dots.nixd;
+  # Option completion needs the flake that defines the hosts (see modules/home/nixd.nix).
+  hostOptions =
+    lib.optionalAttrs (cfg.flake != null && cfg.nixosHost != null) {
+      "nixos" = {
+        "expr" = "(builtins.getFlake \"${cfg.flake}\").nixosConfigurations.${cfg.nixosHost}.options";
+      };
+    }
+    // lib.optionalAttrs (cfg.flake != null && cfg.homeConfiguration != null) {
+      "home_manager" = {
+        "expr" = "(builtins.getFlake \"${cfg.flake}\").homeConfigurations.\"${cfg.homeConfiguration}\".options";
+      };
+    };
+in
 {
   extensions = with pkgs.vscode-extensions; [
     bbenoist.nix
@@ -21,18 +37,9 @@
               "alejandra"
             ];
           };
-          # builtins.getFlake fails on the ~/dots symlink ("path is a symlink"),
-          # so this uses the real repo path instead. Interpolated from
-          # config.home.homeDirectory since this module is shared across
-          # hosts with different usernames (cathe on nixos, jjp38 here).
-          "options" = {
-            "nixos" = {
-              "expr" = "(builtins.getFlake \"${config.home.homeDirectory}/Documents/git/thecathe/dots\").nixosConfigurations.nixos.options";
-            };
-            "home_manager" = {
-              "expr" = "(builtins.getFlake \"${config.home.homeDirectory}/Documents/git/thecathe/dots\").homeConfigurations.\"cathe@worklaptop\".options";
-            };
-          };
+          # builtins.getFlake fails on a symlinked path ("path is a symlink"), so
+          # dots.nixd.flake must be the real repo path. It is set per host.
+          "options" = hostOptions;
         };
       };
     };

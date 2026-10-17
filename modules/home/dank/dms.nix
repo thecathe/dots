@@ -201,8 +201,8 @@ in {
       reset it to canonical defaults at any time and there's no way to stop
       that at the git-filter level - see dankSettingsOverlayScript's comment
       above for why. Keeps per-host facts from leaking into the shared file
-      the same way hosts/nixos/modules/home/monitor.nix does for niri's own
-      output config. See hosts/*/modules/home/dank-monitor.json.
+      the same way the hosts repo's nixos/modules/home/monitor.nix does for niri's own
+      output config. See <host>/modules/home/dank-monitor.json in the hosts repo.
     '';
   };
 

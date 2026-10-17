@@ -25,48 +25,17 @@
 
 - `./bin/` -> scripts
 - `./system/` -> `configuration.nix` programs
+- `./lib/` -> `mkNixos` / `mkHome`, the host constructors (exported as `lib`)
+- `./templates/` -> project templates, `nix flake init -t`
 - `./modules/` -> home-manager configurations
 
-## manual setup (non-nix)
+## hosts
 
-Steps needed on hosts that can't be captured by home-manager/NixOS config, e.g. because they touch root-owned files outside home-manager's reach (standalone home-manager has no `/etc` management).
+dots defines no machines. A machine is a small flake in its own repo that consumes dots: it calls
+`dots.lib.mkNixos` (NixOS plus home-manager) or `dots.lib.mkHome` (standalone home-manager), imports
+`dots.nixosModules.default` / `dots.homeModules.default`, and adds only what is specific to it. dots exports
+the constructors and module sets, and hosts reuse dots' inputs, so there is a single set of version pins.
+Per-host manual setup steps live with the host definitions, not here.
 
-- `worklaptop` (ubuntu, standalone home-manager): swaylock must be installed via apt, not Nix. `programs.swaylock.package` is forced to `null` for this host (`hosts/worklaptop/modules/wm/niri.nix`, following home-manager's own documented recommendation for this exact case) because the Nix-built swaylock links against Nix's own linux-pam, which can never authenticate on a non-NixOS host - its `pam_unix.so` needs a setuid-root `unix_chkpwd` helper to read `/etc/shadow`, and Nix doesn't ship setuid binaries in the store (only NixOS's `security.wrappers` provides that). It doesn't error, it just silently rejects every password, correct or not - and if you kill the stuck lock client instead of unlocking properly, niri's session-lock protocol keeps the whole session locked (solid red screen) until that specific niri process is killed and a fresh one starts. `enable` stays `true` so Stylix still themes `~/.config/swaylock/config`; only the package (and its PATH-shadowing symlink) is dropped, so PATH falls through to apt's binary, which reads the same config file. Recreate by hand after reprovisioning:
-  ```
-  sudo apt install swaylock
-  ```
-  This also installs `/etc/pam.d/swaylock` (`auth include login`), which apt manages automatically from here on.
-
-- `nixos` (Minecraft server manual setup - RCON secret, world migration, packwiz
-  bridge): see the `minecraft` flake input's own README
-  (`~/Documents/git/thecathe/minecraft`, consumed here via `inputs.minecraft`).
-
-- `nixos-laptop` (user `max`): account exists (`users.users.max` in
-  `hosts/nixos-laptop/default.nix`), but his home-manager config is entirely
-  self-managed from his own GitHub repo, bootstrapped from this repo's
-  `templates/home-manager-user` template. Nothing in `thecathe/dots` needs
-  updating when he changes his own config - see that template's README.
-
-- `nixos-laptop` (eduroam, user `cathe`): the CA cert
-  (`hosts/nixos-laptop/eduroam-ca.cer`) is committed - it's Kent's public,
-  self-signed University of Kent Root CA, downloaded from
-  https://student.kent.ac.uk/studies/wi-fi/manual (that page also confirms
-  the Root CA is the right one to use here, not the issuing CA or the wifi
-  server cert, and that the server should present `CN=wifi.kent.ac.uk`).
-  The actual eduroam username/password are NOT committed. `systemd.tmpfiles.rules`
-  (`hosts/nixos-laptop/default.nix`) pre-creates `/etc/nixos/secrets/eduroam-cathe.env`
-  (empty, root-only) on every boot/switch, so it's already there after
-  `nixos-rebuild switch` - just fill it in, once, as root on `nixos-laptop`:
-  ```
-  sudoedit /etc/nixos/secrets/eduroam-cathe.env
-  ```
-  containing:
-  ```
-  EDUROAM_IDENTITY=<kent IT account username>@kent.ac.uk
-  EDUROAM_PASSWORD=<kent password>
-  ```
-  then either `nixos-rebuild switch` again or
-  `sudo systemctl restart NetworkManager-ensure-profiles.service` to pick it up.
-  `max` isn't covered by this profile (it's scoped to `cathe` only via
-  `connection.permissions`) - he sets up his own eduroam login independently,
-  the same way he manages the rest of his account.
+To change dots without breaking a machine, test the change against every host before merging (see the
+`check` script in the hosts repo).
