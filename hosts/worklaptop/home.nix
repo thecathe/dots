@@ -11,7 +11,7 @@
   # nixGLPrefix = "${nixgl.packages.${pkgs.stdenv.hostPlatform.system}.nixGL}/bin/nixGL";
 in {
   imports = [
-    ../../modules/home
+    inputs.dots.homeModules.default
     ./modules
   ];
 
@@ -40,7 +40,7 @@ in {
   programs.home-manager.enable = true;
 
   home.packages = with pkgs;
-    (import ../../modules/shared/fonts.nix pkgs)
+    (inputs.dots.lib.fonts pkgs)
     ++ [
     ];
 

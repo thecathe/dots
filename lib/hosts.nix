@@ -14,6 +14,11 @@
   mkUnfreePredicate = extra: pkg: builtins.elem (nixpkgs.lib.getName pkg) (unfreeAllowList ++ extra);
 
   overlays = [inputs.nix-vscode-extensions.overlays.default];
+
+  # The `inputs` a host's modules receive: these inputs, `dots` itself (so a host
+  # can import dots' modules wherever the host's own files happen to live), and
+  # any inputs the host adds.
+  withDots = extraInputs: inputs // {dots = inputs.self;} // extraInputs;
 in {
   # A NixOS system with home-manager for one user.
   #   modules       host NixOS modules, placed before the shared stack
@@ -29,7 +34,7 @@ in {
     unfreeExtra ? [],
     extraInputs ? {},
   }: let
-    inputs' = inputs // extraInputs;
+    inputs' = withDots extraInputs;
   in
     nixpkgs.lib.nixosSystem {
       inherit system;
@@ -90,7 +95,7 @@ in {
         inherit system overlays;
         config.allowUnfreePredicate = mkUnfreePredicate unfreeExtra;
       };
-      extraSpecialArgs = {inputs = inputs // extraInputs;};
+      extraSpecialArgs = {inputs = withDots extraInputs;};
       modules =
         modules
         ++ [

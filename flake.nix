@@ -134,7 +134,15 @@
   in {
     # Constructors for the wiring every host shares; a host supplies only what
     # is specific to it. See lib/hosts.nix.
-    lib = {inherit (hostLib) mkNixos mkHome;};
+    lib = {
+      inherit (hostLib) mkNixos mkHome;
+      # Font packages shared by every host: `dots.lib.fonts pkgs`.
+      fonts = import ./modules/shared/fonts.nix;
+    };
+
+    # The shared module sets a host imports (see hosts/*/home.nix and default.nix).
+    homeModules.default = ./modules/home;
+    nixosModules.default = ./modules/nixos;
 
     ###### nixos machine
     nixosConfigurations.nixos = hostLib.mkNixos {

@@ -1,6 +1,10 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  inputs,
+  ...
+}: {
   imports = [
-    ../../modules/home
+    inputs.dots.homeModules.default
     ./modules/home
   ];
 

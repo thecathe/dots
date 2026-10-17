@@ -4,7 +4,7 @@
   ...
 }: {
   imports = [
-    ../../modules/home
+    inputs.dots.homeModules.default
     ./modules/home
     inputs.minecraft.homeModules.default
   ];

@@ -21,7 +21,7 @@
     ./modules/nixos
     ./modules/wm/gnome
     ./modules/wm/niri
-    ../../modules/nixos
+    inputs.dots.nixosModules.default
   ];
 
   stylix = {
