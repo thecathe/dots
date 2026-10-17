@@ -89,7 +89,10 @@ in {
     "${dots}/modules/home/nvim"
     vscodeModule
   ];
-  # The vscode module alone. It must not rely on another dots module (nvim, say)
-  # happening to declare an option its feature files read.
-  consumer-vscode-only = check "consumer-vscode-only-evaluates" [vscodeModule];
+  # The same without nvim: the shell module plus the vscode module. Nothing here may
+  # rely on the nvim module happening to declare an option that others read.
+  consumer-no-nvim = check "consumer-no-nvim-evaluates" [
+    "${dots}/modules/home/shell"
+    vscodeModule
+  ];
 }
