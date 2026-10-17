@@ -1,7 +1,14 @@
 { pkgs, config, ... }:
 let
   inherit (pkgs) lib;
-  cfg = config.dots.nixd;
+  # Feature files are also imported one by one by downstream flakes, which may not
+  # import modules/home/nixd.nix (where dots.nixd is declared): fall back to unset.
+  cfg =
+    config.dots.nixd or {
+      flake = null;
+      nixosHost = null;
+      homeConfiguration = null;
+    };
   # Option completion needs the flake that defines the hosts (see modules/home/nixd.nix).
   hostOptions =
     lib.optionalAttrs (cfg.flake != null && cfg.nixosHost != null) {
