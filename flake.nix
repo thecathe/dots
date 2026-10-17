@@ -110,7 +110,6 @@
   };
 
   outputs = {
-    self,
     nixpkgs,
     home-manager,
     nix-snapd,
@@ -125,127 +124,36 @@
     #    onto-nvim,
     ...
   } @ inputs: let
-    system = "x86_64-linux";
-    unfreeAllowList = import ./modules/shared/unfree.nix;
-    unfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowList;
+    hostLib = import ./lib/hosts.nix {inherit inputs;};
+
     # "minecraft-server": the Fabric server (minecraft flake input) builds on
     # the actual Mojang vanilla server jar, unlike Paper which is an
     # independently-licensed (GPL3) rebuild - see the minecraft repo's
     # modules/nixos/default.nix for details.
-    unfreeAllowListNixOS = unfreeAllowList ++ ["nvidia-x11" "discord" "discord-unwrapped" "steam" "steam-unwrapped" "nvidia-settings" "minecraft-server"];
-    unfreePredicateNixOS = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeAllowListNixOS;
+    unfreeNixOS = ["nvidia-x11" "discord" "discord-unwrapped" "steam" "steam-unwrapped" "nvidia-settings" "minecraft-server"];
   in {
+    # Constructors for the wiring every host shares; a host supplies only what
+    # is specific to it. See lib/hosts.nix.
+    lib = {inherit (hostLib) mkNixos mkHome;};
+
     ###### nixos machine
-    nixosConfigurations.nixos = inputs.nixpkgs.lib.nixosSystem {
-      inherit system;
-      specialArgs = {inherit inputs;};
-      modules = [
-        {
-          nix.settings.experimental-features = [
-            "nix-command"
-            "flakes"
-          ];
-          nixpkgs = {
-            config.allowUnfreePredicate = unfreePredicateNixOS;
-            overlays = [
-              inputs.nix-vscode-extensions.overlays.default
-            ];
-          };
-        }
-        ./hosts/nixos
-        inputs.stylix.nixosModules.stylix
-        inputs.dms.nixosModules.dank-material-shell
-        inputs.dms-plugin-registry.nixosModules.default
-
-        home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            extraSpecialArgs = {inherit inputs;};
-            sharedModules = [
-              inputs.dms.homeModules.dank-material-shell
-              inputs.dms-plugin-registry.homeModules.default
-              inputs.danksearch.homeModules.default
-              inputs.dcal.homeModules.default
-            ];
-            users.cathe = import ./hosts/nixos/home.nix;
-          };
-        }
-
-        nix-snapd.nixosModules.default
-        {
-          services.snap.enable = true;
-        }
-
-        minecraft.nixosModules.default
-      ];
+    nixosConfigurations.nixos = hostLib.mkNixos {
+      modules = [./hosts/nixos];
+      modulesAfter = [minecraft.nixosModules.default];
+      home = ./hosts/nixos/home.nix;
+      unfreeExtra = unfreeNixOS;
     };
 
     ###### nixos-laptop
-    nixosConfigurations.nixos-laptop = inputs.nixpkgs.lib.nixosSystem {
-      inherit system;
-      specialArgs = {inherit inputs;};
-      modules = [
-        {
-          nix.settings.experimental-features = [
-            "nix-command"
-            "flakes"
-          ];
-          nixpkgs = {
-            config.allowUnfreePredicate = unfreePredicateNixOS;
-            overlays = [
-              inputs.nix-vscode-extensions.overlays.default
-            ];
-          };
-        }
-        ./hosts/nixos-laptop
-        inputs.disko.nixosModules.disko
-        inputs.stylix.nixosModules.stylix
-        inputs.dms.nixosModules.dank-material-shell
-        inputs.dms-plugin-registry.nixosModules.default
-
-        home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            extraSpecialArgs = {inherit inputs;};
-            sharedModules = [
-              inputs.dms.homeModules.dank-material-shell
-              inputs.dms-plugin-registry.homeModules.default
-              inputs.danksearch.homeModules.default
-              inputs.dcal.homeModules.default
-            ];
-            users.cathe = import ./hosts/nixos-laptop/home.nix;
-          };
-        }
-
-        nix-snapd.nixosModules.default
-        {
-          services.snap.enable = true;
-        }
-      ];
+    nixosConfigurations.nixos-laptop = hostLib.mkNixos {
+      modules = [./hosts/nixos-laptop inputs.disko.nixosModules.disko];
+      home = ./hosts/nixos-laptop/home.nix;
+      unfreeExtra = unfreeNixOS;
     };
 
     ###### worklaptop (ubuntu)
-    homeConfigurations."cathe@worklaptop" = inputs.home-manager.lib.homeManagerConfiguration {
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfreePredicate = unfreePredicate;
-        overlays = [
-          inputs.nix-vscode-extensions.overlays.default
-        ];
-      };
-      extraSpecialArgs = {inherit inputs;};
-      modules = [
-        ./hosts/worklaptop/home.nix
-        inputs.stylix.homeModules.stylix
-        inputs.dms.homeModules.dank-material-shell
-        inputs.dms-plugin-registry.homeModules.default
-        inputs.danksearch.homeModules.default
-        inputs.dcal.homeModules.default
-      ];
+    homeConfigurations."cathe@worklaptop" = hostLib.mkHome {
+      modules = [./hosts/worklaptop/home.nix];
     };
 
     ###### project templates
