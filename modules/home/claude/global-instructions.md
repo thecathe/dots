@@ -67,13 +67,30 @@ standing branch. When the project's practice is unclear, ask before acting.
 
 ## Design write-ups
 - When a session's design work was interesting or insightful (trade-offs weighed,
-  approaches rejected, surprising findings), record it in the project's
-  `DEVELOPMENT.md`, however little got built. If the project already keeps an
-  equivalent log (e.g. `ASSISTED-CHANGES.md`), use that instead. Record the date,
-  context, decisions and why, alternatives considered, open questions, and commits.
+  approaches rejected, surprising findings), record it, however little got built.
+- Logs live outside the project they describe, in the shared `devlog` repo
+  (`~/Documents/git/thecathe/devlog`), one folder per project. The project's
+  `CLAUDE.md` names its folder; if it doesn't, ask the first time and record the
+  answer there.
+- A project's folder is laid out as:
+  - `index.md`: the single point of entry and table of contents. It links every
+    feature entry (title, date, status, one-line summary) and holds one-line
+    entries for small fixes and tweaks directly. A small change gets no file of
+    its own.
+  - One `<feature>.md` per mini-project of adequate scope (a feature, a subsystem,
+    or a design thread worth a session or more), not per session. It tells the
+    story: the original vision, how and why the plan changed, and the final
+    outcome. Record dates, context, decisions and why, alternatives considered,
+    open questions, and the commits (with the repo each belongs to).
+  - Returning to a topic updates its entry rather than starting a second one.
+    Add or update the `index.md` line in the same commit.
+- The repo's root `index.md` lists the projects and links each project's `index.md`.
+- A project that already keeps its own log in-repo (e.g. `DEVELOPMENT.md`,
+  `ASSISTED-CHANGES.md`) keeps using it until the user chooses to migrate it. Don't
+  split or move it unprompted.
 - When returning to a project after a gap, or at the end of a substantial session,
-  offer once to revisit past entries: what held up, and what could be improved or
-  iterated on.
+  offer once to revisit its past entries (start from its `index.md`): what held up,
+  and what could be improved or iterated on.
 
 ## AI-generated published content
 - Any page Claude writes or substantially edits for a published site is explicitly
