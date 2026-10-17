@@ -29,7 +29,11 @@ in {
     description = ''
       Directory of *.code-workspace files plus a manifest.json (profiles, repos,
       untracked). Folder paths inside the workspace files are relative to this
-      directory. Null disables the feature.
+      directory, which must therefore be a real directory and not reached through
+      a symlink: VSCode resolves those paths against the path a file was opened by,
+      and its file dialog returns the real path, so through a symlink the same file
+      points at two different places. `code-workspace --check` verifies this.
+      Null disables the feature.
     '';
   };
 
