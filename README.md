@@ -39,3 +39,10 @@ Per-host manual setup steps live with the host definitions, not here.
 
 To change dots without breaking a machine, test the change against every host before merging (see the
 `check` script in the hosts repo).
+
+## formatting
+
+Nix files are formatted with alejandra, declared as the flake's `formatter`: run `nix fmt` (or
+`nix fmt <files>`). `nix flake check` fails if any `.nix` file is not formatted. The one-off commit that
+formatted the whole repo is listed in `.git-blame-ignore-revs`; to have local `git blame` skip it, run
+`git config blame.ignoreRevsFile .git-blame-ignore-revs`.
