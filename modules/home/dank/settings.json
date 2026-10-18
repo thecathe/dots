@@ -93,27 +93,6 @@
           "trayUseInlineExpansion": false
         },
         {
-          "id": "colorPicker",
-          "enabled": true
-        },
-        {
-          "id": "notepadButton",
-          "enabled": true
-        },
-        "clipboard",
-        {
-          "id": "usbManager",
-          "enabled": true
-        },
-        {
-          "id": "nixMonitor",
-          "enabled": true
-        },
-        {
-          "id": "dankDiskUsage",
-          "enabled": true
-        },
-        {
           "id": "memUsage",
           "enabled": true,
           "minimumWidth": true,
