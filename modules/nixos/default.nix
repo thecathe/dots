@@ -18,5 +18,6 @@
     ./vscode.nix
     ./claude.nix
     ./network-sharing.nix
+    ./tailscale.nix
   ];
 }
