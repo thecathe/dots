@@ -407,6 +407,21 @@ in {
     # see dankResetDockScript above.
     systemd.user.services.dms.Service.ExecStartPre = ["${dankResetDockScript}"];
 
+    # Restart DMS when any plugin or plugin setting changes. DMS reads
+    # plugin_settings.json once at startup: its file watch never fires on a
+    # rebuild, because home-manager swaps the symlink and the old store file it
+    # watches never changes. A plugin's pluginData then stays stale (an added
+    # plugin sees {} even after `dms ipc call plugins reload`), and a new
+    # plugin dir was not picked up either. Listing every plugin's source and
+    # settings in a file referenced by the unit makes the unit change whenever
+    # they do, so the switch restarts DMS (restartIfChanged above).
+    systemd.user.services.dms.Unit.X-Restart-Triggers = [
+      (pkgs.writeText "dms-plugins.json" (builtins.toJSON (lib.mapAttrs (_: p: {
+        inherit (p) settings;
+        src = "${p.src}";
+      }) (lib.filterAttrs (_: p: p.enable) config.programs.dank-material-shell.plugins))))
+    ];
+
     # settings.json is tracked directly: symlinked straight into the dots repo so the
     # DMS settings app can write to it (Qt's QSaveFile resolves symlinks and writes
     # through them), instead of nix's default read-only nix-store-backed symlink.
