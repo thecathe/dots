@@ -406,6 +406,9 @@ binds {
     // same IPC call falls back to opening that popout's Wallpaper tab instead, so the bind
     // keeps working if the bar layout changes again later.
     Mod+Y hotkey-overlay-title="Browse Wallpapers: DankMaterialShell" { spawn "dms" "ipc" "call" "dash" "toggle" "wallpaper"; }
+    // Curated menu of utilities (colour picker, notepad, clipboard, USB, ...): a local DMS
+    // plugin, entries in modules/home/dank/curated-menu.nix. j/k + Enter, or each entry's key.
+    Mod+A hotkey-overlay-title="Utilities Menu: DankMaterialShell" { spawn "dms" "ipc" "call" "curatedMenu" "toggle"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
     // "Away" lock: same swaylock, but holds a logind inhibitor (sleep + lid switch) for as long as
     // swaylock runs, so background jobs keep running even if the lid is closed undocked
