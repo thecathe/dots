@@ -122,8 +122,10 @@ dank.curatedMenu.entries = lib.mkAfter [
 ## Trying changes
 
 1. Rebuild (`rebuild`). Entries and QML are both in the Nix store, so nothing changes before that.
-2. If the menu doesn't pick up the change, reload the plugin without restarting DMS:
-   `dms ipc call plugins reload curatedMenu`. QML errors show up in `journalctl --user -u dms -f`.
+2. The rebuild restarts DMS whenever a plugin or its settings changed (the bar blinks for a moment). This is needed:
+   DMS reads `plugin_settings.json` only at startup, so `dms ipc call plugins reload curatedMenu` reloads the QML
+   but keeps the old entries. If the menu still looks stale, `systemctl --user restart dms`.
+   QML errors show up in `journalctl --user -u dms -f`.
 
 Don't experiment by copying a plugin into `~/.config/DankMaterialShell/plugins` and enabling it from DMS. DMS rewrites
 `plugin_settings.json` atomically, which replaces home-manager's symlink with a plain file and breaks the next
