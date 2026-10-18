@@ -31,13 +31,13 @@
         nativeBuildInputs = with pkgs; [
           ghc
           cabal-install # on a brand new machine, run `cabal update` once to
-                        # fetch the Hackage package index before the first
-                        # `cabal build`
+          # fetch the Hackage package index before the first
+          # `cabal build`
           haskell-language-server
           pkg-config # only exercised by Hackage packages with a
-                     # pkgconfig-depends: stanza (e.g. zlib, text-icu)
+          # pkgconfig-depends: stanza (e.g. zlib, text-icu)
           git # needed if cabal.project ever pins a dependency via a
-              # source-repository-package stanza
+          # source-repository-package stanza
         ];
 
         # If a Hackage package fails to build citing a missing system

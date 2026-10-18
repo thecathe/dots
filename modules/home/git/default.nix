@@ -1,6 +1,4 @@
-{ ... }:
-{
-
+{...}: {
   programs.gh = {
     enable = true;
     gitCredentialHelper.enable = true;
@@ -23,5 +21,4 @@
       ".DS_store" # mac stuff
     ];
   };
-
 }

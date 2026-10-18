@@ -1,5 +1,4 @@
-{ ... }:
-{
+{...}: {
   imports = [
     ./image.nix
     ./raw.nix

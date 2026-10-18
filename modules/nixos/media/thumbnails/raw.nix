@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-
+{pkgs, ...}:
 ## https://wiki.nixos.org/wiki/Thumbnails#Enable_RAW_(Camera)_Image_Thumbnails
 {
   environment.systemPackages = with pkgs; [

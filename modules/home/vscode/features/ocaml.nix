@@ -1,6 +1,5 @@
-{ pkgs, ... }:
-{
-  extensions = [ pkgs.vscode-extensions.ocamllabs.ocaml-platform ];
+{pkgs, ...}: {
+  extensions = [pkgs.vscode-extensions.ocamllabs.ocaml-platform];
   settings = {
     "[ocaml]" = {
       "editor" = {

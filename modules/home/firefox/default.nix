@@ -3,9 +3,7 @@
   config,
   inputs,
   ...
-}:
-
-{
+}: {
   # https://mynixos.com/home-manager/options/programs.firefox
   programs.firefox = {
     enable = true;
@@ -15,7 +13,7 @@
     # opened with the main input's older 153.0.1. Drop this override once the
     # main nixpkgs input catches up to >=154.0.1.
     package = inputs.nixpkgs-firefox.legacyPackages.${pkgs.stdenv.hostPlatform.system}.firefox;
-    profiles = import ./profiles.nix { inherit pkgs; };
+    profiles = import ./profiles.nix {inherit pkgs;};
     configPath = "${config.xdg.configHome}/mozilla/firefox";
     policies = {
       # DisableTelemetry = true;

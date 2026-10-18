@@ -1,7 +1,5 @@
-{ pkgs, ... }:
-{
-  extensions = [ pkgs.vscode-extensions.golang.go ];
+{pkgs, ...}: {
+  extensions = [pkgs.vscode-extensions.golang.go];
   settings = {
-
   };
 }

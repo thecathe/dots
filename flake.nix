@@ -96,6 +96,7 @@
   # reusing this flake's inputs so there is a single set of version pins.
   outputs = {...} @ inputs: let
     hostLib = import ./lib/hosts.nix {inherit inputs;};
+    alejandra = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
   in {
     # Constructors for the wiring every host shares; a host supplies only what
     # is specific to it. See lib/hosts.nix.
@@ -109,9 +110,19 @@
     homeModules.default = ./modules/home;
     nixosModules.default = ./modules/nixos;
 
+    # `nix fmt` formats the repo with alejandra.
+    formatter.x86_64-linux = alejandra;
+
     # dots cannot see what depends on it. These stand in for consumers; the real
-    # test of the hosts is `check` in the hosts repo.
-    checks.x86_64-linux = import ./checks/consumer.nix {inherit inputs;};
+    # test of the hosts is `check` in the hosts repo. `formatting` fails if any
+    # .nix file is not alejandra-formatted (fix with `nix fmt`).
+    checks.x86_64-linux =
+      import ./checks/consumer.nix {inherit inputs;}
+      // {
+        formatting = inputs.nixpkgs.legacyPackages.x86_64-linux.runCommand "formatting" {} ''
+          ${alejandra}/bin/alejandra --check --quiet ${inputs.self} && touch $out
+        '';
+      };
 
     ###### project templates
     templates = {

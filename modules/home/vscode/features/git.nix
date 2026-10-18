@@ -1,8 +1,6 @@
-{ pkgs, ... }:
-{
-  extensions = [ ];
+{pkgs, ...}: {
+  extensions = [];
   settings = {
-
     "git" = {
       "openRepositoryInParentFolders" = "never";
       "enableSmartCommit" = true;
@@ -24,6 +22,5 @@
       "inputFontFamily" = "JetBrainsMono Nerd Font Mono";
       "inputFontSize" = 14.857142857142858;
     };
-
   };
 }

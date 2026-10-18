@@ -1,5 +1,8 @@
-{ pkgs, config, ... }:
-let
+{
+  pkgs,
+  config,
+  ...
+}: let
   inherit (pkgs) lib;
   # Feature files are also imported one by one by downstream flakes, which may not
   # import modules/home/nixd.nix (where dots.nixd is declared): fall back to unset.
@@ -21,8 +24,7 @@ let
         "expr" = "(builtins.getFlake \"${cfg.flake}\").homeConfigurations.\"${cfg.homeConfiguration}\".options";
       };
     };
-in
-{
+in {
   extensions = with pkgs.vscode-extensions; [
     bbenoist.nix
     b4dm4n.vscode-nixpkgs-fmt

@@ -1,0 +1,4 @@
+# Whitespace-only commits for `git blame` to skip (GitHub reads this file; locally:
+# git config blame.ignoreRevsFile .git-blame-ignore-revs).
+# style: format every .nix file with alejandra
+e9a68951fb31b10049476c936d44f65c9173d493

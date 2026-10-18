@@ -48,7 +48,11 @@ in
       # tree. The default profile is patched in place (VSCode must be closed,
       # same reason as for the profile dbs), then every profile is seeded from
       # it below.
-      files_container=${lib.escapeShellArg (if filesContainer == null then "" else filesContainer)}
+      files_container=${lib.escapeShellArg (
+        if filesContainer == null
+        then ""
+        else filesContainer
+      )}
       default_marker="$(sqlite3 "$default_db" "SELECT value FROM ItemTable WHERE key='$marker'" 2>/dev/null || true)"
       if [ "$default_marker" != "${version}" ]; then
         if [ "$running" = 1 ]; then
