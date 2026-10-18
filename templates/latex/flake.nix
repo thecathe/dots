@@ -49,9 +49,10 @@
       default = pkgs.mkShell {
         buildInputs = [pkgs.tectonic];
         shellHook = builtins.concatStringsSep "\n" (map (f: ''
-          ln -sf ${f.src} ./${f.name}
-          grep -qxF '${f.name}' .gitignore 2>/dev/null || echo '${f.name}' >> .gitignore
-        '') extraTexFiles);
+            ln -sf ${f.src} ./${f.name}
+            grep -qxF '${f.name}' .gitignore 2>/dev/null || echo '${f.name}' >> .gitignore
+          '')
+          extraTexFiles);
       };
     });
   };

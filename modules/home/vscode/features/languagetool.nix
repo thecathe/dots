@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-let
+{pkgs, ...}: let
   # ltex-plus downloads its own ltex-ls-plus server (including a bundled JDK)
   # into its own extension directory on first activation -- but under
   # home-manager that directory is a read-only Nix store symlink, so the
@@ -36,14 +35,13 @@ let
       runHook postInstall
     '';
   };
-in
-{
+in {
   # ltex-plus.vscode-ltex-plus is the actively-maintained fork of the now-archived
   # valentjn.vscode-ltex. forester's forest-keeper extension hardcodes a check for
   # the old extension ID to find-and-force-activate LTeX (see the overrideAttrs
   # patch on forest-keeper in the vscode-forester flake's nix/packages.nix, which
   # retargets that check at this extension's ID instead).
-  extensions = [ pkgs.vscode-extensions.ltex-plus.vscode-ltex-plus ];
+  extensions = [pkgs.vscode-extensions.ltex-plus.vscode-ltex-plus];
   settings = {
     "ltex.ltex-ls.path" = "${ltexLsPlus}";
     "ltex.java.path" = "${pkgs.jdk21_headless}";

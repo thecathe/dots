@@ -1,6 +1,5 @@
-{ pkgs, ... }:
-{
-  extensions = [ pkgs.vscode-extensions.aaron-bond.better-comments ];
+{pkgs, ...}: {
+  extensions = [pkgs.vscode-extensions.aaron-bond.better-comments];
   settings = {
     "better-comments.tags" = [
       {

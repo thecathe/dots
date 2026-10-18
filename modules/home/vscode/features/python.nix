@@ -1,7 +1,5 @@
-{ pkgs, ... }:
-{
-  extensions =
-    with pkgs.vscode-extensions;
+{pkgs, ...}: {
+  extensions = with pkgs.vscode-extensions;
     [
       ms-python.python
       ms-python.vscode-python-envs
