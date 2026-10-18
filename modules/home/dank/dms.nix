@@ -289,8 +289,8 @@ in {
         # DankBar widgets - enabling only makes them available; they show up
         # once added to a bar in settings.json (or, for screenOff, also as a
         # control-center tile). dankDiskUsage covers disk, ZFS and the Nix
-        # store; nixMonitor the store size and generations.
-        nixMonitor.enable = true;
+        # store. (nixMonitor was dropped: its defaults are placeholder
+        # commands and nothing configured it, so it never showed real data.)
         dankDiskUsage.enable = true;
         # Shells out to udisksctl/lsblk/parted/mkfs.* and polkit, all of
         # which come from the host (apt on Ubuntu, NixOS udisks2/polkit).
