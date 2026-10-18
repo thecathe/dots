@@ -4,25 +4,86 @@ import Quickshell.Io
 import qs.Common
 import qs.Modals.Common
 import qs.Modules.Plugins
+import qs.Services
 import qs.Widgets
 
 // Daemon surface: lives for the whole session, so the IPC target exists
 // before the menu is first opened. Layout and key handling follow DMS's own
 // power menu (Modules/PowerMenu/PowerMenuContent.qml, list mode).
+// Maintenance notes: README.md next to this file.
 PluginComponent {
     id: root
 
-    // [{ key, label, icon, command: [argv...] }], from this plugin's settings
-    // (written by modules/home/dank/curated-menu.nix, which also checks that
-    // keys are single characters, unique, and not j/k).
+    // [{ key, label, icon, and one of: command: [argv...] | entries: [...] |
+    // generator: [argv...] }], from this plugin's settings (written by
+    // modules/home/dank/curated-menu.nix, which checks the static entries).
     readonly property var entries: pluginData.entries || []
 
-    function run(index) {
-        const entry = entries[index];
+    // Open submenus, innermost last: [{ title, entries }]. Empty at the top.
+    property var stack: []
+    readonly property var current: stack.length > 0 ? stack[stack.length - 1].entries : entries
+    readonly property string title: stack.length > 0 ? stack[stack.length - 1].title : ""
+
+    signal levelChanged
+
+    function push(title, items) {
+        stack = stack.concat([{
+                title: title,
+                entries: items
+            }]);
+        levelChanged();
+    }
+
+    function back() {
+        if (stack.length === 0) {
+            modal.close();
+            return;
+        }
+        stack = stack.slice(0, -1);
+        levelChanged();
+    }
+
+    function activate(index) {
+        const entry = current[index];
         if (!entry)
             return;
-        modal.close();
-        Quickshell.execDetached(entry.command);
+        if (entry.entries && entry.entries.length > 0) {
+            push(entry.label, entry.entries);
+        } else if (entry.generator) {
+            generator.title = entry.label;
+            generator.command = entry.generator;
+            generator.running = true;
+        } else if (entry.command) {
+            modal.close();
+            Quickshell.execDetached(entry.command);
+        }
+    }
+
+    // Runs an entry's generator; its stdout is the submenu's entries as JSON.
+    Process {
+        id: generator
+
+        property string title: ""
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.trim() === "") {
+                    ToastService.showError(generator.title + ": generator printed nothing (did it fail?)");
+                    return;
+                }
+                let items;
+                try {
+                    items = JSON.parse(text);
+                } catch (e) {
+                    ToastService.showError(generator.title + ": generator output is not JSON", String(e));
+                    return;
+                }
+                if (Array.isArray(items) && items.length > 0)
+                    root.push(generator.title, items);
+                else
+                    ToastService.showError(generator.title + ": nothing to show");
+            }
+        }
     }
 
     IpcHandler {
@@ -50,12 +111,16 @@ PluginComponent {
         layerNamespace: "dms:curated-menu"
         useOverlayLayer: true
         positioning: "center"
+        // Esc goes back a level (handled below) rather than always closing.
+        closeOnEscapeKey: false
         modalWidth: 400
         modalHeight: contentLoader.item ? contentLoader.item.implicitHeight : 300
 
         onShouldBeVisibleChanged: {
-            if (shouldBeVisible && contentLoader.item)
-                contentLoader.item.selectedIndex = 0;
+            if (shouldBeVisible) {
+                root.stack = [];
+                root.levelChanged();
+            }
         }
         onShouldHaveFocusChanged: {
             if (shouldHaveFocus)
@@ -72,12 +137,21 @@ PluginComponent {
                 focus: true
                 implicitHeight: column.implicitHeight + Theme.spacingL * 2
 
+                Connections {
+                    target: root
+                    function onLevelChanged() {
+                        menu.selectedIndex = 0;
+                    }
+                }
+
                 Keys.onPressed: event => {
                     event.accepted = true;
-                    const count = root.entries.length;
+                    const count = root.current.length;
                     switch (event.key) {
                     case Qt.Key_Escape:
-                        modal.close();
+                    case Qt.Key_Backspace:
+                    case Qt.Key_Left:
+                        root.back();
                         return;
                     case Qt.Key_J:
                     case Qt.Key_Down:
@@ -93,12 +167,15 @@ PluginComponent {
                         return;
                     case Qt.Key_Return:
                     case Qt.Key_Enter:
-                        root.run(selectedIndex);
+                    case Qt.Key_Right:
+                        root.activate(selectedIndex);
                         return;
                     }
-                    const index = root.entries.findIndex(e => e.key === event.text);
+                    // Modifier and other non-text keys have empty text; never
+                    // let them match an entry without a key.
+                    const index = event.text === "" ? -1 : root.current.findIndex(e => e.key === event.text);
                     if (index >= 0)
-                        root.run(index);
+                        root.activate(index);
                     else
                         event.accepted = false;
                 }
@@ -114,8 +191,29 @@ PluginComponent {
                     }
                     spacing: Theme.spacingS
 
+                    // Submenu title; Esc/Backspace/Left goes back.
+                    Row {
+                        visible: root.stack.length > 0
+                        spacing: Theme.spacingS
+
+                        DankIcon {
+                            name: "arrow_back"
+                            size: Theme.iconSize
+                            color: Theme.surfaceTextSecondary
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        StyledText {
+                            text: root.title
+                            font.pixelSize: Theme.fontSizeMedium
+                            font.weight: Font.Medium
+                            color: Theme.surfaceTextSecondary
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
                     Repeater {
-                        model: root.entries
+                        model: root.current
 
                         Rectangle {
                             id: row
@@ -123,6 +221,7 @@ PluginComponent {
                             required property int index
                             required property var modelData
                             readonly property bool isSelected: menu.selectedIndex === index
+                            readonly property bool isSubmenu: !!(modelData.generator || (modelData.entries && modelData.entries.length > 0))
 
                             width: parent.width
                             height: 48
@@ -134,7 +233,7 @@ PluginComponent {
                             Row {
                                 anchors {
                                     left: parent.left
-                                    right: keyCap.left
+                                    right: trailing.left
                                     leftMargin: Theme.spacingM
                                     rightMargin: Theme.spacingM
                                     verticalCenter: parent.verticalCenter
@@ -157,25 +256,39 @@ PluginComponent {
                                 }
                             }
 
-                            Rectangle {
-                                id: keyCap
+                            Row {
+                                id: trailing
 
-                                width: 28
-                                height: 20
-                                radius: 4
-                                color: Theme.onSurface_12
+                                spacing: Theme.spacingXS
                                 anchors {
                                     right: parent.right
                                     rightMargin: Theme.spacingM
                                     verticalCenter: parent.verticalCenter
                                 }
 
-                                StyledText {
-                                    text: row.modelData.key
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    font.weight: Font.Medium
+                                DankIcon {
+                                    visible: row.isSubmenu
+                                    name: "chevron_right"
+                                    size: Theme.iconSize
                                     color: Theme.surfaceTextSecondary
-                                    anchors.centerIn: parent
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Rectangle {
+                                    visible: !!row.modelData.key
+                                    width: 28
+                                    height: 20
+                                    radius: 4
+                                    color: Theme.onSurface_12
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    StyledText {
+                                        text: row.modelData.key || ""
+                                        font.pixelSize: Theme.fontSizeSmall
+                                        font.weight: Font.Medium
+                                        color: Theme.surfaceTextSecondary
+                                        anchors.centerIn: parent
+                                    }
                                 }
                             }
 
@@ -186,7 +299,7 @@ PluginComponent {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onEntered: menu.selectedIndex = row.index
-                                onClicked: root.run(row.index)
+                                onClicked: root.activate(row.index)
                             }
                         }
                     }
