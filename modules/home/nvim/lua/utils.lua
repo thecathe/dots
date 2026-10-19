@@ -24,13 +24,21 @@ end
 
 patch_resession()
 
--- handle project-local sessions
+-- Sessions hold absolute paths (so the user name of the host that saved them), which
+-- must not end up in a project repo, least of all a public one. They live in the
+-- private workspaces repo, one folder per project: ~/workspaces/nvim/<project path
+-- under $HOME>/. Without that repo they fall back to a project-local .nvim.
+M.sessions_root = vim.fn.expand("~/workspaces/nvim")
+
+-- handle project sessions
 M.get_session_dir = function()
 	local result = vim.fn.systemlist("git rev-parse --show-toplevel 2>/dev/null")
-	if vim.v.shell_error == 0 and result[1] then
-		return result[1] .. "/.nvim"
+	local project = (vim.v.shell_error == 0 and result[1]) or vim.fn.getcwd()
+	local home = vim.fn.resolve(vim.fn.expand("~")) .. "/"
+	if vim.fn.isdirectory(M.sessions_root) == 1 and vim.startswith(project, home) then
+		return M.sessions_root .. "/" .. project:sub(#home + 1)
 	end
-	return vim.fn.getcwd() .. "/.nvim"
+	return project .. "/.nvim"
 end
 
 local function remap_session_paths(session_path)

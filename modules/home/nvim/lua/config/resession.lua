@@ -15,7 +15,7 @@ local function ensure_session_dir()
 end
 
 vim.api.nvim_create_user_command("SSave", function(opts)
-	local dir = ensure_session_dir() -- creates /.nvim if needed
+	local dir = ensure_session_dir() -- creates the project's session folder if needed
 	require("resession").save(opts.args ~= "" and opts.args or nil, { dir = dir })
 end, { nargs = "?" })
 

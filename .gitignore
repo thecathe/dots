@@ -1,5 +1,8 @@
 # workspace configs
 .vscode
+# neovim sessions live in the private workspaces repo (see modules/home/nvim/lua/utils.lua);
+# this is only the fallback used when that repo is absent
+/.nvim/*.json
 !/templates/*/.vscode
 
 # nix build output symlink
