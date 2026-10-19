@@ -39,4 +39,25 @@ in {
     # Global instructions are declarative and synced across hosts via git.
     context = ./global-instructions.md;
   };
+
+  # Long-lived login for Claude Code (`claude setup-token`), exported from a
+  # per-host file so the secret never enters this repo or the nix store (the
+  # store is world-readable; this repo is public). The file is created by hand
+  # on each host that wants it, and skipped silently where it is absent:
+  #
+  #   mkdir -p -m 700 ~/.config/claude
+  #   (umask 077; read -rs "t?token: " && print -rn -- "$t" > ~/.config/claude/oauth-token); unset t
+  #
+  # Paste the token as one line with no whitespace: `read` stops at the first
+  # newline, and a stray control character makes the token invalid (401).
+  # It outranks the `/login` credentials, so claude.ai connectors and Remote
+  # Control are unavailable in shells that export it. It expires after a year:
+  # generate a new one and overwrite the file.
+  programs.zsh.initContent = lib.mkOrder 600 ''
+    _claude_token="''${XDG_CONFIG_HOME:-$HOME/.config}/claude/oauth-token"
+    if [[ -r $_claude_token ]]; then
+      export CLAUDE_CODE_OAUTH_TOKEN="$(<$_claude_token)"
+    fi
+    unset _claude_token
+  '';
 }
