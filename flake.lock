@@ -402,11 +402,11 @@
         "opam-repository": "opam-repository"
       },
       "locked": {
-        "lastModified": 1792063062,
-        "narHash": "sha256-twAbdjskKLw0M2IMUbxh73xuApNdho9c9/lt1JaVXUY=",
+        "lastModified": 1792332494,
+        "narHash": "sha256-k45aB1Pr7DnfSElOPhrhvjFIECu9HzFpF2J3tMxlVZA=",
         "owner": "thecathe",
         "repo": "ocaml-forester",
-        "rev": "a847fbde501c72404d31cdf2cf767ffb6af09338",
+        "rev": "8fb8b374fd6dce2e7c1bd88793becd71fc6a4a36",
         "type": "github"
       },
       "original": {
@@ -1016,11 +1016,11 @@
         "systems": "systems_5"
       },
       "locked": {
-        "lastModified": 1792063401,
-        "narHash": "sha256-Jdviyc3GnKzPoHbBAKTeKTrCi41YAn4JC2N/zASBQTs=",
+        "lastModified": 1792411701,
+        "narHash": "sha256-t/G8klcn5dWKjYTa+zKP6hfO5b2h16c1l6XEfxT/YOs=",
         "owner": "thecathe",
         "repo": "vscode-forester",
-        "rev": "75e416e970fd09233d007734a0fd9de7f28a97d3",
+        "rev": "2b415736258f13a1897676a4c3b2e50a86b22c14",
         "type": "github"
       },
       "original": {
