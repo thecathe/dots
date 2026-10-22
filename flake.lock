@@ -1016,11 +1016,11 @@
         "systems": "systems_5"
       },
       "locked": {
-        "lastModified": 1792586557,
-        "narHash": "sha256-fsIwjFWqTlb9C/ZAj9QqDDXvCMLISlNhDrHeNW1tnwY=",
+        "lastModified": 1792617585,
+        "narHash": "sha256-BTziYRd2vNIDEhliitDwgsANumfahMHAoKmHBBYLRYo=",
         "owner": "thecathe",
         "repo": "vscode-forester",
-        "rev": "430ed403fad6d62928c81aa21ea3898d7aef23a7",
+        "rev": "a49df41fc52a2023498f948b64c07b136f8042ed",
         "type": "github"
       },
       "original": {
