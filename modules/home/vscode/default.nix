@@ -28,6 +28,7 @@
     vsrocq = ./features/vsrocq.nix;
     markdown = ./features/markdown.nix;
     languagetool = ./features/languagetool.nix;
+    tab-groups = ./features/tab-groups.nix;
     spellcheck = ./features/spellcheck.nix;
     better-comments = ./features/better-comments.nix;
     disable-breakpoint = ./features/disable-breakpoint.nix;

@@ -4,6 +4,7 @@
     git
     markdown
     better-comments
+    tab-groups
     json
     toml
     kdl
