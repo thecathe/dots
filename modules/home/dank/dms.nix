@@ -6,12 +6,12 @@
 }: let
   # Keys in settings.json that are state, not config (DMS persists them into
   # the same file as everything else, but they churn independently of any
-  # rebuild - e.g. showDock is flipped ad hoc by dank-dock-toggle). Consulted
-  # by both dankSettingsCleanFilter (resets them to these defaults on the way
-  # into git) and dankMaterialShellSettingsOverlay (seeds a host's real value
-  # back in if it's still at the default, e.g. right after a fresh clone).
-  # Plain list, not a mkOption: this is a fact about DMS's own schema, not a
-  # per-host fact like dank.settingsOverlay.
+  # rebuild - e.g. showDock is flipped ad hoc by dank-dock-toggle). Declared
+  # through options.dank.settingsState below by whichever module owns the key
+  # (today only dock-toggle.nix). Consulted by both dankSettingsCleanFilter
+  # (resets them to these defaults on the way into git) and
+  # dankMaterialShellSettingsOverlay (seeds a host's real value back in if it's
+  # still at the default, e.g. right after a fresh clone).
   #
   # Used to be 4 keys: a DMS update (dms flake input bump in 051068e) moved
   # activeDisplayProfile/desktopWidgetGridSettings into session.json (DMS's
@@ -24,10 +24,8 @@
   # (session.local.json below) is gitignored and host-local, so unlike
   # settings.json it's never reset by a checkout - DMS's normal use already
   # keeps its moved-in values correct per host with no seeding needed.
-  dankSettingsStateKeys = ["showDock"];
-  dankSettingsStateDefaults = {
-    showDock = true;
-  };
+  dankSettingsStateDefaults = config.dank.settingsState;
+  dankSettingsStateKeys = lib.attrNames dankSettingsStateDefaults;
 
   # git clean filter for settings.json (wired up via .gitattributes +
   # programs.git.settings.filter below): strips dankSettingsStateKeys and
@@ -89,32 +87,6 @@
   # re-run automatically the moment settings.json's content changes for any
   # reason (a checkout, a live DMS write), so the reset window is however long
   # inotify + a jq invocation take, not however long until the next rebuild.
-  #
-  # Forces the dock visible before every DMS session start (login, reboot,
-  # and any restartIfChanged-triggered restart from a rebuild) - wired below
-  # via systemd.user.services.dms.Service.ExecStartPre. Deliberately NOT
-  # handled via dank.settingsOverlay seeding (unlike desktopWidgetInstances/
-  # barConfigs data below): showDock isn't a host fact to seed a default
-  # for, it's a "start every session the same way" preference, hidden only
-  # ad hoc mid-session via dank-dock-toggle.
-  #
-  # Replaces the file only if jq succeeded AND produced output. On input that
-  # is not valid JSON (conflict markers left by a git merge, a half-written
-  # file) jq fails and leaves $tmp empty; an unguarded mv would then truncate
-  # the live settings.json to 0 bytes. Exits 0 either way: this is dms's
-  # ExecStartPre, where a failure would stop the shell from starting.
-  dankResetDockScript = pkgs.writeShellScript "dank-reset-dock" ''
-    settingsFile="$HOME/dots/modules/home/dank/settings.json"
-    if [ -e "$settingsFile" ]; then
-      tmp="$(mktemp)"
-      trap 'rm -f "$tmp"' EXIT
-      if ${pkgs.jq}/bin/jq '.showDock = true' "$settingsFile" > "$tmp" && [ -s "$tmp" ]; then
-        mv "$tmp" "$settingsFile"
-      else
-        echo "dank-reset-dock: $settingsFile is not valid JSON; left untouched" >&2
-      fi
-    fi
-  '';
 
   # Seeds this host's real values (customThemeFile, dankSettingsStateKeys,
   # desktopWidgetInstances positions/displayPreferences, barConfigs
@@ -188,6 +160,21 @@
       fi
     '';
 in {
+  options.dank.settingsState = lib.mkOption {
+    type = lib.types.attrsOf lib.types.anything;
+    default = {};
+    example = {showDock = true;};
+    description = ''
+      settings.json keys that are state rather than config, each with the
+      canonical default it is reset to on the way into git (see
+      dankSettingsCleanFilter) and that a host's real value is seeded over
+      when the live file is still at it (see dankSettingsOverlayScript). A
+      fact about DMS's own schema, not a per-host fact: declared by the module
+      that owns the key (dock-toggle.nix declares showDock), where the host's
+      value, if any, then goes in dank.settingsOverlay.
+    '';
+  };
+
   options.dank.settingsOverlay = lib.mkOption {
     type = lib.types.attrsOf lib.types.anything;
     default = {};
@@ -315,28 +302,14 @@ in {
       };
     };
 
-    # Manual dock visibility toggle (bound to Super+Alt+D in niri), independent
-    # of dockSmartAutoHide - just flips SettingsData.showDock via DMS's own IPC
-    # and toasts (also via DMS's IPC) which way it went, so it can be silenced
-    # on demand for anything (games, screenshares) without touching settings.
     home.packages = [
       # Runtime dependency of the fdSearch launcher plugin (programs.dank-
       # material-shell.plugins above); not packaged by the registry module.
       pkgs.fd
 
-      (pkgs.writeShellScriptBin "dank-dock-toggle" ''
-        set -u
-        result="$(${config.programs.dank-material-shell.package}/bin/dms ipc call dock toggle)"
-        case "$result" in
-          DOCK_SHOW_SUCCESS) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast info "Dock shown" ;;
-          DOCK_HIDE_SUCCESS) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast info "Dock hidden" ;;
-          *) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast warn "Dock toggle: unexpected response ($result)" ;;
-        esac
-      '')
-
       # Saves the current clipboard image to ~/Pictures/Saved/NAME.png. DMS-specific
       # (uses dms clipboard paste), so it lives here rather than dots/bin - only
-      # exists when this module is enabled, mirroring dank-dock-toggle above. Also
+      # exists when this module is enabled, like dank-dock-toggle (dock-toggle.nix). Also
       # bound to Ctrl+Alt+S in niri (modules/home/wm/niri/config.kdl), which
       # supplies a timestamp as NAME - see the comment there for why that bind
       # isn't DMS-gated.
@@ -399,13 +372,6 @@ in {
       clean = "${dankSettingsCleanFilter}";
       smudge = "${pkgs.coreutils}/bin/cat";
     };
-
-    # dank-material-shell's own home-manager module (inputs.dms) defines the
-    # "dms" systemd user service that actually launches the shell. Adding to
-    # its ExecStartPre here (rather than replacing it) so the dock is always
-    # forced visible immediately before DMS starts reading settings.json -
-    # see dankResetDockScript above.
-    systemd.user.services.dms.Service.ExecStartPre = ["${dankResetDockScript}"];
 
     # Restart DMS when any plugin or plugin setting changes. DMS reads
     # plugin_settings.json once at startup: its file watch never fires on a
