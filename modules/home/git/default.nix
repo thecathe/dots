@@ -1,4 +1,10 @@
-{...}: {
+{
+  config,
+  lib,
+  ...
+}: let
+  inherit (config.dots.user) git;
+in {
   programs.gh = {
     enable = true;
     gitCredentialHelper.enable = true;
@@ -8,10 +14,9 @@
   programs.git = {
     enable = true;
     lfs.enable = true;
-    settings.user = {
-      name = "thecathe";
-      email = "pearsandcabbage@gmail.com";
-    };
+    settings.user =
+      lib.optionalAttrs (git.name != null) {inherit (git) name;}
+      // lib.optionalAttrs (git.email != null) {inherit (git) email;};
     ignores = [
       "_opam/" # opam local switches
       "_build/" # build files

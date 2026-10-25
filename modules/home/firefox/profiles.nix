@@ -1,8 +1,9 @@
-{...}: {
+# Takes the main profile's name (dots.firefox.profile).
+profile: {
   # https://mynixos.com/home-manager/options/programs.firefox.profiles.%3Cname%3E
-  cathe = {
+  ${profile} = {
     id = 0;
-    name = "cathe";
+    name = profile;
     isDefault = true;
     settings = {
       # "extensions.autoDisableScopes" = 0;

@@ -3,7 +3,7 @@
     "name": "Curated Menu",
     "description": "Keyboard menu of curated commands, opened over IPC (dms ipc call curatedMenu toggle). Pick with j/k + Enter or each entry's own key. Entries come from the plugin settings (dots: modules/home/dank/curated-menu.nix).",
     "version": "1.0.0",
-    "author": "thecathe",
+    "author": "dots",
     "icon": "apps",
     "type": "daemon",
     "component": "./CuratedMenu.qml",

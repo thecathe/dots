@@ -24,12 +24,13 @@ in {
   #   modules       host NixOS modules, placed before the shared stack
   #   modulesAfter  NixOS modules placed after it
   #   home          the user's home-manager module (a path)
+  #   user          the user's login name (sets dots.user.name)
   #   unfreeExtra   unfree package names allowed on top of the shared list
   #   extraInputs   extra flake inputs, merged into the `inputs` modules receive
   mkNixos = {
     modules,
     home,
-    user ? "cathe",
+    user,
     modulesAfter ? [],
     unfreeExtra ? [],
     extraInputs ? {},
@@ -42,6 +43,7 @@ in {
       modules =
         [
           {
+            dots.user.name = user;
             nix.settings.experimental-features = [
               "nix-command"
               "flakes"

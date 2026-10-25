@@ -1,11 +1,22 @@
 {
   pkgs,
   config,
+  lib,
   inputs,
   ...
 }: {
+  options.dots.firefox.profile = lib.mkOption {
+    type = lib.types.str;
+    default = config.home.username;
+    defaultText = lib.literalExpression "config.home.username";
+    description = ''
+      The main Firefox profile's name, which is also its directory: changing it
+      on a machine that already has a profile starts a new, empty one.
+    '';
+  };
+
   # https://mynixos.com/home-manager/options/programs.firefox
-  programs.firefox = {
+  config.programs.firefox = {
     enable = true;
     # Pinned ahead of the main nixpkgs input (see flake.nix's nixpkgs-firefox
     # comment) - a migrated real profile last written by Firefox 154.0.1 hit
@@ -13,7 +24,7 @@
     # opened with the main input's older 153.0.1. Drop this override once the
     # main nixpkgs input catches up to >=154.0.1.
     package = inputs.nixpkgs-firefox.legacyPackages.${pkgs.stdenv.hostPlatform.system}.firefox;
-    profiles = import ./profiles.nix {inherit pkgs;};
+    profiles = import ./profiles.nix config.dots.firefox.profile;
     configPath = "${config.xdg.configHome}/mozilla/firefox";
     policies = {
       # DisableTelemetry = true;
