@@ -15,5 +15,7 @@
     ./claude.nix
     ./network-sharing.nix
     ./tailscale.nix
+    ./stylix.nix
+    ./niri.nix
   ];
 }

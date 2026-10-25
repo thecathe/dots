@@ -1,4 +1,6 @@
 layout splits
-cd ~/dots
+# A relative cd is resolved against this file's own directory, so the
+# session opens in whichever project the file sits in.
+cd .
 launch --title "nvim editor" nvim 
 launch --title "shell" --location=hsplit
