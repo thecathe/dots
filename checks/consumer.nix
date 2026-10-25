@@ -41,6 +41,7 @@
           "git"
           "markdown"
           "better-comments"
+          "tab-groups"
           "toml"
           "json"
           "kdl"
