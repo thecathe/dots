@@ -62,13 +62,6 @@
     # for non-nixos hosts
     nixgl.url = "github:nix-community/nixGL";
 
-    # Pinned ahead of the main nixpkgs input specifically for a newer Firefox:
-    # a migrated real profile (from Firefox 154.0.1) hit storage/IndexedDB
-    # errors on Microsoft/Outlook sites when opened with the main input's
-    # older 153.0.1 (see modules/home/firefox/default.nix). Drop this once
-    # the main nixpkgs input catches up to >=154.0.1.
-    nixpkgs-firefox.url = "github:nixos/nixpkgs/34ab99075ac4f7e40cf037eef32cb1c360bb85e9";
-
     # Forester VS Code setup (forest-keeper pin/patches, forester-edit
     # extension, keybindings, scripts, dev shell) around the ocaml-forester
     # fork. Pick up changes with `nix flake update vscode-forester`.
