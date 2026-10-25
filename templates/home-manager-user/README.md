@@ -16,7 +16,7 @@ or move it to your own repo.
 
 2. Edit `flake.nix` and `home.nix`, replacing every `NEW_USER`/`NEW_HOST`
    with your actual Linux username and the hostname of the machine you're
-   setting up (e.g. `max`/`nixos-laptop`). Set your own `git` name/email in
+   setting up (e.g. `alex`/`nixos-laptop`). Set your own `git` name/email in
    `home.nix`, and add/remove packages and other home-manager options as you
    like.
 
