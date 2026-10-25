@@ -11,6 +11,8 @@
         enable = true;
         ## https://gist.github.com/vy-let/a030c1079f09ecae4135aebf1e121ea6
         openFirewall = true;
+        # Members of the usershares group can share folders themselves (e.g.
+        # from Nautilus); the dots user is added below.
         usershares.enable = true;
 
         settings = {
@@ -33,5 +35,7 @@
         openFirewall = true;
       };
     };
+
+    users.users.${config.dots.user.name}.extraGroups = [config.services.samba.usershares.group];
   };
 }
