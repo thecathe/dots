@@ -1,5 +1,6 @@
 {...}: {
   imports = [
+    ../shared/identity.nix
     ./media
     ./torrent
     ./waydroid

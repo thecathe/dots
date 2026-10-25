@@ -1,5 +1,11 @@
-{pkgs, ...}: {
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: {
   imports = [
+    ../shared/identity.nix
     ./nixd.nix
     ./wm
     ./dank
@@ -22,6 +28,8 @@
 
   # options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";
   config = {
+    dots.user.name = lib.mkDefault config.home.username;
+
     home.packages = with pkgs; [
       ## essential
       wget

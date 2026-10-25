@@ -12,7 +12,7 @@
     virtualisation.docker = {
       enable = true;
     };
-    users.users.cathe.extraGroups = ["docker"];
+    users.users.${config.dots.user.name}.extraGroups = ["docker"];
     # compose2nix
     environment.systemPackages = with pkgs; [
       compose2nix
