@@ -1,0 +1,13 @@
+{
+    "id": "dotsServices",
+    "name": "Services",
+    "description": "Bar menu of the services this machine switches on by hand (dots.services: Immich, Tailscale, ...). Shows whether each is up, checked only when the menu opens; click one to bring it up or take it down. Entries come from the plugin settings (dots: modules/home/dank/services-menu.nix).",
+    "version": "1.0.0",
+    "author": "dots",
+    "icon": "dns",
+    "type": "widget",
+    "capabilities": ["dankbar-widget"],
+    "component": "./ServicesMenu.qml",
+    "requires_dms": ">=1.6.0",
+    "permissions": ["settings_read", "process"]
+}
