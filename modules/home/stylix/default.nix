@@ -1,10 +1,14 @@
-{pkgs, ...}: {
+{
+  config,
+  pkgs,
+  ...
+}: {
   stylix = {
     enable = true;
     autoEnable = true;
     polarity = "dark";
     targets = {
-      firefox.profileNames = ["cathe"];
+      firefox.profileNames = [config.dots.firefox.profile];
       kitty.enable = true;
       ## disable
       starship.enable = false;
