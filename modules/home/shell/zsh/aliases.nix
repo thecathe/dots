@@ -65,16 +65,16 @@ in {
     dhash-set() {
       local scope=dots ## default (optiona=local)
       [[ "$1" == "--local" ]] && { scope=local; shift }
-      local name="$1" path="$2"
-      [[ -z "$name" || -z "$path" ]] && { echo "usage: dirhash-set [--local] NAME PATH" >&2; return 1 }
+      local name="$1" dir="$2"
+      [[ -z "$name" || -z "$dir" ]] && { echo "usage: dhash-set [--local] NAME DIR" >&2; return 1 }
       local file="${aliasDir}/dirs.$scope.zsh"
 
       ## write to file
-      _binding-write "hash -d" "$file" "$name" "$path"
+      _binding-write "hash -d" "$file" "$name" "$dir"
 
       ## define hash for use
-      hash -d "$name=$path"
-      echo "set ($scope): ~$name -> $path"
+      hash -d "$name=$dir"
+      echo "set ($scope): ~$name -> $dir"
     }
 
     dhash-unset() {
