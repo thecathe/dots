@@ -83,7 +83,39 @@
 
   check = name: modules:
     pkgs.writeText name (builtins.unsafeDiscardStringContext (consumer modules));
+  # The newer shape: dots' area modules (homeModules.shell/nvim/vscode), VS Code
+  # with a few profiles, on a nixpkgs without the nix-vscode-extensions overlay
+  # (the vscode module brings its own). Asserts that a profile set without
+  # Erlang doesn't get Erlang on VS Code's PATH.
+  modulesConsumer = let
+    hm = inputs.home-manager.lib.homeManagerConfiguration {
+      pkgs = import inputs.nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
+      modules = [
+        base
+        dots.homeModules.shell
+        dots.homeModules.nvim
+        dots.homeModules.vscode
+        {
+          dots.vscode = {
+            enable = true;
+            profiles = ["java" "python" "rocq" "haskell"];
+          };
+        }
+      ];
+    };
+    vscode = hm.config.programs.vscode;
+  in
+    assert inputs.nixpkgs.lib.assertMsg (inputs.nixpkgs.lib.attrNames vscode.profiles == ["default" "haskell" "java" "python" "rocq"])
+    "consumer-modules: unexpected profiles ${toString (inputs.nixpkgs.lib.attrNames vscode.profiles)}";
+    assert inputs.nixpkgs.lib.assertMsg (hm.config.dots.vscode.extraPath == [])
+    "consumer-modules: Erlang reached VS Code's PATH without an Erlang profile";
+      hm.activationPackage.drvPath;
 in {
+  # The area modules with dots.vscode, as a second user's flake uses them.
+  consumer-modules = pkgs.writeText "consumer-modules-evaluates" (builtins.unsafeDiscardStringContext modulesConsumer);
   # shell + nvim by path, plus the vscode module above: the full downstream shape.
   consumer-full = check "consumer-full-evaluates" [
     "${dots}/modules/home/shell"
