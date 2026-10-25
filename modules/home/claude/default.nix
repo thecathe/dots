@@ -40,7 +40,7 @@ in {
     context = ./global-instructions.md;
   };
 
-  # Long-lived login for Claude Code (`claude setup-token`), exported from a
+  # Long-lived login for Claude Code (`claude setup-token`), read from a
   # per-host file so the secret never enters this repo or the nix store (the
   # store is world-readable; this repo is public). The file is created by hand
   # on each host that wants it, and skipped silently where it is absent:
@@ -51,13 +51,20 @@ in {
   # Paste the token as one line with no whitespace: `read` stops at the first
   # newline, and a stray control character makes the token invalid (401).
   # It outranks the `/login` credentials, so claude.ai connectors and Remote
-  # Control are unavailable in shells that export it. It expires after a year:
-  # generate a new one and overwrite the file.
+  # Control are unavailable in a claude started this way. It expires after a
+  # year: generate a new one and overwrite the file.
+  #
+  # Only `claude` itself gets it: a function sets CLAUDE_CODE_OAUTH_TOKEN for
+  # that one command, rather than exporting it into the shell, where every
+  # program the shell starts (dev shells, build scripts) would inherit it.
   programs.zsh.initContent = lib.mkOrder 600 ''
-    _claude_token="''${XDG_CONFIG_HOME:-$HOME/.config}/claude/oauth-token"
-    if [[ -r $_claude_token ]]; then
-      export CLAUDE_CODE_OAUTH_TOKEN="$(<$_claude_token)"
-    fi
-    unset _claude_token
+    claude() {
+      local token_file="''${XDG_CONFIG_HOME:-$HOME/.config}/claude/oauth-token"
+      if [[ -r $token_file ]]; then
+        CLAUDE_CODE_OAUTH_TOKEN="$(<$token_file)" command claude "$@"
+      else
+        command claude "$@"
+      fi
+    }
   '';
 }
