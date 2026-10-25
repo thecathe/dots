@@ -5,6 +5,7 @@
 }: let
   dms = "${config.programs.dank-material-shell.package}/bin/dms";
   jq = "${pkgs.jq}/bin/jq";
+  curl = "${pkgs.curl}/bin/curl";
 
   # CLI wrapper around the wallpaperBing DMS plugin (see modules/home/dank/dms.nix)
   # and DMS core's own wallpaper-cycling feature, adding what neither provides:
@@ -280,7 +281,7 @@
 
     mkdir -p "$recents_dir"
 
-    archive="$(curl -s "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=$count&mkt=$mkt")"
+    archive="$(${curl} -fsS "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=$count&mkt=$mkt")"
 
     fetched=0
     skipped=0
@@ -294,6 +295,15 @@
       name_part="''${image_url#*OHR.}"
       ext="''${name_part##*.}"
       file_name="''${name_part%.*}"
+      # The names come from Bing's response: keep only characters that are
+      # safe in a file name, so nothing in it can point outside recents_dir.
+      startdate="''${startdate//[^0-9]/}"
+      file_name="''${file_name//[^A-Za-z0-9_.-]/}"
+      file_name="''${file_name#.}"
+      ext="''${ext//[^A-Za-z0-9]/}"
+      if [ -z "$startdate" ] || [ -z "$file_name" ] || [ -z "$ext" ]; then
+        continue
+      fi
       dest="$recents_dir/$startdate-$file_name.$ext"
 
       if [ -e "$dest" ]; then
@@ -301,7 +311,7 @@
         continue
       fi
 
-      curl -s -o "$dest" "$full_url"
+      ${curl} -fsS -o "$dest" "$full_url"
       fetched=$((fetched + 1))
     done < <(${jq} -c '.images[]' <<< "$archive")
 

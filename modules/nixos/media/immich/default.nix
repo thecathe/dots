@@ -18,18 +18,34 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = with pkgs; [
-      immich ## self-hosted image/video management
-      immich-cli ## cli
-      ##    immich-go ## useful for go-import
-    ];
+    # Up only when wanted: nothing starts at boot. `immich up` / `immich down`
+    # (or the DMS services menu) start and stop immich.target, which takes the
+    # server, machine learning and its redis with it. Any other `immich`
+    # arguments go to immich-cli. Postgres, which Immich shares with anything
+    # else that wants it, is left running.
+    dots.services.immich = {
+      label = "Immich";
+      icon = "photo_library";
+      unit = "immich.target";
+      status = ["${pkgs.systemd}/bin/systemctl" "is-active" "--quiet" "immich-server.service"];
+      command = "immich";
+      fallback = "${pkgs.immich-cli}/bin/immich";
+    };
+    systemd.targets.immich = {
+      description = "Immich, started by hand (immich up)";
+      wants = ["immich-server.service" "immich-machine-learning.service" "redis-immich.service"];
+    };
+    systemd.services = lib.genAttrs ["immich-server" "immich-machine-learning" "redis-immich"] (_: {
+      wantedBy = lib.mkForce [];
+      partOf = ["immich.target"];
+    });
 
-    # starts on: http://localhost:2283/
+    # Served on this machine only: http://localhost:2283/
     services.immich = {
       enable = true;
       port = 2283;
-      host = "0.0.0.0";
-      openFirewall = true;
+      host = "localhost";
+      openFirewall = false;
       environment.IMMICH_LOG_LEVEL = "warn";
       inherit (cfg) mediaLocation;
       accelerationDevices = null;

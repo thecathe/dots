@@ -20,13 +20,6 @@
             "workgroup" = "WORKGROUP";
             "security" = "user";
           };
-
-          testshare = {
-            "path" = "${config.users.users.${config.dots.user.name}.home}/Public";
-            "writable" = "yes";
-            "comment" = "Hello World!";
-            "browseable" = "yes";
-          };
         };
       };
       samba-wsdd = {
