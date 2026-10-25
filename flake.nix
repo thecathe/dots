@@ -118,6 +118,7 @@
     # .nix file is not alejandra-formatted (fix with `nix fmt`).
     checks.x86_64-linux =
       import ./checks/consumer.nix {inherit inputs;}
+      // import ./checks/templates.nix {inherit inputs;}
       // {
         formatting = inputs.nixpkgs.legacyPackages.x86_64-linux.runCommand "formatting" {} ''
           ${alejandra}/bin/alejandra --check --quiet ${inputs.self} && touch $out
@@ -165,6 +166,18 @@
       latex-texlive = {
         path = ./templates/latex-texlive;
         description = "LaTeX project needing real texlive (packages outside Tectonic's bundle, LuaTeX, etc.) and direnv";
+      };
+      host-nixos = {
+        path = ./templates/host-nixos;
+        description = "A NixOS machine built on dots (dots.lib.mkNixos), for a hosts repo";
+      };
+      host-home = {
+        path = ./templates/host-home;
+        description = "A non-NixOS machine's standalone home-manager config built on dots (dots.lib.mkHome), for a hosts repo";
+      };
+      kitty = {
+        path = ./templates/kitty;
+        description = "A kitty session (nvim above a shell) that opens in the project it is placed in";
       };
       home-manager-user = {
         path = ./templates/home-manager-user;
