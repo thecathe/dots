@@ -6,6 +6,7 @@
 }: {
   imports = [
     ../shared/identity.nix
+    ../shared/services.nix
     ./nixd.nix
     ./wm
     ./dank
@@ -30,53 +31,56 @@
   config = {
     dots.user.name = lib.mkDefault config.home.username;
 
-    home.packages = with pkgs; [
-      ## essential
-      wget
-      fzf
+    # dots.services CLIs (modules/shared/services.nix), then the rest.
+    home.packages =
+      config.dots.servicesPackages
+      ++ (with pkgs; [
+        ## essential
+        wget
+        fzf
 
-      ## nix
-      nix
-      nixfmt
-      nixd # nix language server (used by both neovim and vscode)
-      alejandra # nix formatter, also invoked by nixd itself
+        ## nix
+        nix
+        nixfmt
+        nixd # nix language server (used by both neovim and vscode)
+        alejandra # nix formatter, also invoked by nixd itself
 
-      ## packages
-      flatpak # # installer
-      libappimage # # appimage
+        ## packages
+        flatpak # # installer
+        libappimage # # appimage
 
-      ## git
-      git
-      gh
-      gource # # timelapse
+        ## git
+        git
+        gh
+        gource # # timelapse
 
-      ## terminal
-      tmux # # multiplexer
-      # abduco ## sessions, kitty?
-      # dvtm ## tilling, kitty?
+        ## terminal
+        tmux # # multiplexer
+        # abduco ## sessions, kitty?
+        # dvtm ## tilling, kitty?
 
-      ## audio tools
-      ffmpeg
-      obs-studio # # screen recording
+        ## audio tools
+        ffmpeg
+        obs-studio # # screen recording
 
-      ## music
-      rmpc # # kitty music-player?
+        ## music
+        rmpc # # kitty music-player?
 
-      ## software
-      audacity_3
+        ## software
+        audacity_3
 
-      ## cloud storage
-      onedrive
+        ## cloud storage
+        onedrive
 
-      ## misc
-      satty # # screenshot tool
-      ansi # # get ansi escape sequences
-      rpi-imager # # rasberry-pi headless config
-      pomodoro # # timer
+        ## misc
+        satty # # screenshot tool
+        ansi # # get ansi escape sequences
+        rpi-imager # # rasberry-pi headless config
+        pomodoro # # timer
 
-      ## silly
-      kittysay
-      fastfetch
-    ];
+        ## silly
+        kittysay
+        fastfetch
+      ]);
   };
 }
