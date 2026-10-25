@@ -24,10 +24,12 @@
 ## structure
 
 - `./bin/` -> scripts
-- `./system/` -> `configuration.nix` programs
 - `./lib/` -> `mkNixos` / `mkHome`, the host constructors (exported as `lib`)
+- `./modules/home/` -> home-manager modules (exported as `homeModules.default`)
+- `./modules/nixos/` -> NixOS modules (exported as `nixosModules.default`)
+- `./modules/shared/` -> lists both sides use (fonts, the unfree allow-list)
+- `./checks/` -> stand-ins for the flakes that consume dots (`nix flake check`)
 - `./templates/` -> project templates, `nix flake init -t`
-- `./modules/` -> home-manager configurations
 
 ## hosts
 

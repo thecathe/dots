@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+{...}: {
   extensions = [];
   settings = {
     "git" = {
