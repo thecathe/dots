@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+{...}: {
   # https://mynixos.com/home-manager/options/programs.firefox.profiles.%3Cname%3E
   cathe = {
     id = 0;

@@ -1,10 +1,4 @@
-{
-  inputs,
-  pkgs,
-  config,
-  lib,
-  ...
-}: {
+{pkgs, ...}: {
   imports = [
     ./lang
   ];
