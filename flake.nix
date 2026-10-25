@@ -99,8 +99,22 @@
       fonts = import ./modules/shared/fonts.nix;
     };
 
-    # The shared module sets a host imports.
-    homeModules.default = ./modules/home;
+    # The module sets a host imports: `default` is everything, the others are
+    # single areas for a flake that wants only those (e.g. a second user's own
+    # config). Each carries dots' own inputs as the `dotsInputs` module
+    # argument, so it doesn't depend on what the importing flake calls its
+    # inputs (keyed, so importing several of them is fine).
+    homeModules = let
+      dotsArgs = {
+        key = "dots-args";
+        _module.args.dotsInputs = inputs;
+      };
+    in {
+      default = {imports = [dotsArgs ./modules/home];};
+      vscode = {imports = [dotsArgs ./modules/home/vscode];};
+      shell = {imports = [dotsArgs ./modules/home/shell];};
+      nvim = {imports = [dotsArgs ./modules/home/nvim];};
+    };
     nixosModules.default = ./modules/nixos;
 
     # `nix fmt` formats the repo with alejandra.

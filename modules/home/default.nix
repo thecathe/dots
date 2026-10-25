@@ -30,6 +30,7 @@
   # options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";
   config = {
     dots.user.name = lib.mkDefault config.home.username;
+    dots.vscode.enable = lib.mkDefault true;
 
     # dots.services CLIs (modules/shared/services.nix), then the rest.
     home.packages =

@@ -46,6 +46,11 @@
         '';
     });
 in {
+  # pgourlain.erlang shells out to rebar3/escript (its bridge, above): the
+  # vscode wrapper puts these on PATH only when a profile with this feature is
+  # enabled (extraPath in ../default.nix).
+  extraPath = [pkgs.beamPackages.erlang pkgs.beamPackages.rebar3];
+
   extensions = with pkgs.vscode-extensions;
     []
     ++ (with pkgs.nix-vscode-extensions.vscode-marketplace-release-universal; [
