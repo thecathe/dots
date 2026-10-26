@@ -1,8 +1,32 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  lib,
+  ...
+}: {
   wayland.windowManager.niri = {
     enable = true;
     package = pkgs.niri;
-    extraConfig = builtins.readFile ./config.kdl;
+    extraConfig = lib.mkMerge [
+      (builtins.readFile ./config.kdl)
+      # DMS's display settings GUI applies mode/position/scale/transform live over
+      # IPC, but anything it can only express in KDL (the per-output `layout {}`
+      # overrides, e.g. a portrait monitor's 100% default column width) goes to
+      # ~/.config/niri/dms/outputs.kdl, which niri only reads if it is included.
+      # DMS's own "Setup" button would add this line itself, but fails because
+      # config.kdl is a read-only store symlink. The path is relative (and has to
+      # stay so: DMS greps for the literal `"dms/outputs.kdl"` to decide whether
+      # the include exists); niri resolves it against the config's own location,
+      # not the symlink target. optional=true since only hosts that run DMS's
+      # display GUI have the file.
+      #
+      # mkAfter puts it below any host `output` block: niri uses the first block
+      # that matches an output's name, without merging, so a host's declarative
+      # block (e.g. hosts/nixos' DP-1 with VRR) must come first to win over the
+      # GUI-generated one.
+      (lib.mkAfter ''
+        include optional=true "dms/outputs.kdl"
+      '')
+    ];
   };
 
   # programs.alacritty.enable = true; # ~ changed to kitty ~Super+T in the default setting (terminal)~~

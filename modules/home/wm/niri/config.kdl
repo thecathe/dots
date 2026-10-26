@@ -66,11 +66,20 @@ input {
     }
 
     // Uncomment this to make the mouse warp to the center of newly focused windows.
+    // Deliberately off: the pointer is meant to decide focus (focus-follows-mouse
+    // below), not be dragged around by it. Note this does NOT stop the focus-monitor-*,
+    // move-*-to-monitor-* and *-or-monitor-* actions from jumping the cursor to the
+    // centre of the target output: niri hardcodes that fallback (src/input/mod.rs,
+    // `move_cursor_to_output`) with no config switch.
     // warp-mouse-to-focus
 
-    // Focus windows and outputs automatically when moving the mouse into them.
-    // Setting max-scroll-amount="0%" makes it work only on windows already fully on screen.
-    // focus-follows-mouse max-scroll-amount="0%"
+    // Focus windows and outputs automatically when moving the mouse into them, so the
+    // monitor under the cursor is the focused one and actions (scrolling, workspace
+    // switches, ...) apply to it rather than to a monitor the cursor has left.
+    // max-scroll-amount="0%" makes it work only on windows already fully on screen, so
+    // brushing the cursor over a half-visible column never scrolls the view; moving to
+    // another monitor still focuses it, since that part isn't subject to the limit.
+    focus-follows-mouse max-scroll-amount="0%"
 }
 
 // You can configure outputs by their name, which you can find
@@ -608,7 +617,11 @@ binds {
     Mod+Shift+R { switch-preset-column-width-back; }
 
     Mod+Ctrl+Shift+R { switch-preset-window-height; }
-    Mod+Ctrl+R { reset-window-height; }
+    // Back to automatic: the window shares its column's height evenly with the
+    // others again and refills the space of any that close. Any manual height
+    // (the binds below, or the preset cycle above) is kept as a fixed size
+    // instead, so after closing a neighbour press this on the survivor.
+    Mod+Ctrl+R hotkey-overlay-title="Reset Window Height" { reset-window-height; }
 
     Mod+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
@@ -640,8 +653,14 @@ binds {
     Mod+Equal { set-column-width "+10%"; }
 
     // Finer height adjustments when in column with other windows.
-    Mod+Shift+Minus { set-window-height "-10%"; }
-    Mod+Shift+Equal { set-window-height "+10%"; }
+    Mod+Shift+Minus hotkey-overlay-title="Window Shorter" { set-window-height "-10%"; }
+    Mod+Shift+Equal hotkey-overlay-title="Window Taller" { set-window-height "+10%"; }
+
+    // Vertical counterpart of Mod+F (maximize-column): give the focused window as
+    // much of its column's height as the other windows' minimum sizes allow.
+    // Mod+Ctrl+R puts it back. niri has no toggle for this, and (like any manual
+    // height) it stays fixed if the other windows in the column close.
+    Mod+Alt+F hotkey-overlay-title="Fill Column Height" { set-window-height "100%"; }
 
     // Move the focused window between the floating and the tiling layout.
     Mod+V       { toggle-window-floating; }
