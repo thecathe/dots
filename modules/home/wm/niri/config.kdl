@@ -66,11 +66,20 @@ input {
     }
 
     // Uncomment this to make the mouse warp to the center of newly focused windows.
+    // Deliberately off: the pointer is meant to decide focus (focus-follows-mouse
+    // below), not be dragged around by it. Note this does NOT stop the focus-monitor-*,
+    // move-*-to-monitor-* and *-or-monitor-* actions from jumping the cursor to the
+    // centre of the target output: niri hardcodes that fallback (src/input/mod.rs,
+    // `move_cursor_to_output`) with no config switch.
     // warp-mouse-to-focus
 
-    // Focus windows and outputs automatically when moving the mouse into them.
-    // Setting max-scroll-amount="0%" makes it work only on windows already fully on screen.
-    // focus-follows-mouse max-scroll-amount="0%"
+    // Focus windows and outputs automatically when moving the mouse into them, so the
+    // monitor under the cursor is the focused one and actions (scrolling, workspace
+    // switches, ...) apply to it rather than to a monitor the cursor has left.
+    // max-scroll-amount="0%" makes it work only on windows already fully on screen, so
+    // brushing the cursor over a half-visible column never scrolls the view; moving to
+    // another monitor still focuses it, since that part isn't subject to the limit.
+    focus-follows-mouse max-scroll-amount="0%"
 }
 
 // You can configure outputs by their name, which you can find
