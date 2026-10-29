@@ -149,6 +149,8 @@
     "consumer-globalprotect: the menu's `up` does not attach-or-create a tmux session";
     assert inputs.nixpkgs.lib.assertMsg (!(inputs.nixpkgs.lib.elem "new-session" menu.down))
     "consumer-globalprotect: the menu's `down` runs in tmux; it must be a plain terminal";
+    assert inputs.nixpkgs.lib.assertMsg (builtins.length menu.actions == 1 && (builtins.head menu.actions).terminal && inputs.nixpkgs.lib.last (builtins.head menu.actions).argv == "attach")
+    "consumer-globalprotect: the menu's one action is not a terminal `globalprotect attach`";
       check "consumer-globalprotect-evaluates" modules;
 in {
   # The globalprotect module alone, by path.
