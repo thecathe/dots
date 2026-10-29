@@ -23,6 +23,12 @@
 # connection; Ctrl-C or `globalprotect down` from another terminal ends it.
 # nixpkgs has gpclient 2.6.5, which has no --background mode.
 #
+# The browser sign-in ends on a page that opens a `globalprotectcallback:` link;
+# the desktop must hand that to `gpclient launch-gui`, which passes it to the
+# waiting gpauth. nixpkgs' gpclient ships a desktop file that declares this, but
+# only the wrapper below is installed, so the module registers the handler itself.
+# Without it the page just says "Please click Open GlobalProtect" and nothing happens.
+#
 # It is also an entry of the DMS services menu (dots.services.globalprotect,
 # next to Tailscale), shown on the hosts that enable it. The menu has no
 # keyboard, so a click opens a terminal that runs `globalprotect up|down` for
@@ -146,6 +152,18 @@ in {
     ];
 
     home.packages = [globalprotect];
+
+    # The handler for the sign-in's final redirect (see the header). Not shown in
+    # launchers: it only makes sense with a callback link to pass on. gpclient is
+    # named by store path, as in the wrapper, and %u is the link. launch-gui
+    # refuses to run as root, which is right: the browser starts it as the user.
+    xdg.desktopEntries.globalprotect-callback = {
+      name = "GlobalProtect sign-in callback";
+      exec = "${gpclient} launch-gui %u";
+      mimeType = ["x-scheme-handler/globalprotectcallback"];
+      terminal = false;
+      noDisplay = true;
+    };
 
     dots.services.globalprotect = {
       label = "GlobalProtect";

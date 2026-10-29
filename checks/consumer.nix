@@ -74,12 +74,14 @@
     };
   };
 
-  consumer = modules:
-    (inputs.home-manager.lib.homeManagerConfiguration {
+  consumerConfig = modules:
+    inputs.home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
       extraSpecialArgs = {inputs = inputs // {inherit dots;};};
       modules = [base] ++ modules;
-    }).activationPackage.drvPath;
+    };
+
+  consumer = modules: (consumerConfig modules).activationPackage.drvPath;
 
   check = name: modules:
     pkgs.writeText name (builtins.unsafeDiscardStringContext (consumer modules));
@@ -116,22 +118,30 @@
 
   # The globalprotect module imported by path on its own, as a second user would
   # (it is self-contained, so nothing else of dots' needs to come with it). Enabled
-  # with a portal it evaluates; enabled without one it must be refused.
+  # with a portal it evaluates; enabled without one it must be refused. It must
+  # also register the handler for the sign-in's `globalprotectcallback:` link, or
+  # the browser's final page does nothing.
   globalprotectModule = "${dots}/modules/home/globalprotect";
   globalprotectConsumer = let
     noPortalEvaluates = (builtins.tryEval (consumer [globalprotectModule {dots.globalprotect.enable = true;}])).success;
+    modules = [
+      globalprotectModule
+      {
+        dots.globalprotect = {
+          enable = true;
+          portal = "vpn.example.com";
+        };
+      }
+    ];
+    callback = (consumerConfig modules).config.xdg.desktopEntries.globalprotect-callback;
   in
     assert inputs.nixpkgs.lib.assertMsg (!noPortalEvaluates)
     "consumer-globalprotect: enabling dots.globalprotect without a portal evaluated";
-      check "consumer-globalprotect-evaluates" [
-        globalprotectModule
-        {
-          dots.globalprotect = {
-            enable = true;
-            portal = "vpn.example.com";
-          };
-        }
-      ];
+    assert inputs.nixpkgs.lib.assertMsg (callback.mimeType == ["x-scheme-handler/globalprotectcallback"])
+    "consumer-globalprotect: the callback desktop entry does not handle globalprotectcallback:";
+    assert inputs.nixpkgs.lib.assertMsg (inputs.nixpkgs.lib.hasSuffix "/bin/gpclient launch-gui %u" callback.exec)
+    "consumer-globalprotect: the callback desktop entry does not run `gpclient launch-gui %u`";
+      check "consumer-globalprotect-evaluates" modules;
 in {
   # The globalprotect module alone, by path.
   consumer-globalprotect = globalprotectConsumer;
