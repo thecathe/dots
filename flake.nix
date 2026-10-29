@@ -114,6 +114,8 @@
       vscode = {imports = [dotsArgs ./modules/home/vscode];};
       shell = {imports = [dotsArgs ./modules/home/shell];};
       nvim = {imports = [dotsArgs ./modules/home/nvim];};
+      # Needs nothing from dots' inputs, hence no dotsArgs.
+      globalprotect = {imports = [./modules/home/globalprotect];};
     };
     nixosModules.default = ./modules/nixos;
 
