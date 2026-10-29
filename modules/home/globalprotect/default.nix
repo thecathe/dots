@@ -222,6 +222,16 @@ in {
       up = inTerminal "up" inTmux;
       down = inTerminal "down" lib.id;
       status = ["${globalprotect}/bin/globalprotect" "status"];
+      # The "..." on the row: look at the session `up` runs in (the sign-in
+      # progress, or the connection's output) after its window was closed.
+      actions = [
+        {
+          label = "Reattach";
+          icon = "terminal";
+          argv = ["${globalprotect}/bin/globalprotect" "attach"];
+          terminal = true;
+        }
+      ];
     };
   };
 }

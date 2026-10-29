@@ -3,6 +3,8 @@
 # how to bring it up, take it down and check it, which gives:
 #   - optionally a `<command> up|down|status` CLI (dots.services.<name>.command),
 #   - the list the DMS services menu shows (modules/home/dank/services-menu.nix),
+#     where an entry's optional `actions` (e.g. "attach to its console") are
+#     listed behind a "..." button on its row,
 #   - on NixOS, a polkit rule letting the dots user start and stop the entry's
 #     system unit without a password (modules/nixos/services.nix).
 # Imported by both the NixOS and the home-manager module sets: NixOS entries
@@ -15,6 +17,36 @@
 }: let
   inherit (lib) mkOption mkDefault types;
   systemctl = "${pkgs.systemd}/bin/systemctl";
+
+  # An extra thing to do with a service besides switching it, offered in the
+  # services menu behind the "..." button on the service's row.
+  action = types.submodule {
+    options = {
+      label = mkOption {
+        type = types.str;
+        description = "The name the menu shows for the action.";
+      };
+      icon = mkOption {
+        type = types.str;
+        default = "chevron_right";
+        description = "A Material Symbols icon name for the action.";
+      };
+      argv = mkOption {
+        type = types.listOf types.str;
+        description = "The command (argv) the action runs.";
+      };
+      terminal = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Run the command in a terminal window (kitty) rather than in the
+          background: for commands that are interactive or stay up, e.g.
+          attaching to a tmux session. The window closes when the command
+          ends, and waits for Enter if it failed so the error can be read.
+        '';
+      };
+    };
+  };
 
   service = types.submodule ({
     name,
@@ -58,6 +90,23 @@
       status = mkOption {
         type = types.listOf types.str;
         description = "The command (argv) that exits 0 while the service is up. It runs each time the services menu opens, so keep it cheap.";
+      };
+      actions = mkOption {
+        type = types.listOf action;
+        default = [];
+        example = [
+          {
+            label = "Attach to console";
+            icon = "terminal";
+            argv = ["tmux" "attach"];
+            terminal = true;
+          }
+        ];
+        description = ''
+          Extra actions for the services menu. A service with any gets a "..."
+          button on its row that lists them; one without has no button. Only the
+          menu uses them: they do not appear in the CLI.
+        '';
       };
       command = mkOption {
         type = types.nullOr types.str;
