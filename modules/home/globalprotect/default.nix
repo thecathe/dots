@@ -22,6 +22,11 @@
 # the browser for the login, then stays in the foreground holding the
 # connection; Ctrl-C or `globalprotect down` from another terminal ends it.
 # nixpkgs has gpclient 2.6.5, which has no --background mode.
+#
+# It is also an entry of the DMS services menu (dots.services.globalprotect,
+# next to Tailscale), shown on the hosts that enable it. The menu has no
+# keyboard, so a click opens a terminal that runs `globalprotect up|down` for
+# the password prompt. The entry is plain data: without the menu it does nothing.
 {
   config,
   lib,
@@ -71,7 +76,29 @@
         ;;
     esac
   '';
+
+  # The services menu runs a service's up or down and waits for it to exit (10 s
+  # at most). `globalprotect up` needs the sudo password and runs for as long as
+  # the tunnel is up, so the menu opens a terminal for it: kitty --detach returns
+  # at once and leaves the window running. The window closes when the command
+  # ends; if the command failed it waits for Enter, so the error can be read.
+  inTerminal = verb: [
+    "${config.programs.kitty.package}/bin/kitty"
+    "--detach"
+    "--title"
+    "GlobalProtect ${verb}"
+    "${pkgs.writeShellScript "globalprotect-${verb}-in-terminal" ''
+      ${globalprotect}/bin/globalprotect ${verb} || {
+        echo
+        read -r -p "globalprotect ${verb} failed. Press Enter to close. "
+      }
+    ''}"
+  ];
 in {
+  # Declares dots.services, so the entry below also evaluates when this module
+  # is imported on its own. Imported twice (with the rest of dots) it is one module.
+  imports = [../../shared/services.nix];
+
   options.dots.globalprotect = {
     enable = lib.mkEnableOption "the globalprotect command (GlobalProtect VPN through gpclient)";
 
@@ -119,5 +146,13 @@ in {
     ];
 
     home.packages = [globalprotect];
+
+    dots.services.globalprotect = {
+      label = "GlobalProtect";
+      icon = "vpn_key";
+      up = inTerminal "up";
+      down = inTerminal "down";
+      status = ["${globalprotect}/bin/globalprotect" "status"];
+    };
   };
 }
