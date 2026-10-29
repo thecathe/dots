@@ -23,6 +23,7 @@
     ./obsidian
     ./claude
     ./opam
+    ./globalprotect
     ./zathura # epub reader?
     ./navi # commadn cheatsheet tool
   ];

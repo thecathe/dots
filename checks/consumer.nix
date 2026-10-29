@@ -113,7 +113,28 @@
     assert inputs.nixpkgs.lib.assertMsg (hm.config.dots.vscode.extraPath == [])
     "consumer-modules: Erlang reached VS Code's PATH without an Erlang profile";
       hm.activationPackage.drvPath;
+
+  # The globalprotect module imported by path on its own, as a second user would
+  # (it is self-contained, so nothing else of dots' needs to come with it). Enabled
+  # with a portal it evaluates; enabled without one it must be refused.
+  globalprotectModule = "${dots}/modules/home/globalprotect";
+  globalprotectConsumer = let
+    noPortalEvaluates = (builtins.tryEval (consumer [globalprotectModule {dots.globalprotect.enable = true;}])).success;
+  in
+    assert inputs.nixpkgs.lib.assertMsg (!noPortalEvaluates)
+    "consumer-globalprotect: enabling dots.globalprotect without a portal evaluated";
+      check "consumer-globalprotect-evaluates" [
+        globalprotectModule
+        {
+          dots.globalprotect = {
+            enable = true;
+            portal = "vpn.example.com";
+          };
+        }
+      ];
 in {
+  # The globalprotect module alone, by path.
+  consumer-globalprotect = globalprotectConsumer;
   # The area modules with dots.vscode, as a second user's flake uses them.
   consumer-modules = pkgs.writeText "consumer-modules-evaluates" (builtins.unsafeDiscardStringContext modulesConsumer);
   # shell + nvim by path, plus the vscode module above: the full downstream shape.
