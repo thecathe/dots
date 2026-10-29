@@ -133,7 +133,11 @@
         };
       }
     ];
-    callback = (consumerConfig modules).config.xdg.desktopEntries.globalprotect-callback;
+    gpConfig = (consumerConfig modules).config;
+    callback = gpConfig.xdg.desktopEntries.globalprotect-callback;
+    # The menu's `up` runs in its own tmux session (so its window can be closed
+    # while connected); `down` is a plain terminal.
+    menu = gpConfig.dots.services.globalprotect;
   in
     assert inputs.nixpkgs.lib.assertMsg (!noPortalEvaluates)
     "consumer-globalprotect: enabling dots.globalprotect without a portal evaluated";
@@ -141,6 +145,10 @@
     "consumer-globalprotect: the callback desktop entry does not handle globalprotectcallback:";
     assert inputs.nixpkgs.lib.assertMsg (inputs.nixpkgs.lib.hasSuffix "/bin/gpclient launch-gui %u" callback.exec)
     "consumer-globalprotect: the callback desktop entry does not run `gpclient launch-gui %u`";
+    assert inputs.nixpkgs.lib.assertMsg (inputs.nixpkgs.lib.elem "new-session" menu.up && inputs.nixpkgs.lib.elem "-A" menu.up)
+    "consumer-globalprotect: the menu's `up` does not attach-or-create a tmux session";
+    assert inputs.nixpkgs.lib.assertMsg (!(inputs.nixpkgs.lib.elem "new-session" menu.down))
+    "consumer-globalprotect: the menu's `down` runs in tmux; it must be a plain terminal";
       check "consumer-globalprotect-evaluates" modules;
 in {
   # The globalprotect module alone, by path.
