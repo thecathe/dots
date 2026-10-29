@@ -33,6 +33,13 @@
 # next to Tailscale), shown on the hosts that enable it. The menu has no
 # keyboard, so a click opens a terminal that runs `globalprotect up|down` for
 # the password prompt. The entry is plain data: without the menu it does nothing.
+#
+# Since `up` is the connection, the window it runs in would have to stay open for
+# as long as the VPN is wanted. So the menu runs `up` inside a tmux session of its
+# own: closing the window only detaches, and the connection carries on. Clicking
+# "up" again, or `globalprotect attach`, shows that session again. `down` ends
+# gpclient, which ends the session. Plain `globalprotect up` from a shell is
+# unchanged (foreground, no tmux).
 {
   config,
   lib,
@@ -43,6 +50,18 @@
 
   gpclient = "${cfg.package}/bin/gpclient";
   gpauth = "${cfg.authPackage}/bin/gpauth";
+
+  # The menu's tmux: a server of its own (-L), so it never touches the user's
+  # tmux, and no config file (-f /dev/null), so nobody's settings (mouse, prefix,
+  # status bar) change how the window behaves. The server exits with its last
+  # session, so each connection starts a fresh one in the current desktop
+  # session's environment (the browser launch needs WAYLAND_DISPLAY).
+  tmuxSession = "globalprotect";
+  tmuxCmd = lib.concatStringsSep " " [
+    "${pkgs.tmux}/bin/tmux"
+    "-L ${tmuxSession}"
+    "-f /dev/null"
+  ];
 
   # `sudo` is deliberately not given by a runtimeInputs/PATH entry from nixpkgs:
   # that copy is not setuid and cannot work. The host's own sudo is found on PATH
@@ -76,8 +95,18 @@
       status)
         if is_up; then echo up; else echo down; exit 3; fi
         ;;
+      attach)
+        # The session the services menu started `up` in. A $TMUX from the
+        # caller's own tmux would make tmux refuse to nest.
+        unset TMUX
+        if ! ${tmuxCmd} has-session -t ${tmuxSession} 2>/dev/null; then
+          echo "no GlobalProtect session: nothing was started from the services menu" >&2
+          exit 1
+        fi
+        exec ${tmuxCmd} attach -t ${tmuxSession}
+        ;;
       *)
-        echo "usage: globalprotect [up|down|status]" >&2
+        echo "usage: globalprotect [up|down|status|attach]" >&2
         exit 2
         ;;
     esac
@@ -88,18 +117,40 @@
   # the tunnel is up, so the menu opens a terminal for it: kitty --detach returns
   # at once and leaves the window running. The window closes when the command
   # ends; if the command failed it waits for Enter, so the error can be read.
-  inTerminal = verb: [
-    "${config.programs.kitty.package}/bin/kitty"
-    "--detach"
-    "--title"
-    "GlobalProtect ${verb}"
-    "${pkgs.writeShellScript "globalprotect-${verb}-in-terminal" ''
-      ${globalprotect}/bin/globalprotect ${verb} || {
-        echo
-        read -r -p "globalprotect ${verb} failed. Press Enter to close. "
-      }
-    ''}"
-  ];
+  # `wrap` is what goes between kitty and that script (nothing, or tmux).
+  inTerminal = verb: wrap:
+    [
+      "${config.programs.kitty.package}/bin/kitty"
+      "--detach"
+      "--title"
+      "GlobalProtect ${verb}"
+    ]
+    ++ wrap [
+      "${pkgs.writeShellScript "globalprotect-${verb}-in-terminal" ''
+        ${globalprotect}/bin/globalprotect ${verb} || {
+          echo
+          read -r -p "globalprotect ${verb} failed. Press Enter to close. "
+        }
+      ''}"
+    ];
+
+  # `up` inside the menu's tmux session: attached if it already exists (a click
+  # on "up" while connecting or after closing the window), else created. With no
+  # config the status bar would be on; it has nothing to say here.
+  inTmux = script:
+    [
+      "${pkgs.tmux}/bin/tmux"
+      "-L"
+      tmuxSession
+      "-f"
+      "/dev/null"
+      "new-session"
+      "-A"
+      "-s"
+      tmuxSession
+    ]
+    ++ script
+    ++ [";" "set-option" "-t" tmuxSession "status" "off"];
 in {
   # Declares dots.services, so the entry below also evaluates when this module
   # is imported on its own. Imported twice (with the rest of dots) it is one module.
@@ -168,8 +219,8 @@ in {
     dots.services.globalprotect = {
       label = "GlobalProtect";
       icon = "vpn_key";
-      up = inTerminal "up";
-      down = inTerminal "down";
+      up = inTerminal "up" inTmux;
+      down = inTerminal "down" lib.id;
       status = ["${globalprotect}/bin/globalprotect" "status"];
     };
   };
