@@ -1,9 +1,11 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }: let
   dms = "${config.programs.dank-material-shell.package}/bin/dms";
+  bingPlugin = config.programs.dank-material-shell.plugins.wallpaperBing;
   jq = "${pkgs.jq}/bin/jq";
   curl = "${pkgs.curl}/bin/curl";
 
@@ -318,6 +320,20 @@
     ${dms} ipc call toast info "Backfilled $fetched wallpaper(s), $skipped already present" || true
   '';
 in {
+  # The plugin re-applies today's image whenever one of its checks (every 3
+  # hours, and at dailyRefreshTime) finds nothing new to download, so a
+  # wallpaper picked by hand was reverted within hours. The patch removes that
+  # re-apply: the daily image is applied only when a new one is downloaded
+  # (and on a forced refresh from the plugin's widget). Rewriting the plugin's
+  # link rather than its `src` option leaves the registry's definition alone
+  # and needs no flake input here. applyPatches fails the build if a registry
+  # bump changes the patched lines, so the patch cannot silently stop applying.
+  xdg.configFile."DankMaterialShell/plugins/wallpaperBing".source = lib.mkIf bingPlugin.enable (lib.mkForce (pkgs.applyPatches {
+    name = "dms-plugin-wallpaperBing-keep-manual-choice";
+    src = bingPlugin.src;
+    patches = [./patches/bing-keep-manual-choice.patch];
+  }));
+
   home.packages = [
     pkgs.curl
     pkgs.inotify-tools
