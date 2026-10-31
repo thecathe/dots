@@ -1,0 +1,15 @@
+--- a/BingwallDaemon.qml
++++ b/BingwallDaemon.qml
+@@ -274,10 +274,9 @@
+                         }, 0)
+ 
+                     } else {
++                        // Today's image is already downloaded: leave whatever
++                        // wallpaper is in use alone, so a manual pick sticks
+                         console.log("Wallpaper of the day: No new wallpaper found")
+-                        if (!root.isStarting) {
+-                            SessionData.setWallpaper(root.currentImageSavePath)
+-                        }
+                         root.isForcing = false
+                         root.isDownloading = false
+                     }
