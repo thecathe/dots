@@ -33,6 +33,17 @@
   "dockLauncherLogoMode": "os",
   "dockLauncherLogoSizeOffset": 4,
   "notificationShowTimeoutBar": true,
+  "notificationRules": [
+    {
+      "enabled": true,
+      "field": "appName",
+      "pattern": "ibus",
+      "matchType": "exact",
+      "action": "ignore",
+      "urgency": "default",
+      "bypassDnd": false
+    }
+  ],
   "screenPreferences": {
     "wallpaper": [
       "all"
