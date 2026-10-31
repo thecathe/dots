@@ -17,6 +17,7 @@ in {
     settings.user =
       lib.optionalAttrs (git.name != null) {inherit (git) name;}
       // lib.optionalAttrs (git.email != null) {inherit (git) email;};
+    settings.push.recurseSubmodules = "check"; # refuse to push a superproject whose submodule commits aren't pushed
     ignores = [
       "_opam/" # opam local switches
       "_build/" # build files
