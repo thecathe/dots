@@ -152,12 +152,10 @@
   #     </object>
   #   </interface>
   # '';
-  services.mako = {
-    enable = true; # notification daemon
-    # IBus (autostarted by the GNOME module) pops a setup notice at login that
-    # is irrelevant in niri; hide it here so GNOME's IBus is left untouched.
-    settings."app-name=ibus".invisible = 1;
-  };
+  # No notification daemon here on purpose: DMS is the notification server (popups,
+  # history behind the bar's bell). A second daemon such as mako is D-Bus-activated
+  # by the first notification at login, a few seconds before DMS has claimed
+  # org.freedesktop.Notifications, and then keeps the name for the whole session.
   services.polkit-gnome.enable = true; # polkit
   home.packages = with pkgs; [
     swaybg # wallpaper
