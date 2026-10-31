@@ -36,6 +36,21 @@
         # forward/backward word
         bindkey '^[[1;5C' forward-word
         bindkey '^[[1;5D' backward-word
+
+        # home/end, delete, ctrl+delete: oh-my-zsh bound these and plain zsh
+        # binds none. terminfo gives what the terminal sends once zle has put
+        # it in application mode; the literals are its normal mode and the
+        # tmux/linux-console forms.
+        zmodload zsh/terminfo
+        for cap widget in khome beginning-of-line kend end-of-line kdch1 delete-char; do
+          [[ -n $terminfo[$cap] ]] && bindkey $terminfo[$cap] $widget
+        done
+        bindkey '^[[H' beginning-of-line
+        bindkey '^[[F' end-of-line
+        bindkey '^[[1~' beginning-of-line
+        bindkey '^[[4~' end-of-line
+        bindkey '^[[3~' delete-char
+        bindkey '^[[3;5~' kill-word
       '')
       (lib.mkOrder 1200 ''
         webm2mp4() {
