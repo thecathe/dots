@@ -999,11 +999,11 @@
         "systems": "systems_5"
       },
       "locked": {
-        "lastModified": 1792617585,
-        "narHash": "sha256-BTziYRd2vNIDEhliitDwgsANumfahMHAoKmHBBYLRYo=",
+        "lastModified": 1793452823,
+        "narHash": "sha256-1h7pl+hvg0DXKATFoyEAHoid2AY8nzfdipyZ3hUjRGE=",
         "owner": "thecathe",
         "repo": "vscode-forester",
-        "rev": "a49df41fc52a2023498f948b64c07b136f8042ed",
+        "rev": "2a0ac07dfa95bfc87ac8d2f1a68ebecda1c273c3",
         "type": "github"
       },
       "original": {
