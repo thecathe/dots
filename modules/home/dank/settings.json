@@ -10,6 +10,9 @@
   "showWorkspaceIndex": true,
   "showWorkspacePadding": true,
   "mediaUseAlbumArtAccent": true,
+  "mediaExcludePlayers": [
+    "firefox"
+  ],
   "dankLauncherV2IncludeFilesInAll": true,
   "dankLauncherV2IncludeFoldersInAll": true,
   "launcherUseOverlayLayer": true,
@@ -233,11 +236,6 @@
         }
       ],
       "centerWidgets": [
-        {
-          "id": "music",
-          "enabled": true,
-          "mediaSize": 3
-        },
         {
           "id": "clock",
           "enabled": true,
