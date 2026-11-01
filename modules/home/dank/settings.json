@@ -234,11 +234,6 @@
       ],
       "centerWidgets": [
         {
-          "id": "music",
-          "enabled": true,
-          "mediaSize": 3
-        },
-        {
           "id": "clock",
           "enabled": true,
           "clockCompactMode": false
