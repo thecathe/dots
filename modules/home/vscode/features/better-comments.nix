@@ -20,15 +20,15 @@
         "bold" = false;
         "italic" = false;
       }
-      {
-        "tag" = "//";
-        "color" = "#474747";
-        "strikethrough" = true;
-        "underline" = false;
-        "backgroundColor" = "transparent";
-        "bold" = false;
-        "italic" = false;
-      }
+      # {
+      #   "tag" = "//";
+      #   "color" = "#474747";
+      #   "strikethrough" = true;
+      #   "underline" = false;
+      #   "backgroundColor" = "transparent";
+      #   "bold" = false;
+      #   "italic" = false;
+      # }
       {
         "tag" = "todo";
         "color" = "#FF8C00";
