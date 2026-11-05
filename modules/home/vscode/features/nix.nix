@@ -35,6 +35,7 @@ in {
   settings = {
     "nix" = {
       "enableLanguageServer" = true;
+      "hiddenLanguageServerErrors" = ["textDocument/definition"];
       "serverPath" = "nixd";
       "serverSettings" = {
         "nixd" = {
