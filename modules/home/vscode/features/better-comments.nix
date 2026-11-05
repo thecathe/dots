@@ -20,6 +20,51 @@
         "bold" = false;
         "italic" = false;
       }
+      {
+        "tag" = "*";
+        "color" = "#98C379";
+        "strikethrough" = false;
+        "underline" = false;
+        "backgroundColor" = "transparent";
+        "bold" = false;
+        "italic" = false;
+      }
+      {
+        "tag" = "~";
+        "color" = "#44CCBB";
+        "strikethrough" = false;
+        "underline" = false;
+        "backgroundColor" = "transparent";
+        "bold" = false;
+        "italic" = false;
+      }
+      {
+        "tag" = "&";
+        "color" = "#4f44cc";
+        "strikethrough" = false;
+        "underline" = false;
+        "backgroundColor" = "transparent";
+        "bold" = false;
+        "italic" = false;
+      }
+      {
+        "tag" = "$";
+        "color" = "#9844cc";
+        "strikethrough" = false;
+        "underline" = false;
+        "backgroundColor" = "transparent";
+        "bold" = false;
+        "italic" = false;
+      }
+      {
+        "tag" = "£";
+        "color" = "#cc8a44";
+        "strikethrough" = false;
+        "underline" = false;
+        "backgroundColor" = "transparent";
+        "bold" = false;
+        "italic" = false;
+      }
       # {
       #   "tag" = "//";
       #   "color" = "#474747";
@@ -32,15 +77,6 @@
       {
         "tag" = "todo";
         "color" = "#FF8C00";
-        "strikethrough" = false;
-        "underline" = false;
-        "backgroundColor" = "transparent";
-        "bold" = false;
-        "italic" = false;
-      }
-      {
-        "tag" = "*";
-        "color" = "#98C379";
         "strikethrough" = false;
         "underline" = false;
         "backgroundColor" = "transparent";
@@ -77,15 +113,6 @@
       {
         "tag" = "rewrite";
         "color" = "#FFCC55";
-        "strikethrough" = false;
-        "underline" = false;
-        "backgroundColor" = "transparent";
-        "bold" = false;
-        "italic" = false;
-      }
-      {
-        "tag" = "~";
-        "color" = "#44CCBB";
         "strikethrough" = false;
         "underline" = false;
         "backgroundColor" = "transparent";
