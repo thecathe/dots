@@ -72,6 +72,20 @@
   # Programs an extension shells out to and expects on PATH (a feature's
   # `extraPath`), from the enabled profiles' features only.
   extraPath = lib.unique (lib.concatMap (f: f.extraPath or []) enabledFeatures);
+
+  # The Claude Code extension decides whether to show its sign-in screen from
+  # VS Code's own environment (CLAUDE_CODE_OAUTH_TOKEN counts as signed in),
+  # so the terminal-only `claude` function in ../claude never reaches it.
+  # Reads the same per-host token file, at launch, so the secret stays out of
+  # the nix store; skipped silently where the file is absent. The token also
+  # reaches everything VS Code starts, hence the terminal scrub in
+  # features/claude.nix.
+  claudeTokenFromFile = ''
+    token_file="''${XDG_CONFIG_HOME:-$HOME/.config}/claude/oauth-token"
+    if [ -r "$token_file" ]; then
+      export CLAUDE_CODE_OAUTH_TOKEN="$(< "$token_file")"
+    fi
+  '';
 in {
   # ../nixd.nix declares dots.nixd, which features/nix.nix reads: imported here so the
   # vscode module also works when imported on its own (modules dedupe by path).
@@ -117,7 +131,7 @@ in {
         nativeBuildInputs = [pkgs.makeWrapper];
         postBuild =
           ''
-            wrapProgram $out/bin/code --add-flags "--no-sandbox"''
+            wrapProgram $out/bin/code --add-flags "--no-sandbox" --run ${lib.escapeShellArg claudeTokenFromFile}''
           + lib.optionalString (extraPath != []) " --prefix PATH : ${lib.makeBinPath extraPath}"
           + "\n";
       };
