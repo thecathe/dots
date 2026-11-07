@@ -24,6 +24,7 @@
     ./claude
     ./opam
     ./globalprotect
+    ./dictation
     ./zathura # epub reader?
     ./navi # commadn cheatsheet tool
   ];

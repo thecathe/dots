@@ -152,9 +152,61 @@
     assert inputs.nixpkgs.lib.assertMsg (builtins.length menu.actions == 1 && (builtins.head menu.actions).terminal && inputs.nixpkgs.lib.last (builtins.head menu.actions).argv == "attach")
     "consumer-globalprotect: the menu's one action is not a terminal `globalprotect attach`";
       check "consumer-globalprotect-evaluates" modules;
+
+  # The dictation module imported by path on its own (it needs only home-manager's
+  # own niri module). Enabled, it must configure voxtype for Parakeet with its own
+  # hotkey off (voxtype's default is on, and would grab every keyboard), let a
+  # host replace any default, run the daemon as a user unit and add the niri bind
+  # file; disabled, it must add nothing.
+  dictationModule = "${dots}/modules/home/dictation";
+  dictationConsumer = let
+    lib = inputs.nixpkgs.lib;
+    on = (consumerConfig [dictationModule {dots.dictation.enable = true;}]).config;
+    custom =
+      (consumerConfig [
+        dictationModule
+        {
+          dots.dictation = {
+            enable = true;
+            model = "v2";
+            keyboardLayout = "us";
+            settings.output.mode = "clipboard";
+          };
+        }
+      ]).config;
+    off = (consumerConfig [dictationModule]).config;
+    settings = on.dots.dictation.settings;
+  in
+    assert lib.assertMsg (settings.engine == "parakeet" && settings.parakeet.model_type == "tdt")
+    "consumer-dictation: voxtype is not configured for the Parakeet TDT engine";
+    assert lib.assertMsg (settings.hotkey.enabled == false)
+    "consumer-dictation: voxtype's own hotkey is not turned off";
+    assert lib.assertMsg (settings.output.driver_order == ["dotool" "clipboard"])
+    "consumer-dictation: text is not typed by dotool with only the clipboard as a fallback (wtype corrupts text in Electron apps)";
+    assert lib.assertMsg (settings.output.dotool_xkb_layout == "gb" && custom.dots.dictation.settings.output.dotool_xkb_layout == "us")
+    "consumer-dictation: dotool's layout does not follow dots.dictation.keyboardLayout";
+    assert lib.assertMsg (settings.osd.enabled == false)
+    "consumer-dictation: voxtype's overlay is not turned off (this build cannot start it)";
+    assert lib.assertMsg (lib.hasSuffix "-parakeet-tdt-0.6b-v2-int8" settings.parakeet.model)
+    "consumer-dictation: the default model is not the int8 v2 directory (${settings.parakeet.model})";
+    assert lib.assertMsg (lib.hasSuffix "-parakeet-tdt-0.6b-v2" custom.dots.dictation.settings.parakeet.model)
+    "consumer-dictation: dots.dictation.model = \"v2\" did not select the fp32 directory";
+    assert lib.assertMsg (custom.dots.dictation.settings.output.mode == "clipboard" && custom.dots.dictation.settings.hotkey.enabled == false)
+    "consumer-dictation: a host's setting was lost, or setting one key dropped the defaults";
+    assert lib.assertMsg (lib.hasSuffix "/bin/voxtype daemon" (lib.head on.systemd.user.services.voxtype.Service.ExecStart))
+    "consumer-dictation: the unit does not run `voxtype daemon`";
+    assert lib.assertMsg (on.xdg.configFile ? "voxtype/config.toml")
+    "consumer-dictation: no config file is installed";
+    assert lib.assertMsg (lib.hasInfix "dictation-binds.kdl" on.wayland.windowManager.niri.extraConfig)
+    "consumer-dictation: niri does not include the bind file";
+    assert lib.assertMsg (!(off.systemd.user.services ? voxtype) && !(off.xdg.configFile ? "voxtype/config.toml") && !(lib.hasInfix "dictation" off.wayland.windowManager.niri.extraConfig))
+    "consumer-dictation: the disabled module still adds a unit, a config file or a niri include";
+      check "consumer-dictation-evaluates" [dictationModule {dots.dictation.enable = true;}];
 in {
   # The globalprotect module alone, by path.
   consumer-globalprotect = globalprotectConsumer;
+  # The dictation module alone, by path.
+  consumer-dictation = dictationConsumer;
   # The area modules with dots.vscode, as a second user's flake uses them.
   consumer-modules = pkgs.writeText "consumer-modules-evaluates" (builtins.unsafeDiscardStringContext modulesConsumer);
   # shell + nvim by path, plus the vscode module above: the full downstream shape.
