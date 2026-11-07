@@ -169,6 +169,7 @@
           dots.dictation = {
             enable = true;
             model = "v2-int8";
+            keyboardLayout = "us";
             settings.output.mode = "clipboard";
           };
         }
@@ -180,6 +181,10 @@
     "consumer-dictation: voxtype is not configured for the Parakeet TDT engine";
     assert lib.assertMsg (settings.hotkey.enabled == false)
     "consumer-dictation: voxtype's own hotkey is not turned off";
+    assert lib.assertMsg (settings.output.driver_order == ["dotool" "clipboard"])
+    "consumer-dictation: text is not typed by dotool with only the clipboard as a fallback (wtype corrupts text in Electron apps)";
+    assert lib.assertMsg (settings.output.dotool_xkb_layout == "gb" && custom.dots.dictation.settings.output.dotool_xkb_layout == "us")
+    "consumer-dictation: dotool's layout does not follow dots.dictation.keyboardLayout";
     assert lib.assertMsg (settings.osd.enabled == false)
     "consumer-dictation: voxtype's overlay is not turned off (this build cannot start it)";
     assert lib.assertMsg (lib.hasSuffix "-parakeet-tdt-0.6b-v2" settings.parakeet.model)

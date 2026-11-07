@@ -6,9 +6,23 @@
 #   voxtype  the dictation daemon (nixpkgs), built with ONNX support so it can run
 #            NVIDIA's Parakeet speech model on the CPU (its default, Whisper, is
 #            what you get without it). It records from the default microphone,
-#            transcribes, and types the result with wtype (which the nixpkgs
-#            package puts on its own PATH, with wl-clipboard and dotool as
-#            fallbacks).
+#            transcribes, and types the result with dotool (which the nixpkgs
+#            package puts on its own PATH, with wtype and wl-clipboard).
+#
+# Why dotool and not voxtype's first choice, wtype: wtype does not press the keys of
+# your layout. It builds a temporary keymap and gives each distinct character in the
+# text the next evdev keycode from 1 up, so the 14th and 15th distinct characters
+# are keycodes 14 and 15, Backspace and Tab. VS Code (and any Electron app) acts on
+# the keycode, so those two characters edit the text instead of being typed: a
+# dictated "and still the pain" came out as "andt ll the pa n". (Measured in VS Code
+# on 2026-11-07; the 28th distinct character would be Enter.) dotool presses the real
+# key of the layout for each character through a uinput virtual keyboard, so it
+# behaves like a keyboard in every app. It needs /dev/uinput: on `nixos` the user
+# has it only because programs.steam installs Steam's udev rules, so a host without
+# that needs its own rule. Without access dotool fails, and the text goes to the
+# clipboard instead (wtype is deliberately not a fallback: it would silently
+# corrupt the text in VS Code). Characters the layout cannot type, such as "—" or
+# "✓", are dropped with a warning; Parakeet v2 writes plain English.
 #   the model  models.nix: Parakeet TDT 0.6B v2 (English only), fetched from
 #            Hugging Face by hash when a build first needs it.
 #   a user service  `voxtype daemon`, started with the graphical session.
@@ -91,6 +105,18 @@ in {
       '';
     };
 
+    keyboardLayout = lib.mkOption {
+      type = lib.types.str;
+      default = "gb";
+      example = "us";
+      description = ''
+        The XKB layout of the keyboard, which dotool needs in order to press the
+        right keys for each character. It has to match the layout niri uses (the
+        `xkb { layout }` setting in niri's config.kdl, "gb" there): dotool does
+        not follow a layout change made while it runs.
+      '';
+    };
+
     settings = lib.mkOption {
       type = tomlFormat.type;
       default = {};
@@ -120,6 +146,11 @@ in {
       # voxtype's own default is on, and would grab every keyboard to watch for
       # its key. The niri bind owns the key.
       hotkey.enabled = lib.mkDefault false;
+      # See the top of this file for why dotool, and why not wtype as a fallback.
+      output = {
+        driver_order = lib.mkDefault ["dotool" "clipboard"];
+        dotool_xkb_layout = lib.mkDefault cfg.keyboardLayout;
+      };
       # With a toggle bind and no window of its own, a short sound on start, stop
       # and finish is the only sign that anything happened.
       audio.feedback.enabled = lib.mkDefault true;
