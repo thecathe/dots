@@ -47,14 +47,71 @@
     mkdir -p "$dir"
     exec xdg-open "$dir"
   '';
-in {
-  options.dots.gpuScreenRecorder.enable = lib.mkEnableOption ''
-    GPU Screen Recorder, a ShadowPlay-style recorder with an instant-replay
-    buffer and an overlay UI (Alt+Z). Installs two setcap wrappers:
-    gsr-kms-server (cap_sys_admin, for promptless capture) and
-    gsr-global-hotkeys (cap_setuid, for hotkeys under Wayland)'';
 
-  config = lib.mkIf config.dots.gpuScreenRecorder.enable {
+  cfg = config.dots.gpuScreenRecorder;
+
+  # Sets each of cfg.settings in the UI's config file, which the UI otherwise
+  # owns (it rewrites the whole file whenever a setting is saved, so a read-only
+  # symlink would break that). It runs before every start, so what is declared
+  # wins over what the UI last saved. There is no file until the UI has run
+  # once, and a file of just these lines would also reset what the UI takes from
+  # a missing file (the default audio tracks), so nothing is done until then.
+  # A key the file lacks is added; a key that can repeat (the audio tracks)
+  # cannot be pinned.
+  pinScript = pkgs.writeShellScript "gsr-pin-settings" ''
+    export PATH=${lib.makeBinPath [pkgs.coreutils pkgs.diffutils]}
+    config=''${XDG_CONFIG_HOME:-$HOME/.config}/gpu-screen-recorder/config_ui
+    [ -f "$config" ] || exit 0
+    pin() {
+      key=$1 value=$2 found=
+      tmp=$(mktemp)
+      while IFS= read -r line || [ -n "$line" ]; do
+        case $line in
+          "$key "*)
+            printf '%s %s\n' "$key" "$value"
+            found=1
+            ;;
+          *) printf '%s\n' "$line" ;;
+        esac
+      done < "$config" > "$tmp"
+      [ -n "$found" ] || printf '%s %s\n' "$key" "$value" >> "$tmp"
+      cmp -s "$tmp" "$config" || cat "$tmp" > "$config"
+      rm -f "$tmp"
+    }
+    ${lib.concatStrings (lib.mapAttrsToList (key: value: "pin ${lib.escapeShellArg key} ${lib.escapeShellArg value}\n") cfg.settings)}
+  '';
+in {
+  options.dots.gpuScreenRecorder = {
+    enable = lib.mkEnableOption ''
+      GPU Screen Recorder, a ShadowPlay-style recorder with an instant-replay
+      buffer and an overlay UI, which the niri module binds to Mod+Z (and
+      Mod+F7..F12, see modules/home/wm/niri/gsr-binds.kdl). Installs two setcap
+      wrappers: gsr-kms-server (cap_sys_admin, for promptless capture) and
+      gsr-global-hotkeys (cap_setuid, which only the recorder's own hotkeys use)'';
+
+    settings = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = {};
+      example = {"record.save_directory" = "/mnt/data/Videos";};
+      description = ''
+        Settings of the UI (keys of ~/.config/gpu-screen-recorder/config_ui, as
+        that file spells them) to set to these values each time the service
+        starts. Everything else stays whatever the UI saved. See pinScript in
+        modules/nixos/gpu-screen-recorder.nix for the limits: nothing is set
+        before the UI has written the file once, and a key that repeats (audio
+        tracks) cannot be set.
+      '';
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    # The recorder's own global hotkeys are off: they grab every keyboard, so
+    # Alt+Z, Print and the rest never reach any other program, niri included.
+    # Mod+... binds in niri (gsr-binds.kdl) send the same commands to the UI
+    # instead. Any value but the three enable_* ones means "no hotkeys". A host
+    # that wants them back sets this to "enable_hotkeys".
+    dots.gpuScreenRecorder.settings."main.hotkeys_enable_option" = lib.mkDefault "disable_hotkeys";
+
     programs.gpu-screen-recorder = {
       enable = true;
       ui.enable = true;
@@ -70,8 +127,8 @@ in {
       package = pkgs.gpu-screen-recorder.override {ffmpeg = pkgs.ffmpeg_7;};
     };
 
-    # The UI is what owns the global hotkeys and the replay buffer, so it has
-    # to be running before the first hotkey press. "launch-daemon" is the
+    # The UI owns the replay buffer (and the commands niri sends it), so it has
+    # to be running before the first key press. "launch-daemon" is the
     # action meant for a service: it starts hidden and, unlike "launch-hide",
     # does not pop the UI open if one is already running. Leave the UI's own
     # "Start program on system startup" setting off, or both would start it.
@@ -84,6 +141,8 @@ in {
       partOf = ["graphical-session.target"];
       after = ["graphical-session.target"];
       serviceConfig = {
+        # The "-" lets the service start even if pinning failed.
+        ExecStartPre = lib.mkIf (cfg.settings != {}) "-${pinScript}";
         ExecStart = "/run/current-system/sw/bin/gsr-ui launch-daemon";
         Restart = "on-failure";
         RestartSec = 5;

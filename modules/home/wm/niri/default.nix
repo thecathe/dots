@@ -1,13 +1,23 @@
 {
   pkgs,
   lib,
+  osConfig ? null,
   ...
-}: {
+}: let
+  # GPU Screen Recorder is a NixOS-side opt-in (modules/nixos/gpu-screen-recorder.nix),
+  # so the hosts that have it are the ones that get its key binds.
+  gpuScreenRecorder = osConfig != null && (osConfig.dots.gpuScreenRecorder.enable or false);
+in {
   wayland.windowManager.niri = {
     enable = true;
     package = pkgs.niri;
     extraConfig = lib.mkMerge [
       (builtins.readFile ./config.kdl)
+      # A second `binds` block in this file would be an error ("duplicate node"),
+      # but binds in an included file are merged into the ones above.
+      (lib.mkIf gpuScreenRecorder ''
+        include "${./gsr-binds.kdl}"
+      '')
       # DMS's display settings GUI applies mode/position/scale/transform live over
       # IPC, but anything it can only express in KDL (the per-output `layout {}`
       # overrides, e.g. a portrait monitor's 100% default column width) goes to

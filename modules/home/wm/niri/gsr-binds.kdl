@@ -1,0 +1,35 @@
+// GPU Screen Recorder, driven from niri instead of from its own global hotkeys.
+// Added to config.kdl by default.nix on a host that enables dots.gpuScreenRecorder.
+//
+// The recorder's hotkeys (Alt+Z, Alt+F7..F12, Print, ...) are off on such a host
+// (dots.gpuScreenRecorder.settings): it grabs every keyboard to catch them, so
+// the keys never reached any other program, VS Code's Alt+Z or the Print
+// screenshot binds above included. gsr-ui-cli tells the running gsr-ui what to
+// do over its socket instead. The keys are the recorder's own defaults with Mod
+// for Alt (so Mod+Z, Mod+F9, ...); the screenshot ones are left out, niri's own
+// Print binds cover them.
+//
+//   allow-inhibiting=false  so they still work while a game or remote desktop
+//                           asks niri to stop processing shortcuts
+//   repeat=false            so holding a key does not toggle again and again
+//
+// Needs the gsr-ui service running (the DMS services menu starts it); while it
+// is not, a key press just fails to connect.
+binds {
+    Mod+Z allow-inhibiting=false repeat=false hotkey-overlay-title="Screen Recorder: overlay" { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-show"; }
+
+    // Recording
+    Mod+F9 allow-inhibiting=false repeat=false hotkey-overlay-title="Screen Recorder: start/stop recording" { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-record"; }
+    Mod+F7 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-pause"; }
+    Mod+Ctrl+F9 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-record-region"; }
+    Mod+Shift+F9 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-record-window"; }
+
+    // The replay buffer
+    Mod+Shift+F10 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-replay"; }
+    Mod+F10 allow-inhibiting=false repeat=false hotkey-overlay-title="Screen Recorder: save replay" { spawn "/run/current-system/sw/bin/gsr-ui-cli" "replay-save"; }
+    Mod+F11 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "replay-save-1-min"; }
+    Mod+F12 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "replay-save-10-min"; }
+
+    // Streaming
+    Mod+F8 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-stream"; }
+}
