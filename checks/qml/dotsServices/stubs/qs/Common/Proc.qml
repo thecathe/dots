@@ -5,7 +5,8 @@ import QtQuick
 QtObject {
     property var calls: []
     property int nextExit: 0
-    property string statusOut: "tailscale up\ngp down\nmc up\n"
+    readonly property string defaultStatus: "tailscale up\ngp down\nmc up\nrec up recording\n"
+    property string statusOut: defaultStatus
     function runCommand(id, command, callback, debounceMs, timeoutMs, owner) {
         calls = calls.concat([{ id: id, command: command, timeout: timeoutMs }]);
         if (id === "dotsServices.status")
@@ -13,5 +14,5 @@ QtObject {
         else
             callback("", nextExit);
     }
-    function reset() { calls = []; nextExit = 0; }
+    function reset() { calls = []; nextExit = 0; statusOut = defaultStatus; }
 }

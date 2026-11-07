@@ -10,6 +10,7 @@ QtObject {
     property real fontSizeMedium: 14
     property color primary: "#6750a4"
     property color primaryHover: "#1f6750a4"
+    property color error: "#b3261e"
     property color surfaceText: "#e6e0e9"
     property color surfaceVariantText: "#cac4d0"
     property color widgetIconColor: "#e6e0e9"

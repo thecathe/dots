@@ -14,6 +14,7 @@ TestCase {
     readonly property string pluginUrl: Qt.resolvedUrl("../../../modules/home/dank/plugins/dotsServices/ServicesMenu.qml")
 
     // tailscale: no actions. gp and mc: actions (gp has a terminal one, mc a background one).
+    // rec: reports a status word while up, and has one action that needs it up.
     readonly property var data: ({
         statusCommand: "/bin/status",
         services: [
@@ -22,7 +23,10 @@ TestCase {
               actions: [{ label: "Reattach", icon: "terminal", argv: ["kitty", "--detach", "gp", "attach"] }] },
             { name: "mc", label: "Minecraft", icon: "sports_esports", up: ["mc", "up"], down: ["mc", "down"],
               actions: [{ label: "Console", icon: "terminal", argv: ["mc", "console"] },
-                        { label: "Backup", icon: "save", argv: ["mc", "backup"] }] }
+                        { label: "Backup", icon: "save", argv: ["mc", "backup"] }] },
+            { name: "rec", label: "Recorder", icon: "videocam", up: ["rec", "up"], down: ["rec", "down"],
+              actions: [{ label: "Record", icon: "fiber_manual_record", argv: ["rec-cli", "toggle-record"], requiresUp: true },
+                        { label: "Open folder", icon: "folder_open", argv: ["xdg-open", "/videos"], requiresUp: false }] }
         ]
     })
 
@@ -89,13 +93,47 @@ TestCase {
 
     function test_rows_and_state_from_status_command() {
         compare(Proc.calls[0].id, "dotsServices.status");
-        for (const label of ["Tailscale", "GlobalProtect", "Minecraft"]) textItem(label);
+        for (const label of ["Tailscale", "GlobalProtect", "Minecraft", "Recorder"]) textItem(label);
         compare(texts().filter(t => t === "up").length, 2);     // tailscale, mc
         compare(texts().filter(t => t === "down").length, 1);   // gp
     }
 
+    function test_status_word_replaces_up_and_uses_the_error_colour() {
+        compare(texts().filter(t => t === "recording").length, 1);   // rec, which would otherwise say "up"
+        verify(Qt.colorEqual(textItem("recording").color, Theme.error), "the word should be in the error colour");
+        // an up service with no word is still the plain primary colour
+        const ups = all(popout, it => it.text === "up" && it.visible);
+        verify(Qt.colorEqual(ups[0].color, Theme.primary), "a plain 'up' stays primary");
+    }
+
+    function test_status_word_is_ignored_while_down() {
+        Proc.statusOut = "tailscale up\ngp down\nmc up\nrec down recording\n";
+        plugin.refresh(); wait(30);
+        compare(texts().filter(t => t === "recording").length, 0, JSON.stringify(texts()));
+        compare(texts().filter(t => t === "down").length, 2);   // gp, rec
+    }
+
+    function test_actions_that_need_the_service_up_are_listed_only_while_up() {
+        clickMoreFor("Recorder"); wait(30);
+        verify(texts().indexOf("Record") >= 0 && texts().indexOf("Open folder") >= 0, JSON.stringify(texts()));
+        Proc.statusOut = "rec down\n";
+        plugin.refresh(); wait(30);
+        verify(texts().indexOf("Record") < 0, "Record needs the service up: " + JSON.stringify(texts()));
+        verify(texts().indexOf("Open folder") >= 0, "Open folder does not");
+    }
+
+    function test_action_is_followed_by_a_status_check() {
+        clickMoreFor("Recorder"); wait(30);
+        clickCentre(textItem("Record")); wait(30);
+        const before = Proc.calls.filter(c => c.id === "dotsServices.status").length;
+        compare(actionCalls()[0].id, "dotsServices.action.rec");
+        compare(JSON.stringify(actionCalls()[0].command), JSON.stringify(["rec-cli", "toggle-record"]));
+        wait(1300);   // the check waits a second for the action to take effect
+        compare(Proc.calls.filter(c => c.id === "dotsServices.status").length, before + 1);
+    }
+
     function test_button_only_on_services_with_actions() {
-        compare(moreButtons().length, 2, "expected a '...' on gp and mc only");
+        compare(moreButtons().length, 3, "expected a '...' on gp, mc and rec only");
         // and none of their action labels shown until opened
         verify(texts().indexOf("Reattach") < 0);
         verify(texts().indexOf("Console") < 0);

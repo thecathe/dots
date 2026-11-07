@@ -2,7 +2,8 @@
 # entry on this machine, the system-wide ones (NixOS, through osConfig) and the
 # user's own (home-manager), with whether each is up and a click to switch it.
 # Statuses are checked only when the menu opens, by one generated script. A
-# service with `actions` also gets a "..." button on its row listing them.
+# service with `actions` also gets a "..." button on its row listing them, and
+# one with a `detail` shows that word on its row while it is up.
 {
   config,
   lib,
@@ -18,10 +19,22 @@
     )
     // config.dots.services;
 
-  # One line per service: "<name> up" or "<name> down".
+  # What an up service prints: "<name> up", with " <word>" after it when it has
+  # a `detail` command that printed one. The word is cut down to the first line
+  # and to letters, digits, _ and -, because the menu splits the line on spaces;
+  # the command gets two seconds, so it cannot hold the menu up.
+  upLine = name: s:
+    if s.detail == null
+    then "echo ${lib.escapeShellArg "${name} up"}"
+    else ''
+      detail=$(${pkgs.coreutils}/bin/timeout 2 ${lib.escapeShellArgs s.detail} 2>/dev/null | ${pkgs.coreutils}/bin/head -n 1 | ${pkgs.coreutils}/bin/tr -cd 'A-Za-z0-9_-')
+      echo ${lib.escapeShellArg "${name} up"}"''${detail:+ $detail}"
+    '';
+
+  # One line per service: "<name> up" (see above) or "<name> down".
   statusScript = pkgs.writeShellScript "dots-services-status" (lib.concatStrings (lib.mapAttrsToList (name: s: ''
       if ${lib.escapeShellArgs s.status} >/dev/null 2>&1; then
-        echo ${lib.escapeShellArg "${name} up"}
+        ${upLine name s}
       else
         echo ${lib.escapeShellArg "${name} down"}
       fi
@@ -70,7 +83,7 @@ in {
           inherit (s) label icon up down;
           actions =
             map (a: {
-              inherit (a) label icon;
+              inherit (a) label icon requiresUp;
               argv = actionArgv "${s.label}: ${a.label}" a;
             })
             s.actions;
