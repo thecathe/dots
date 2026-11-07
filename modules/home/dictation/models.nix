@@ -10,12 +10,17 @@
 # and config.json, were hashed after download and their git blob ids matched the
 # listing). Nix refuses a file that does not match.
 #
-# Two variants, because they differ in speed and size:
-#   fp32  encoder-model.onnx (42 MB graph) + encoder-model.onnx.data (2.4 GB of
-#         weights), decoder 36 MB. 2.5 GB. The full-precision model, and the only
-#         one the GPU build can use well.
+# Two variants:
 #   int8  the same network quantised to 8 bits: encoder 652 MB, decoder 9 MB.
-#         0.66 GB, meant for the CPU.
+#         0.66 GB. The default.
+#   fp32  encoder-model.onnx (42 MB graph) + encoder-model.onnx.data (2.4 GB of
+#         weights), decoder 36 MB. 2.5 GB. The full-precision model.
+# Measured on this machine's CPU (Ryzen 7 5700X, AVX2 only, 4 ONNX Runtime threads
+# as voxtype sets them): the two transcribe at the same speed (28.5 s of audio in
+# 1.3 s either way; the int8 file loads in 1.9 s, fp32 in 2.3 s) and gave the same
+# text on all five test clips, but fp32 holds 2.5 GiB in memory against 1.1 GiB.
+# fp32 is kept for the planned GPU build, where the quantised model may not suit the
+# CUDA provider (not checked).
 # They are separate directories, not one with everything in it, because voxtype's
 # loader (parakeet-rs `find_encoder`) takes `encoder-model.onnx` first when it is
 # present, so a directory holding both would always run fp32.

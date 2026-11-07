@@ -168,7 +168,7 @@
         {
           dots.dictation = {
             enable = true;
-            model = "v2-int8";
+            model = "v2";
             keyboardLayout = "us";
             settings.output.mode = "clipboard";
           };
@@ -187,10 +187,10 @@
     "consumer-dictation: dotool's layout does not follow dots.dictation.keyboardLayout";
     assert lib.assertMsg (settings.osd.enabled == false)
     "consumer-dictation: voxtype's overlay is not turned off (this build cannot start it)";
-    assert lib.assertMsg (lib.hasSuffix "-parakeet-tdt-0.6b-v2" settings.parakeet.model)
-    "consumer-dictation: the default model is not the fp32 v2 directory (${settings.parakeet.model})";
-    assert lib.assertMsg (lib.hasSuffix "-parakeet-tdt-0.6b-v2-int8" custom.dots.dictation.settings.parakeet.model)
-    "consumer-dictation: dots.dictation.model = \"v2-int8\" did not select the int8 directory";
+    assert lib.assertMsg (lib.hasSuffix "-parakeet-tdt-0.6b-v2-int8" settings.parakeet.model)
+    "consumer-dictation: the default model is not the int8 v2 directory (${settings.parakeet.model})";
+    assert lib.assertMsg (lib.hasSuffix "-parakeet-tdt-0.6b-v2" custom.dots.dictation.settings.parakeet.model)
+    "consumer-dictation: dots.dictation.model = \"v2\" did not select the fp32 directory";
     assert lib.assertMsg (custom.dots.dictation.settings.output.mode == "clipboard" && custom.dots.dictation.settings.hotkey.enabled == false)
     "consumer-dictation: a host's setting was lost, or setting one key dropped the defaults";
     assert lib.assertMsg (lib.hasSuffix "/bin/voxtype daemon" (lib.head on.systemd.user.services.voxtype.Service.ExecStart))

@@ -88,10 +88,11 @@ in {
 
     model = lib.mkOption {
       type = lib.types.enum (builtins.attrNames models);
-      default = "v2";
+      default = "v2-int8";
       description = ''
-        Which Parakeet model directory to use (see models.nix): `v2` is the
-        full-precision model, `v2-int8` the 8-bit quantised one.
+        Which Parakeet model directory to use (see models.nix): `v2-int8` is the
+        8-bit quantised model, `v2` the full-precision one. On the CPU they are as
+        fast and gave the same text, but `v2` needs over twice the memory.
       '';
     };
 
