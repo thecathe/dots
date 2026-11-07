@@ -44,7 +44,7 @@ TestCase {
         plugin = null;
         proc = null;
     }
-    function color(c) { return String(c); }
+    function color(c) { return String(Qt.color(c)); }
 
     function test_starts_the_command_once_loaded() {
         compare(proc.running, true);
@@ -82,8 +82,8 @@ TestCase {
     function test_each_state_has_its_own_look() {
         const cases = [
             { alt: "idle", icon: "mic", colour: Theme.surfaceVariantText, recording: false },
-            { alt: "recording", icon: "mic", colour: Theme.error, recording: true },
-            { alt: "streaming", icon: "mic", colour: Theme.error, recording: true },
+            { alt: "recording", icon: "mic", colour: "#ff4d4f", recording: true },
+            { alt: "streaming", icon: "mic", colour: "#ff4d4f", recording: true },
             { alt: "transcribing", icon: "graphic_eq", colour: Theme.primary, recording: false },
             { alt: "stopped", icon: "mic_off", colour: Theme.warning, recording: false },
         ];

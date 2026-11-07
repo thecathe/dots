@@ -36,9 +36,14 @@ PluginComponent {
         }
     }
 
+    // A fixed red, not Theme.error: that is a pastel in DMS's dark themes (#ffb4ab
+    // in the live one), too close to the idle icon for the one state that means the
+    // microphone is live.
+    readonly property color recordingColor: "#ff4d4f"
+
     readonly property color iconColor: {
         if (recording)
-            return Theme.error;
+            return recordingColor;
         if (phase === "transcribing")
             return Theme.primary;
         if (phase === "stopped")
@@ -119,7 +124,7 @@ PluginComponent {
                 loops: Animation.Infinite
                 alwaysRunToEnd: true
                 NumberAnimation {
-                    to: 0.35
+                    to: 0.45
                     duration: 700
                     easing.type: Easing.InOutSine
                 }
