@@ -50,7 +50,7 @@
 
   cfg = config.dots.gpuScreenRecorder;
 
-  recorder = pkgs.gpu-screen-recorder.override {ffmpeg = pkgs.ffmpeg_7;};
+  recorder = pkgs.gpu-screen-recorder.override {ffmpeg = pkgs.ffmpeg_8;};
 
   # Sets each of cfg.settings in the UI's config file, which the UI otherwise
   # owns (it rewrites the whole file whenever a setting is saved, so a read-only
@@ -122,9 +122,11 @@ in {
       # but the 595 driver offers 13.0, so gsr drops every NVENC codec
       # ("gsr_get_supported_video_codecs_nvenc: your nvidia driver only supports
       # nvenc api version 13.0 ...") and is left with software h264 and the
-      # experimental Vulkan encoders. ffmpeg 7 brings them back (checked with
-      # `gpu-screen-recorder --info`: h264, hevc, av1, 10-bit and HDR). Drop
-      # this once the driver catches up with the headers.
+      # experimental Vulkan encoders. ffmpeg 8 (8.1) brings them back (checked
+      # with `gpu-screen-recorder --info`: h264, hevc, av1, 10-bit and HDR).
+      # Not 7, which also does: the recorder warns that its mp4 muxer lacks
+      # working hybrid_fragmented movflags and may stutter (it wants 8 or newer).
+      # Drop this once the driver catches up with the headers.
       #
       # The UI starts the recorder from its own wrapper's PATH, and the module
       # installs the plain UI package (it only overrides a private copy, for
