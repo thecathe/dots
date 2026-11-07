@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: {
   options.dots.gpuScreenRecorder.enable = lib.mkEnableOption ''
@@ -13,6 +14,16 @@
     programs.gpu-screen-recorder = {
       enable = true;
       ui.enable = true;
+
+      # nixpkgs builds it against ffmpeg 9, whose NVENC headers need API 13.1,
+      # but the 595 driver offers 13.0, so gsr drops every NVENC codec
+      # ("gsr_get_supported_video_codecs_nvenc: your nvidia driver only supports
+      # nvenc api version 13.0 ...") and is left with software h264 and the
+      # experimental Vulkan encoders. ffmpeg 7 brings them back (checked with
+      # `gpu-screen-recorder --info`: h264, hevc, av1, 10-bit and HDR). Drop
+      # this once the driver catches up with the headers. The module hands this
+      # package on to the UI, so the one override covers both.
+      package = pkgs.gpu-screen-recorder.override {ffmpeg = pkgs.ffmpeg_7;};
     };
 
     # The UI is what owns the global hotkeys and the replay buffer, so it has
