@@ -202,11 +202,53 @@
     assert lib.assertMsg (!(off.systemd.user.services ? voxtype) && !(off.xdg.configFile ? "voxtype/config.toml") && !(lib.hasInfix "dictation" off.wayland.windowManager.niri.extraConfig))
     "consumer-dictation: the disabled module still adds a unit, a config file or a niri include";
       check "consumer-dictation-evaluates" [dictationModule {dots.dictation.enable = true;}];
+
+  # The DMS bar indicator for dictation (modules/home/dank/dictation-status.nix) next
+  # to the dictation module, with the DMS plugin options stood in for by a bare
+  # attribute set (the real ones come from DMS's own home-manager module, which this
+  # does not load). Enabled, the plugin must be installed and told to follow voxtype's
+  # status with the very binary the daemon runs; disabled, it must not exist at all, so
+  # a host without dictation gets no plugin. The shared settings.json must also place
+  # the widget in a bar, or the plugin would be installed and never drawn.
+  dictationWidgetConsumer = let
+    lib = inputs.nixpkgs.lib;
+    dmsStub = {lib, ...}: {
+      options.programs.dank-material-shell.plugins = lib.mkOption {
+        type = lib.types.attrsOf lib.types.anything;
+        default = {};
+      };
+    };
+    widgetModule = "${dots}/modules/home/dank/dictation-status.nix";
+    modulesOn = [dictationModule widgetModule dmsStub {dots.dictation.enable = true;}];
+    on = (consumerConfig modulesOn).config;
+    off = (consumerConfig [dictationModule widgetModule dmsStub]).config;
+    plugin = on.programs.dank-material-shell.plugins.dictationStatus;
+    manifest = builtins.fromJSON (builtins.readFile "${plugin.src}/plugin.json");
+    settingsJson = builtins.fromJSON (builtins.readFile "${dots}/modules/home/dank/settings.json");
+    widgetId = w:
+      if builtins.isString w
+      then w
+      else w.id or "";
+    inABar = lib.any (bar: lib.any (w: widgetId w == "dictationStatus") (bar.leftWidgets ++ bar.centerWidgets ++ bar.rightWidgets)) settingsJson.barConfigs;
+  in
+    assert lib.assertMsg (plugin.enable)
+    "consumer-dictation-widget: the plugin is not enabled with dictation";
+    assert lib.assertMsg (plugin.settings.statusCommand == ["${on.dots.dictation.package}/bin/voxtype" "status" "--follow" "--format" "json"])
+    "consumer-dictation-widget: the plugin does not follow `voxtype status` of the package the daemon runs (${builtins.toJSON plugin.settings.statusCommand})";
+    assert lib.assertMsg (manifest.id == "dictationStatus" && builtins.pathExists "${plugin.src}/${manifest.component}")
+    "consumer-dictation-widget: the plugin's manifest does not name its id or an existing component";
+    assert lib.assertMsg (!(off.programs.dank-material-shell.plugins ? dictationStatus))
+    "consumer-dictation-widget: the plugin is installed although dictation is off";
+    assert lib.assertMsg inABar
+    "consumer-dictation-widget: no bar in settings.json lists the dictationStatus widget";
+      check "consumer-dictation-widget-evaluates" modulesOn;
 in {
   # The globalprotect module alone, by path.
   consumer-globalprotect = globalprotectConsumer;
   # The dictation module alone, by path.
   consumer-dictation = dictationConsumer;
+  # The dictation bar indicator next to it, with DMS's plugin options stubbed.
+  consumer-dictation-widget = dictationWidgetConsumer;
   # The area modules with dots.vscode, as a second user's flake uses them.
   consumer-modules = pkgs.writeText "consumer-modules-evaluates" (builtins.unsafeDiscardStringContext modulesConsumer);
   # shell + nvim by path, plus the vscode module above: the full downstream shape.
