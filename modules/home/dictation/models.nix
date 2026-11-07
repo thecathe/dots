@@ -22,12 +22,16 @@
 #
 # The encoder's weights are "external data": encoder-model.onnx names
 # encoder-model.onnx.data, and ONNX Runtime looks for it beside the graph file.
-# The directory is therefore assembled from symlinks into the per-file store
-# paths (no 2.4 GB copy). Whether ONNX Runtime accepts external data behind a
-# symlink is not something to assume; see the devlog entry for what was measured.
+# Each directory is therefore built by COPYING the per-file store paths, not by
+# symlinking them (which would avoid a 2.4 GB copy): ONNX Runtime 1.27.1 refuses
+# weights that resolve outside the model's own directory, symlink or not
+# ("External data path escapes model directory"; tested with a toy model, see the
+# devlog entry). The per-file fetches are not referenced by the copy, so a garbage
+# collection frees them afterwards and only the one copy stays.
 {
+  lib,
   fetchurl,
-  linkFarm,
+  runCommand,
 }: let
   repo = "istupakov/parakeet-tdt-0.6b-v2-onnx";
   rev = "0bbb45a3365852604aef28b538a8f066f4ccaa85";
@@ -49,11 +53,10 @@
   };
 
   directory = name: names:
-    linkFarm name (map (file: {
-        name = file;
-        path = files.${file};
-      })
-      names);
+    runCommand name {} ''
+      mkdir $out
+      ${lib.concatMapStringsSep "\n" (file: "cp --reflink=auto ${files.${file}} $out/${file}") names}
+    '';
 in {
   v2 = directory "parakeet-tdt-0.6b-v2" [
     "vocab.txt"
