@@ -15,10 +15,11 @@
   # started inside a replay or stream session (src/recorder/recorder.c), which
   # leaves no sign in the process arguments. Replay buffers and saves are named
   # Replay_*, screenshots Screenshot_*. The unit's cgroup is read directly: its
-  # processes are not all children of gsr-ui.
+  # processes are not all children of gsr-ui. The unit is the first argument,
+  # gsr-ui.service unless given (so a copy under another name can be tested).
   recordingScript = pkgs.writeShellScript "gsr-recording" ''
     export PATH=${lib.makeBinPath [pkgs.coreutils pkgs.systemd]}
-    cgroup=$(systemctl --user show -p ControlGroup --value gsr-ui.service)
+    cgroup=$(systemctl --user show -p ControlGroup --value "''${1:-gsr-ui.service}")
     [ -n "$cgroup" ] || exit 0
     for pid in $(cat "/sys/fs/cgroup$cgroup/cgroup.procs" 2>/dev/null); do
       for fd in /proc/$pid/fd/*; do
@@ -49,6 +50,42 @@
   '';
 
   cfg = config.dots.gpuScreenRecorder;
+
+  # Run by systemd before it signals the unit's processes (ExecStop), so that a
+  # recording still going when the service is stopped (the menu's "down", a
+  # restart, logging out) ends the way the UI's own stop does and the UI says so.
+  # Without this the UI is only told to exit: its shutdown stops the recorder
+  # (the file is saved either way) but never raises the "Saved a ... recording"
+  # notification, which only the UI's stop path does. That popup is a process of
+  # the unit too, so it is also waited for: systemd would kill it at once. The
+  # unit is the first argument (%n in the unit file).
+  stopScript = pkgs.writeShellScript "gsr-stop" ''
+    export PATH=${lib.makeBinPath [pkgs.coreutils pkgs.systemd]}
+    unit=''${1:-gsr-ui.service}
+    recording() { [ -n "$(${recordingScript} "$unit")" ]; }
+    notifying() {
+      cgroup=$(systemctl --user show -p ControlGroup --value "$unit")
+      for pid in $(cat "/sys/fs/cgroup$cgroup/cgroup.procs" 2>/dev/null); do
+        case $(cat "/proc/$pid/comm" 2>/dev/null) in
+          *gsr-notify*) return 0 ;;
+        esac
+      done
+      return 1
+    }
+    recording || exit 0
+    ${cli} toggle-record || exit 0
+    # Finishing a long recording can take a while: up to 30 s.
+    for _ in $(seq 60); do
+      recording || break
+      sleep 0.5
+    done
+    # The popup is started just after the recorder has finished; up to 8 s.
+    sleep 0.5
+    for _ in $(seq 40); do
+      notifying || break
+      sleep 0.2
+    done
+  '';
 
   recorder = pkgs.gpu-screen-recorder.override {ffmpeg = pkgs.ffmpeg_8;};
 
@@ -158,6 +195,9 @@ in {
         # The "-" lets the service start even if pinning failed.
         ExecStartPre = lib.mkIf (cfg.settings != {}) "-${pinScript}";
         ExecStart = "/run/current-system/sw/bin/gsr-ui launch-daemon";
+        # Also with "-": a failure here must not stop the stop (the unit's
+        # processes are signalled afterwards in any case, which saves the file).
+        ExecStop = "-${stopScript} %n";
         Restart = "on-failure";
         RestartSec = 5;
       };
