@@ -6,5 +6,6 @@
     ./calendar.nix
     ./curated-menu.nix
     ./services-menu.nix
+    ./dictation-status.nix
   ];
 }
