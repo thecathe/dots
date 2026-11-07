@@ -84,8 +84,8 @@ in {
   options.dots.gpuScreenRecorder = {
     enable = lib.mkEnableOption ''
       GPU Screen Recorder, a ShadowPlay-style recorder with an instant-replay
-      buffer and an overlay UI, which the niri module binds to Mod+Z (and
-      Mod+F7..F12, see modules/home/wm/niri/gsr-binds.kdl). Installs two setcap
+      buffer and an overlay UI, which the niri module binds to Mod+Alt+Z (and
+      Mod+Alt+F6..F12, see modules/home/wm/niri/gsr-binds.kdl). Installs two setcap
       wrappers: gsr-kms-server (cap_sys_admin, for promptless capture) and
       gsr-global-hotkeys (cap_setuid, which only the recorder's own hotkeys use)'';
 

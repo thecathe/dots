@@ -5,9 +5,13 @@
 // (dots.gpuScreenRecorder.settings): it grabs every keyboard to catch them, so
 // the keys never reached any other program, VS Code's Alt+Z or the Print
 // screenshot binds above included. gsr-ui-cli tells the running gsr-ui what to
-// do over its socket instead. The keys are the recorder's own defaults with Mod
-// for Alt (so Mod+Z, Mod+F9, ...); the screenshot ones are left out, niri's own
-// Print binds cover them.
+// do over its socket instead. The keys are the recorder's own defaults with Mod+
+// added (Mod+Alt+Z, Mod+Alt+F9, ...); the screenshot ones are left out, niri's
+// own Print binds cover them.
+//
+// One key moved: the recorder's region recording is Ctrl+F9, and Mod+Alt+Ctrl+F9
+// would hold Ctrl+Alt+F9, the chord that switches to a text console, so it is
+// Mod+Alt+F6 instead. Keep Ctrl out of any bind that has Alt and an F key.
 //
 //   allow-inhibiting=false  so they still work while a game or remote desktop
 //                           asks niri to stop processing shortcuts
@@ -16,20 +20,20 @@
 // Needs the gsr-ui service running (the DMS services menu starts it); while it
 // is not, a key press just fails to connect.
 binds {
-    Mod+Z allow-inhibiting=false repeat=false hotkey-overlay-title="Screen Recorder: overlay" { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-show"; }
+    Mod+Alt+Z allow-inhibiting=false repeat=false hotkey-overlay-title="Screen Recorder: overlay" { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-show"; }
 
     // Recording
-    Mod+F9 allow-inhibiting=false repeat=false hotkey-overlay-title="Screen Recorder: start/stop recording" { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-record"; }
-    Mod+F7 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-pause"; }
-    Mod+Ctrl+F9 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-record-region"; }
-    Mod+Shift+F9 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-record-window"; }
+    Mod+Alt+F9 allow-inhibiting=false repeat=false hotkey-overlay-title="Screen Recorder: start/stop recording" { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-record"; }
+    Mod+Alt+F7 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-pause"; }
+    Mod+Alt+F6 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-record-region"; }
+    Mod+Alt+Shift+F9 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-record-window"; }
 
     // The replay buffer
-    Mod+Shift+F10 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-replay"; }
-    Mod+F10 allow-inhibiting=false repeat=false hotkey-overlay-title="Screen Recorder: save replay" { spawn "/run/current-system/sw/bin/gsr-ui-cli" "replay-save"; }
-    Mod+F11 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "replay-save-1-min"; }
-    Mod+F12 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "replay-save-10-min"; }
+    Mod+Alt+Shift+F10 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-replay"; }
+    Mod+Alt+F10 allow-inhibiting=false repeat=false hotkey-overlay-title="Screen Recorder: save replay" { spawn "/run/current-system/sw/bin/gsr-ui-cli" "replay-save"; }
+    Mod+Alt+F11 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "replay-save-1-min"; }
+    Mod+Alt+F12 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "replay-save-10-min"; }
 
     // Streaming
-    Mod+F8 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-stream"; }
+    Mod+Alt+F8 allow-inhibiting=false repeat=false { spawn "/run/current-system/sw/bin/gsr-ui-cli" "toggle-stream"; }
 }
