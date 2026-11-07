@@ -13,6 +13,7 @@
     ./firefox.nix
     ./nautilus.nix
     ./docker.nix
+    ./gpu-screen-recorder.nix
     ./nix-ld.nix
     ./vscode.nix
     ./claude.nix
