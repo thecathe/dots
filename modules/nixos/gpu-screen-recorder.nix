@@ -149,6 +149,11 @@ in {
       wantedBy = ["graphical-session.target"];
       partOf = ["graphical-session.target"];
       after = ["graphical-session.target"];
+      # A unit's PATH is only what it lists, not the login shell's. The UI's
+      # wrapper adds the recorder, the notifier and the setcap wrappers, but not
+      # the UI's own helpers, which it starts by name: gsr-game-tracker ("turn on
+      # replay when a game starts") was "No such file or directory" under the unit.
+      path = [config.programs.gpu-screen-recorder.ui.package];
       serviceConfig = {
         # The "-" lets the service start even if pinning failed.
         ExecStartPre = lib.mkIf (cfg.settings != {}) "-${pinScript}";
