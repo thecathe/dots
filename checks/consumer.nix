@@ -180,6 +180,8 @@
     "consumer-dictation: voxtype is not configured for the Parakeet TDT engine";
     assert lib.assertMsg (settings.hotkey.enabled == false)
     "consumer-dictation: voxtype's own hotkey is not turned off";
+    assert lib.assertMsg (settings.osd.enabled == false)
+    "consumer-dictation: voxtype's overlay is not turned off (this build cannot start it)";
     assert lib.assertMsg (lib.hasSuffix "-parakeet-tdt-0.6b-v2" settings.parakeet.model)
     "consumer-dictation: the default model is not the fp32 v2 directory (${settings.parakeet.model})";
     assert lib.assertMsg (lib.hasSuffix "-parakeet-tdt-0.6b-v2-int8" custom.dots.dictation.settings.parakeet.model)

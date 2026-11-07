@@ -123,6 +123,11 @@ in {
       # With a toggle bind and no window of its own, a short sound on start, stop
       # and finish is the only sign that anything happened.
       audio.feedback.enabled = lib.mkDefault true;
+      # voxtype's recording overlay is on by default, but this build ships only
+      # the Quickshell frontend's binary, not the QML it needs: the daemon starts
+      # it, it exits at once, and after three tries voxtype logs an ERROR and gives
+      # up (the daemon itself carries on). Off, it is not started at all.
+      osd.enabled = lib.mkDefault false;
     };
 
     home.packages = [cfg.package];
