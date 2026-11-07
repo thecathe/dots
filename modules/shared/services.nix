@@ -4,7 +4,8 @@
 #   - optionally a `<command> up|down|status` CLI (dots.services.<name>.command),
 #   - the list the DMS services menu shows (modules/home/dank/services-menu.nix),
 #     where an entry's optional `actions` (e.g. "attach to its console") are
-#     listed behind a "..." button on its row,
+#     listed behind a "..." button on its row, and its optional `detail` (what
+#     it is doing right now) replaces "up" on the row,
 #   - on NixOS, a polkit rule letting the dots user start and stop the entry's
 #     system unit without a password (modules/nixos/services.nix).
 # Imported by both the NixOS and the home-manager module sets: NixOS entries
@@ -43,6 +44,14 @@
           background: for commands that are interactive or stay up, e.g.
           attaching to a tmux session. The window closes when the command
           ends, and waits for Enter if it failed so the error can be read.
+        '';
+      };
+      requiresUp = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          List the action only while the service is up: for commands that talk
+          to the running service and would just fail while it is down.
         '';
       };
     };
@@ -90,6 +99,17 @@
       status = mkOption {
         type = types.listOf types.str;
         description = "The command (argv) that exits 0 while the service is up. It runs each time the services menu opens, so keep it cheap.";
+      };
+      detail = mkOption {
+        type = types.nullOr (types.listOf types.str);
+        default = null;
+        description = ''
+          A command (argv) that prints one short word about what an up service
+          is doing right now (e.g. "recording"), or nothing. The menu shows the
+          word in the error colour in place of "up". It runs after `status`
+          succeeds, each time the menu opens, so keep it cheap. Only the menu
+          uses it.
+        '';
       };
       actions = mkOption {
         type = types.listOf action;
