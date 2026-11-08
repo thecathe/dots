@@ -222,6 +222,19 @@
     modulesOn = [dictationModule widgetModule dmsStub {dots.dictation.enable = true;}];
     on = (consumerConfig modulesOn).config;
     off = (consumerConfig [dictationModule widgetModule dmsStub]).config;
+    custom =
+      (consumerConfig [
+        dictationModule
+        widgetModule
+        dmsStub
+        {
+          dots.dictation = {
+            enable = true;
+            settings.audio.max_duration_secs = 180;
+          };
+        }
+      ]).config;
+    customPlugin = custom.programs.dank-material-shell.plugins.dictationStatus;
     plugin = on.programs.dank-material-shell.plugins.dictationStatus;
     manifest = builtins.fromJSON (builtins.readFile "${plugin.src}/plugin.json");
     settingsJson = builtins.fromJSON (builtins.readFile "${dots}/modules/home/dank/settings.json");
@@ -241,6 +254,10 @@
     "consumer-dictation-widget: the plugin is installed although dictation is off";
     assert lib.assertMsg inABar
     "consumer-dictation-widget: no bar in settings.json lists the dictationStatus widget";
+    assert lib.assertMsg (plugin.settings.maxDurationSecs == 60)
+    "consumer-dictation-widget: with no host setting, the widget is not told voxtype's default limit of 60 s (${builtins.toJSON plugin.settings.maxDurationSecs})";
+    assert lib.assertMsg (customPlugin.settings.maxDurationSecs == 180 && custom.dots.dictation.settings.audio.max_duration_secs == customPlugin.settings.maxDurationSecs)
+    "consumer-dictation-widget: a host's audio.max_duration_secs does not reach the widget, or disagrees with the daemon's config";
       check "consumer-dictation-widget-evaluates" modulesOn;
 in {
   # The globalprotect module alone, by path.
