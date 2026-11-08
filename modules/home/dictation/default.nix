@@ -30,6 +30,11 @@
 #            (there is no release trigger), so this is start/stop, not hold to
 #            talk. voxtype's own hotkey would give hold to talk but needs the
 #            `input` group and a grab on every keyboard, so it is off.
+#   a bar indicator  the DMS plugin in ../dank/dictation-status.nix (installed
+#            only where this is enabled): a microphone in the bar that is dim
+#            while idle, pulses red while recording, becomes a waveform while the
+#            speech is transcribed, and warns when the daemon is down. It runs
+#            `voxtype status --follow`, so it needs no setting of its own.
 #
 # The text goes to whichever window has focus when transcription finishes, so
 # keep the target focused. (A VS Code extension that takes text for its own editor
