@@ -3,6 +3,7 @@ import QtQuick
 Item {
     property var pluginData: ({})
     property real barThickness: 30
+    property bool isVertical: false
     property Component horizontalBarPill
     property Component verticalBarPill
     property bool baseCompleted: false
