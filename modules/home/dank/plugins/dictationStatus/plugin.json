@@ -1,0 +1,13 @@
+{
+    "id": "dictationStatus",
+    "name": "Dictation",
+    "description": "Bar indicator for voice dictation (dots.dictation): a microphone that pulses red while recording, shows a waveform while the speech is being transcribed, and warns when the dictation daemon is not running. Follows `voxtype status --follow`; the command comes from the plugin settings (dots: modules/home/dictation/default.nix).",
+    "version": "1.0.0",
+    "author": "dots",
+    "icon": "mic",
+    "type": "widget",
+    "capabilities": ["dankbar-widget"],
+    "component": "./DictationStatus.qml",
+    "requires_dms": ">=1.6.0",
+    "permissions": ["settings_read", "process"]
+}
