@@ -67,7 +67,14 @@
   otherProfiles = lib.remove "default" (lib.attrNames groups);
 
   profiles = ["default"] ++ cfg.profiles;
-  enabledFeatures = lib.concatMap (name: groups.${name}) profiles;
+  # A profile's features: its group from groups.nix, plus Remote-SSH in every
+  # profile when dots.vscode.remoteSsh is on (unique, since a group may already
+  # list it). Left as the plain group when off, so that costs nothing.
+  profileFeatures = name:
+    if cfg.remoteSsh
+    then lib.unique (groups.${name} ++ [features.ssh])
+    else groups.${name};
+  enabledFeatures = lib.concatMap profileFeatures profiles;
 
   # Programs an extension shells out to and expects on PATH (a feature's
   # `extraPath`), from the enabled profiles' features only.
@@ -85,6 +92,18 @@ in {
       defaultText = lib.literalMD "every profile in `groups.nix`";
       example = ["python" "rocq"];
       description = "The profiles to build besides `default`, which is always built. Names are those in groups.nix.";
+    };
+    remoteSsh = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Whether to add Remote-SSH (Microsoft's proprietary extension, with Remote
+        Explorer and Remote-SSH Edit) to every profile, and have it install Claude Code
+        on each host a remote window connects to. A remote window resolves its
+        connection with the extensions of the profile it opens in, so a workspace pinned
+        to any profile needs it, not only the profiles whose group already lists the
+        `ssh` feature. Off by default: it is unfree and most setups never connect out.
+      '';
     };
     extraPath = lib.mkOption {
       type = lib.types.listOf lib.types.package;
@@ -127,7 +146,7 @@ in {
       mutableExtensionsDir = false;
       # Must set icons manually in vscode.
       profiles = lib.genAttrs profiles (name:
-        (vscodeLib.mkProfile groups.${name}).profile
+        (vscodeLib.mkProfile (profileFeatures name)).profile
         // lib.optionalAttrs (name == "default") {
           enableUpdateCheck = false;
           enableExtensionUpdateCheck = false;
