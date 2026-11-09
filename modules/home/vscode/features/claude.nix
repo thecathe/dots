@@ -4,5 +4,6 @@
   ];
   settings = {
     "claudeCode.initialPermissionMode" = "auto";
+    "claudeCode.hideOnboarding" = true;
   };
 }
