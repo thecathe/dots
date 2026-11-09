@@ -3,6 +3,6 @@
     anthropic.claude-code
   ];
   settings = {
-    "claudeCode.initialPermissionMode" = "plan";
+    "claudeCode.initialPermissionMode" = "auto";
   };
 }
