@@ -47,8 +47,12 @@
       diffutils
       gawk
     ]);
-  in
-    lib.hm.dag.entryAfter ["writeBoundary"] ''
+
+    # A script of its own, so that `set -e` stops it at the first failure (it
+    # would not inside the `if` below) and the activation can then carry on.
+    script = pkgs.writeShellScript "opam-global-switch" ''
+      set -euo pipefail
+
       opam="${pkgs.opam}/bin/opam"
       opamroot="$HOME/.opam"
       export PATH="${opamBuildPath}:$PATH"
@@ -85,5 +89,17 @@
       fi
 
       $opam switch set home
+    '';
+  in
+    lib.hm.dag.entryAfter ["writeBoundary"] ''
+      # This only keeps an optional fallback switch healthy, so a failure here
+      # must not abort the activation (and with it the linking of files and
+      # starting of services). The usual cause is a ~/.opam that a newer opam
+      # has upgraded: opam refuses to write to a root newer than itself, and the
+      # upgrade is one-way. Projects have their own roots now (OPAMROOT in their
+      # devShell), so this opam should be the only one that touches ~/.opam.
+      if ! ${script}; then
+        warnEcho "opamGlobalSwitch: could not update the global opam switch (opam's output is above), so ~/.opam is left as it is. If it said ~/.opam is more recent than this version of opam, some newer opam has upgraded the root: bump nixpkgs so that this one is at least as new."
+      fi
     '';
 }
