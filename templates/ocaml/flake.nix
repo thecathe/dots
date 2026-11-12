@@ -96,8 +96,21 @@
           # Test for the binary rather than just _opam/, so a half-built
           # switch is caught too.
           if [ ! -x "$PWD/_opam/bin/dune" ]; then
-            echo "No local opam switch in ./_opam (or it is incomplete)."
-            echo "Create it with:"
+            if [ -d "$PWD/_opam" ]; then
+              # What is there is a half-built switch (an interrupted or failed
+              # bootstrap), and the bootstrap cannot run over it: opam refuses
+              # to create a switch in a directory that already exists. The
+              # directory has to go first, and removing it is enough: opam
+              # forgets a local switch whose directory has gone.
+              echo "./_opam exists but is incomplete (an interrupted or failed bootstrap)."
+              echo "opam will not create a switch over it, so remove it and create it again:"
+              bootstrap="rm -rf _opam && $bootstrap"
+              prompt='Remove ./_opam and create it again now? this takes a while [y/N] '
+            else
+              echo "No local opam switch in ./_opam."
+              echo "Create it with:"
+              prompt='Create it now? this takes a while [y/N] '
+            fi
             echo "    $bootstrap"
 
             # nix-direnv *executes* this hook, and direnv can inherit the
@@ -105,7 +118,7 @@
             # into the project. direnv sets DIRENV_IN_ENVRC while evaluating
             # .envrc, so only prompt outside it, and only on a tty.
             if [ -z "''${DIRENV_IN_ENVRC:-}" ] && [ -t 0 ]; then
-              printf 'Create it now? this takes a while [y/N] '
+              printf '%s' "$prompt"
               read -r reply
               case "$reply" in
                 [yY]*) eval "$bootstrap" ;;
@@ -117,7 +130,7 @@
             fi
           fi
 
-          unset bootstrap opam_init
+          unset bootstrap opam_init prompt
         '';
       };
     });
