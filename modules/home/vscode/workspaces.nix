@@ -1,6 +1,8 @@
 # Pinned VSCode workspaces: the `code-workspace` tool (see code-workspace.sh).
 # It opens a workspace in its profile, offers to clone missing repos, and
-# generates a launcher entry per workspace.
+# generates a launcher entry per workspace. Hosts listed under "remotes" in the
+# manifest get entries too, which open the workspace on that host over Remote-SSH
+# (the profile it opens in needs that extension: see dots.vscode.remoteSsh).
 #
 # This module holds only the mechanism. The workspace files and manifest live
 # in a separate private repo (checked out at ~/workspaces, see
