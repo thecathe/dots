@@ -401,7 +401,7 @@
         "topProcessSortBy": "cpu",
         "layoutMode": "auto",
         "graphInterval": 60,
-        "showOnOverviewOnly": true
+        "showOnOverviewOnly": false
       },
       "positions": {}
     },
