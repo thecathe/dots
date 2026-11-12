@@ -32,3 +32,10 @@ use the `host-home` template instead.
 
 `flake.lock` pins dots, and through it every other input. Update it deliberately with
 `nix flake update dots`.
+
+## Logging in over ssh from kitty
+
+Nothing to set up: `home.nix` imports `dots.homeModules.default`, which puts kitty's terminfo entry in
+`~/.terminfo`. Without it, `ssh NEW_HOST` from kitty finds no definition for `xterm-kitty` and the shell's
+line editor garbles what is typed. Keep that import. (Root's own `~/.terminfo` is not covered, so `sudo -i`
+there still lacks the entry.)
