@@ -83,8 +83,15 @@ in {
 
     package = lib.mkOption {
       type = lib.types.package;
-      default = pkgs.voxtype.override {onnxSupport = true;};
-      defaultText = lib.literalExpression "pkgs.voxtype.override { onnxSupport = true; }";
+      # nixpkgs 177d054's voxtype does not list two system libraries its crates
+      # use: oniguruma (`onig_sys` is told to use the system one,
+      # RUSTONIG_SYSTEM_LIBONIG, but is not given it: "Unable to find oniguruma in
+      # pkg-config") and sqlite (`libsqlite3-sys` is not bundled: "cannot find
+      # -lsqlite3" at link time). Drop the overrideAttrs once nixpkgs lists them.
+      default =
+        (pkgs.voxtype.override {onnxSupport = true;}).overrideAttrs
+        (old: {buildInputs = old.buildInputs ++ [pkgs.oniguruma pkgs.sqlite];});
+      defaultText = lib.literalExpression "pkgs.voxtype.override { onnxSupport = true; }, plus oniguruma and sqlite";
       description = ''
         The voxtype package. It has to be built with ONNX support, or the
         Parakeet engine is missing.
