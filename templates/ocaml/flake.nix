@@ -48,11 +48,26 @@
         OPAMNODEPEXTS = "1";
 
         shellHook = ''
-          bootstrap='opam switch create . --deps-only --yes && opam install . --deps-only --with-dev-setup --yes'
+          # opam keeps its state (package index, download cache, a config that
+          # records a format version, the list of switches) in a "root". The
+          # default root, ~/.opam, is shared by every opam on the machine: the
+          # first opam newer than the root upgrades it for good, and any older
+          # one then refuses to write to it ("Refusing write access to ~/.opam,
+          # which is more recent than this version of opam"). This flake pins
+          # its own opam, so the project gets its own root, which only that opam
+          # touches, and ~/.opam is left alone. Run from the project root, like
+          # the checks below.
+          export OPAMROOT="$PWD/.opam-root"
+
+          # --bare: the switch comes from the next step, not from init.
+          # --no-setup: don't edit ~/.zshrc and friends; this shell's
+          # environment comes from direnv / nix develop, not opam's hooks.
+          opam_init='opam init --bare --no-setup --yes'
+          bootstrap="$opam_init && opam switch create . --deps-only --yes && opam install . --deps-only --with-dev-setup --yes"
           if ! ls -- *.opam >/dev/null 2>&1; then
             bootstrap="dune build && $bootstrap"
           elif ls -- *.opam.locked >/dev/null 2>&1; then
-            bootstrap='opam switch create . --locked --deps-only --yes && opam install . --locked --deps-only --with-dev-setup --yes'
+            bootstrap="$opam_init && opam switch create . --locked --deps-only --yes && opam install . --locked --deps-only --with-dev-setup --yes"
           fi
 
           # Test for the binary rather than just _opam/, so a half-built
@@ -79,7 +94,7 @@
             fi
           fi
 
-          unset bootstrap
+          unset bootstrap opam_init
         '';
       };
     });
