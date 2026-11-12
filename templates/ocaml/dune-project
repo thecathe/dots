@@ -17,7 +17,7 @@
  (description "A longer description")
  (depends
   ; Minimum OCaml version — match this to your opam switch version.
-  (ocaml (>= 5.2))
+  (ocaml (>= 5.5))
   dune
   ; `:with-dev-setup` marks these as development-only.
   ; Install them with: opam install . --deps-only --with-dev-setup
@@ -26,8 +26,12 @@
   ; metadata puts no upper bound on the dune libraries it builds against, so
   ; opam cannot see a combination that fails to compile. Raising the `ocaml`
   ; bound alone to 5.4.1 gave OCaml 5.4.1 with ocaml-lsp-server 1.26.1, which
-  ; does not build against stdune 3.25 ("Unbound value Pid.of_int"). When you
-  ; raise `ocaml` above, raise this lower bound with it (1.27 for OCaml 5.5).
-  (ocaml-lsp-server (and :with-dev-setup (>= 1.18)))
+  ; does not build against stdune 3.25 ("Unbound value Pid.of_int"). So the
+  ; two move together: 1.27 is the first release for OCaml 5.5.
+  (ocaml-lsp-server (and :with-dev-setup (>= 1.27)))
   ; ocamlformat version must exactly match the `version` key in .ocamlformat.
-  (ocamlformat      (and :with-dev-setup (= 0.26.2)))))
+  ; Exact so that everyone formats alike (the output changes between releases,
+  ; and ocamlformat refuses to run on a mismatch). An old pin can also cap
+  ; OCaml: 0.26.2 and 0.27.0 require `ocaml < 5.4`, so a pin left behind stops
+  ; the `ocaml` bound above from being raised. Bump both files together.
+  (ocamlformat      (and :with-dev-setup (= 0.29.0)))))
