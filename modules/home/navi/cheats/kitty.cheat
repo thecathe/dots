@@ -1,0 +1,154 @@
+; Keyboard shortcuts for kitty, as navi cheats. Press Ctrl+G in zsh (or run `navi`), type to search.
+;
+; Each entry reads `[key] what it does`, then a command that does the same thing, so choosing one
+; and pressing Enter runs it on the pane you are in (it needs kitty's remote control, which
+; kitty.nix turns on). `[unbound]` means kitty can do it but no key is set yet; bind one in
+; modules/home/shell/kitty.nix if you reach for it often.
+;
+; Groups are the tags on the `%` lines. List one group with, for example,
+;   navi --tag-rules 'kitty,tabs'      only tabs
+;   navi --tag-rules 'mine'            only the bindings set in kitty.nix
+; Keep the default bindings in step with kitty's docs: https://sw.kovidgoyal.net/kitty/actions/
+
+% kitty, panes, mine
+
+# [alt+enter] Split this pane side by side
+kitten @ action --self 'launch --cwd=current --location=vsplit'
+
+# [alt+shift+enter] Split this pane, one above the other
+kitten @ action --self 'launch --cwd=current --location=hsplit'
+
+% kitty, panes
+
+# [ctrl+shift+enter] New pane (kitty picks the split)
+kitten @ action --self 'new_window'
+
+# [ctrl+shift+w] Close this pane
+kitten @ action --self 'close_window'
+
+# [unbound] Turn this pane's split from side by side into stacked, or back
+kitten @ action --self 'layout_action rotate'
+
+# [unbound] Swap the two panes of this split (rotate 180)
+kitten @ action --self 'layout_action rotate 180'
+
+# [ctrl+shift+r] Resize with the keyboard (follow the on-screen hints; dragging a border works too)
+kitten @ action --self 'start_resizing_window'
+
+# [unbound] Set how much of its split this pane takes
+kitten @ action --self 'layout_action bias <percent>'
+
+# [unbound] Maximize this pane along one axis (run again to restore)
+kitten @ action --self 'layout_action maximize <axis>'
+
+# [unbound] Give every split an equal share again
+kitten @ action --self 'layout_action equalize'
+
+# [unbound] Move this pane in a direction, swapping with its neighbour
+kitten @ action --self 'move_window <direction>'
+
+# [unbound] Move this pane to the edge of the tab, making it span that whole side
+kitten @ action --self 'layout_action move_to_screen_edge <edge>'
+
+# [ctrl+shift+f] Swap this pane with the next one
+kitten @ action --self 'move_window_forward'
+
+# [ctrl+shift+b] Swap this pane with the previous one
+kitten @ action --self 'move_window_backward'
+
+# [ctrl+shift+`] Make this pane the first one
+kitten @ action --self 'move_window_to_top'
+
+# [ctrl+shift+]] Focus the next pane
+kitten @ action --self 'next_window'
+
+# [ctrl+shift+[] Focus the previous pane
+kitten @ action --self 'previous_window'
+
+$ percent: printf '%s\n' 50 60 70 80
+$ axis: printf '%s\n' horizontal vertical
+$ direction: printf '%s\n' left right up down
+$ edge: printf '%s\n' left right top bottom
+
+% kitty, tabs
+
+# [ctrl+shift+t] New tab
+kitten @ action --self 'new_tab'
+
+# [ctrl+tab] Next tab
+kitten @ action --self 'next_tab'
+
+# [ctrl+shift+tab] Previous tab
+kitten @ action --self 'previous_tab'
+
+# [ctrl+shift+alt+t] Rename this tab
+kitten @ action --self 'set_tab_title'
+
+# [ctrl+shift+.] Move this tab one place forward in the tab bar
+kitten @ action --self 'move_tab_forward'
+
+# [ctrl+shift+,] Move this tab one place back in the tab bar
+kitten @ action --self 'move_tab_backward'
+
+# [ctrl+shift+q] Close this tab
+kitten @ action --self 'close_tab'
+
+% kitty, move
+
+; A pane moves between tabs and OS windows with detach_window, a whole tab with detach_tab.
+; A tab that holds a single pane becomes a pane of another tab by moving that pane there.
+; Tabs can also be dragged along the tab bar, or out of it into their own OS window.
+
+# [unbound] Move this pane into a new tab
+kitten @ action --self 'detach_window new-tab'
+
+# [unbound] Move this pane (or a single-pane tab) into another tab, chosen from a list
+kitten @ action --self 'detach_window ask'
+
+# [unbound] Move this pane into the tab you were last in
+kitten @ action --self 'detach_window tab-prev'
+
+# [unbound] Move this pane into its own OS window
+kitten @ action --self 'detach_window'
+
+# [unbound] Move this whole tab into its own OS window
+kitten @ action --self 'detach_tab'
+
+# [unbound] Move this whole tab into another OS window, chosen from a list
+kitten @ action --self 'detach_tab ask'
+
+% kitty, windows
+
+# [ctrl+shift+n] New OS window
+kitten @ action --self 'new_os_window'
+
+# [ctrl+shift+f10] Maximize or restore this OS window
+kitten @ action --self 'toggle_maximized'
+
+# [ctrl+shift+f11] Fullscreen or restore this OS window
+kitten @ action --self 'toggle_fullscreen'
+
+% kitty, scrollback
+
+# [ctrl+shift+h] Browse the scrollback in the pager
+kitten @ action --self 'show_scrollback'
+
+# [ctrl+shift+g] Show the output of the last command in the pager
+kitten @ action --self 'show_last_command_output'
+
+# [ctrl+shift+z] Jump to the previous shell prompt in the scrollback
+kitten @ action --self 'scroll_to_prompt -1'
+
+# [ctrl+shift+x] Jump to the next shell prompt in the scrollback
+kitten @ action --self 'scroll_to_prompt 1'
+
+# [ctrl+shift+page_up] Scroll up a page
+kitten @ action --self 'scroll_page_up'
+
+# [ctrl+shift+page_down] Scroll down a page
+kitten @ action --self 'scroll_page_down'
+
+% kitty, mine
+
+# [ctrl+shift+d] Open nvim on ~/dots in an overlay (a tmux session called `dots`)
+kitten @ action --self "launch --type=overlay --title='nvim dots' zsh -c 'tmux attach -t dots:0.0 2>/dev/null || tmux new-session -s dots -c ~/dots nvim'"
