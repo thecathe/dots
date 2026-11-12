@@ -34,3 +34,11 @@ Some things home-manager can't do outside NixOS, and they need doing by hand on 
   root can write.
 - Programs that check passwords through PAM (screen lockers) need the distribution's own build, since nix
   can't ship setuid helpers.
+
+## Logging in over ssh from kitty
+
+Nothing to set up, and no root or apt needed: `home.nix` imports `dots.homeModules.default`, which puts
+kitty's terminfo entry in `~/.terminfo`. Most distributions' terminfo has no `xterm-kitty`, and without it
+`ssh NEW_HOST` from kitty garbles the shell's line editor (duplicated characters beside suggestions, wrong
+colours). Keep that import. Root's own `~/.terminfo` is not covered, so `sudo -i` on the machine still lacks
+the entry.

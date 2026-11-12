@@ -4,10 +4,20 @@
 {inputs}: let
   system = "x86_64-linux";
   pkgs = inputs.nixpkgs.legacyPackages.${system};
+  lib = inputs.nixpkgs.lib;
   hostLib = import ../lib/hosts.nix {inherit inputs;};
 
   check = name: drv:
     pkgs.writeText name (builtins.unsafeDiscardStringContext drv.drvPath);
+
+  # A host built from a template gets kitty's terminfo entry in ~/.terminfo
+  # (modules/home/terminfo.nix) without being told to. Without it, ssh from
+  # kitty into the host garbles the line editor. `files` is the host user's
+  # home.file.
+  withKittyTerminfo = name: files:
+    lib.throwIfNot
+    (files ? ".terminfo" && lib.hasSuffix "-terminfo/share/terminfo" (toString files.".terminfo".source))
+    "${name}: kitty's terminfo is not installed in ~/.terminfo";
 
   # Stands in for the hardware-configuration.nix that nixos-generate-config
   # writes on the machine, which a template can't ship.
@@ -18,18 +28,21 @@
     };
   };
 
+  hostNixos = hostLib.mkNixos {
+    user = "NEW_USER";
+    modules = [hardware ../templates/host-nixos/configuration.nix];
+    home = ../templates/host-nixos/home.nix;
+  };
+
   # The template's own flake.nix, called with this dots.
   hostHome = (import ../templates/host-home/flake.nix).outputs {dots = inputs.self;};
+  hostHomeConfig = hostHome.homeConfigurations."NEW_USER@NEW_HOST";
 in {
   template-host-nixos =
-    check "template-host-nixos-evaluates"
-    (hostLib.mkNixos {
-      user = "NEW_USER";
-      modules = [hardware ../templates/host-nixos/configuration.nix];
-      home = ../templates/host-nixos/home.nix;
-    }).config.system.build.toplevel;
+    withKittyTerminfo "template-host-nixos" hostNixos.config.home-manager.users.NEW_USER.home.file
+    (check "template-host-nixos-evaluates" hostNixos.config.system.build.toplevel);
 
   template-host-home =
-    check "template-host-home-evaluates"
-    hostHome.homeConfigurations."NEW_USER@NEW_HOST".activationPackage;
+    withKittyTerminfo "template-host-home" hostHomeConfig.config.home.file
+    (check "template-host-home-evaluates" hostHomeConfig.activationPackage);
 }

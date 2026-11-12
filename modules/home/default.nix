@@ -13,6 +13,7 @@
     ./wallpaper
     ./music
     ./latex.nix
+    ./terminfo.nix
     ./git
     ./nvim
     ./stylix
