@@ -24,6 +24,9 @@
   # (session.local.json below) is gitignored and host-local, so unlike
   # settings.json it's never reset by a checkout - DMS's normal use already
   # keeps its moved-in values correct per host with no seeding needed.
+  # (Except desktop widget positions: they moved in the same update, but not
+  # through SESSION_MOVED_KEYS, so that list missed them. They start empty in
+  # a fresh session; see dankWidgetPositions below.)
   dankSettingsStateDefaults = config.dank.settingsState;
   dankSettingsStateKeys = lib.attrNames dankSettingsStateDefaults;
 
@@ -188,6 +191,222 @@
         fi
       fi
     '';
+
+  # Desktop widget positions. DMS 1.6 keeps them in its SESSION file, under
+  # desktopWidgetInstancePositions[<instance id>][<screen name>], and reads
+  # them from nowhere else: the positions inside settings.json's
+  # desktopWidgetInstances are only imported by DMS's migration of a
+  # settings.json older than configVersion 15. So the overlay's positions
+  # (dankSettingsOverlayScript above still writes them into settings.json, where
+  # that migration would find them) reach DMS only through the command below.
+  #
+  # The record is dank.settingsOverlay.desktopWidgetInstances.<id>.positions as
+  # {<id>: {<screen>: {x, y, width, height}}}; empty, so every mode a no-op, on a
+  # host whose overlay records none.
+  dankWidgetPositionsRecord = pkgs.writeText "dank-widget-positions.json" (builtins.toJSON (
+    lib.filterAttrs (_: positions: positions != {}) (
+      lib.mapAttrs (_: instance: instance.positions or {}) (config.dank.settingsOverlay.desktopWidgetInstances or {})
+    )
+  ));
+
+  # One jq program per job. $record is the file above (slurped), $overwrite is
+  # true for `apply` and false for `seed`: seeding sets an (instance, screen) pair
+  # only where the session has none, so what DMS wrote itself (a drag) is never
+  # touched; applying sets every recorded pair, merged over what is there.
+  dankWidgetPositionsFill = pkgs.writeText "dank-widget-positions-fill.jq" ''
+    ($record[0]) as $rec
+    | if ($rec | length) == 0 then .
+      else
+        .desktopWidgetInstancePositions = (
+          reduce ($rec | to_entries[]) as $i (.desktopWidgetInstancePositions // {};
+            reduce ($i.value | to_entries[]) as $s (.;
+              if $overwrite or ((.[$i.key][$s.key] // null) == null)
+              then .[$i.key][$s.key] = ((.[$i.key][$s.key] // {}) * $s.value)
+              else . end)))
+      end
+  '';
+
+  # One row per (widget, screen) that is recorded or set: name, screen, what is
+  # recorded, what DMS holds, and how they compare. $names is {id: name}.
+  dankWidgetPositionsRows = pkgs.writeText "dank-widget-positions-rows.jq" ''
+    def fmt: if . == null then "-" else "\(.x),\(.y) \(.width)x\(.height)" end;
+    (.desktopWidgetInstancePositions // {}) as $live
+    | ($record[0]) as $rec
+    | ([$rec | to_entries[] | .key as $id | .value | to_entries[] | {id: $id, screen: .key}]
+       + [$live | to_entries[] | .key as $id | .value | to_entries[]
+          | select(($rec[$id][.key] // null) == null) | {id: $id, screen: .key}])
+    | .[]
+    | . as $p
+    | ($rec[$p.id][$p.screen] // null) as $r
+    | ($live[$p.id][$p.screen] // null) as $l
+    | [ ($names[$p.id] // $p.id), $p.screen, ($r | fmt), ($l | fmt),
+        (if $r == null then "not recorded"
+         elif $l == null then "not set"
+         elif ($r | to_entries | all(.value == $l[.key])) then "same"
+         else "differs" end) ]
+    | @tsv
+  '';
+
+  dankWidgetPositions = pkgs.writeShellApplication {
+    name = "dank-widget-positions";
+    runtimeInputs = [pkgs.coreutils pkgs.diffutils pkgs.jq pkgs.util-linux];
+    text = ''
+      session="$HOME/dots/modules/home/dank/session.local.json"
+      settings="$HOME/dots/modules/home/dank/settings.json"
+      record="${dankWidgetPositionsRecord}"
+      tmp=""
+      trap 'rm -f "$tmp"' EXIT
+
+      usage() {
+        cat <<'EOF'
+      Usage: dank-widget-positions [status | apply [-n|--dry-run] [--no-restart] | seed]
+
+      Compares the desktop widget positions this host records (dank-monitor.json
+      in the hosts repo, as of the last rebuild) with the ones DMS holds in its
+      session file.
+
+        status   show both side by side (the default)
+        apply    set DMS's positions to the recorded ones, for every recorded
+                 widget and screen. DMS reads that file only when it starts and
+                 writes its own copy back at its next save, so apply stops
+                 dms.service while it writes and starts it again (a few seconds
+                 without the shell); --no-restart leaves DMS alone, and then it
+                 has to be restarted by hand or it undoes the change.
+                 -n shows what would change and changes nothing
+        seed     set only the positions DMS has none for; quiet, and what a
+                 rebuild runs, so a position DMS wrote itself is never touched
+      EOF
+      }
+
+      # The session file with the recorded positions applied ($1 = true: all of
+      # them, false: only the missing ones), written beside it and renamed over
+      # it, so DMS (which watches the file) never reads half of one. Returns 0
+      # when it changed something, 1 when there was nothing to change, 2 when the
+      # file was left alone because it could not be read or rewritten.
+      write_session() {
+        [ -f "$session" ] || return 1
+        tmp=$(mktemp "$session.XXXXXX")
+        if jq --slurpfile record "$record" --argjson overwrite "$1" -f ${dankWidgetPositionsFill} "$session" > "$tmp" 2>/dev/null && [ -s "$tmp" ]; then
+          if cmp -s <(jq -S . "$tmp") <(jq -S . "$session"); then
+            return 1
+          fi
+          chmod --reference="$session" "$tmp"
+          mv -f "$tmp" "$session"
+          return 0
+        fi
+        echo "dank-widget-positions: $session is not valid JSON or could not be rewritten; left untouched" >&2
+        return 2
+      }
+
+      rows() {
+        local names='{}'
+        if [ -f "$settings" ]; then
+          names=$(jq -c '[.desktopWidgetInstances[]? | select(.id != null) | {(.id): (.name // .id)}] | add // {}' "$settings" 2>/dev/null) || names='{}'
+        fi
+        jq -r --slurpfile record "$record" --argjson names "$names" -f ${dankWidgetPositionsRows} "$session"
+      }
+
+      status() {
+        if [ ! -f "$session" ]; then
+          echo "No session file at $session yet (DMS has not run here)."
+          return 0
+        fi
+        local out
+        if ! out=$(rows); then
+          echo "dank-widget-positions: $session is not valid JSON" >&2
+          return 1
+        fi
+        if [ -z "$out" ]; then
+          echo "Nothing recorded for this host, and DMS has no widget positions."
+          return 0
+        fi
+        { printf 'WIDGET\tSCREEN\tRECORDED\tDMS HOLDS\tSTATE\n'; printf '%s\n' "$out"; } | column -t -s "$(printf '\t')"
+      }
+
+      dms_active() {
+        systemctl --user is-active --quiet dms.service 2>/dev/null
+      }
+
+      # DMS loads its session file when it starts and writes the whole of its own
+      # copy back at its next save (tested: an outside write, atomic or in place,
+      # is neither noticed nor kept; and it saves nothing on its way out), so
+      # a change made behind its back is lost. Hence the stop around the write.
+      apply() {
+        local dry=$1 restart=$2 pending=0 state rc=0 stopped=false running=false
+        [ -f "$session" ] || { echo "No session file at $session yet (DMS has not run here)."; return 0; }
+        status
+        while IFS=$'\t' read -r _ _ _ _ state; do
+          case $state in
+            differs | "not set") pending=$((pending + 1)) ;;
+          esac
+        done < <(rows)
+        if [ "$pending" -eq 0 ]; then
+          echo "Nothing to change."
+          return 0
+        fi
+        if dms_active; then running=true; fi
+        if [ "$dry" = true ]; then
+          echo "Would set $pending position(s) to the recorded ones. Nothing changed."
+          if [ "$running" = true ] && [ "$restart" = true ]; then
+            echo "DMS would be stopped for the write and started again."
+          fi
+          return 0
+        fi
+        if [ "$running" = true ] && [ "$restart" = true ]; then
+          if ! systemctl --user stop dms.service; then
+            echo "dank-widget-positions: could not stop dms.service; nothing changed" >&2
+            return 1
+          fi
+          stopped=true
+        fi
+        write_session true || rc=$?
+        # Never leave the shell stopped, whatever the write did.
+        if [ "$stopped" = true ] && ! systemctl --user start dms.service; then
+          echo "dank-widget-positions: could not start dms.service again; start it by hand" >&2
+          return 1
+        fi
+        case $rc in
+          0) ;;
+          1)
+            echo "Nothing to change."
+            return 0
+            ;;
+          *) return 1 ;;
+        esac
+        if [ "$stopped" = true ]; then
+          echo "Set $pending position(s) to the recorded ones. DMS was restarted to read them."
+        elif [ "$running" = true ]; then
+          echo "Set $pending position(s) to the recorded ones, but DMS is running and keeps its own copy:" \
+            "restart it now (systemctl --user restart dms), or it will overwrite them at its next save."
+        else
+          echo "Set $pending position(s) to the recorded ones. DMS is not running; it reads them when it starts."
+        fi
+      }
+
+      case "''${1:-status}" in
+        status) status ;;
+        apply)
+          dry=false
+          restart=true
+          shift
+          for arg in "$@"; do
+            case $arg in
+              -n | --dry-run) dry=true ;;
+              --no-restart) restart=false ;;
+              *) usage >&2; exit 2 ;;
+            esac
+          done
+          apply "$dry" "$restart"
+          ;;
+        seed)
+          # Always succeeds: it runs inside the activation script.
+          write_session false || true
+          ;;
+        -h | --help | help) usage ;;
+        *) usage >&2; exit 2 ;;
+      esac
+    '';
+  };
 in {
   options.dank.settingsState = lib.mkOption {
     type = lib.types.attrsOf lib.types.anything;
@@ -253,6 +472,17 @@ in {
       gitignored/host-local and never reset by a checkout - so DMS's own
       normal use keeps them correct per host with no seeding needed; don't
       add them back here.
+      The same update moved the desktop widget POSITIONS into session.json,
+      and DMS reads them only from there; the positions seeded into
+      settings.json are only for DMS's migration of an old settings file. So
+      the recorded positions also reach the session file, by the
+      dank-widget-positions command: a rebuild fills in the (widget, screen)
+      pairs the session has none for (which, since DMS stores a default the
+      first time it shows a widget on a screen, means a host that has not
+      shown it yet), and `dank-widget-positions apply` sets them all to the
+      record on request, restarting DMS around the write because DMS reads
+      the session only when it starts. displayPreferences are still read from
+      settings.json.
       None of this data is ever tracked by git in the first place - see
       .gitattributes and dankSettingsCleanFilter above, which strip it back
       to canonical defaults on every git add/diff/status/commit. This overlay
@@ -394,6 +624,10 @@ in {
       # material-shell.plugins above); not packaged by the registry module.
       pkgs.fd
 
+      # Shows, or re-applies by hand, this host's recorded desktop widget
+      # positions (see dankWidgetPositions above); the rebuild runs its `seed`.
+      dankWidgetPositions
+
       # Saves the current clipboard image to ~/Pictures/Saved/NAME.png. DMS-specific
       # (uses dms clipboard paste), so it lives here rather than dots/bin - only
       # exists when this module is enabled, like dank-dock-toggle (dock-toggle.nix). Also
@@ -497,6 +731,20 @@ in {
     '';
     xdg.stateFile."DankMaterialShell/session.json".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dots/modules/home/dank/session.local.json";
+
+    # DMS reads desktop widget positions only from that session file, and a
+    # fresh one has none. Fill in the positions the host records
+    # (dank-monitor.json), but only the ones the session lacks: a position DMS
+    # wrote itself (a drag) always wins, so a rebuild never moves a widget.
+    # Limits, all tested against the real DMS: DMS stores a default for a
+    # widget the first time it shows it on a screen, so this only gets in first
+    # on a host that has not shown it yet (a new host's first rebuild; DMS is
+    # started after activation); and DMS keeps its own copy and writes it all
+    # back at its next save, so a seed written while it runs is lost. To make
+    # the session follow the record after editing it, run
+    # `dank-widget-positions apply`, which restarts DMS around the write.
+    home.activation.dankMaterialShellWidgetPositions =
+      lib.hm.dag.entryAfter ["dankMaterialShellSession"] "${dankWidgetPositions}/bin/dank-widget-positions seed";
 
     # Seeds this host's real values into the live settings.json at rebuild
     # time - the only reason this is needed at all is that the clean filter
