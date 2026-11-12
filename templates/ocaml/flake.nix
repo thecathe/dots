@@ -20,14 +20,22 @@
       nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
   in {
     devShells = forAllSystems (pkgs: {
+      # Used for one step only: writing the *.opam file when the project has
+      # none yet (see the shellHook below). dune needs an OCaml compiler just
+      # to start, and the opam switch that would supply one is created *from*
+      # that file, so this shell brings its own. It stays out of `default` so
+      # the everyday shell never carries a second compiler that could be
+      # picked up instead of the switch's.
+      opam-file = pkgs.mkShell {
+        nativeBuildInputs = with pkgs; [ocaml dune];
+      };
+
       default = pkgs.mkShell {
         # Nix provides opam and the system libraries that opam packages
-        # compile against. OCaml packages themselves are managed by opam
-        # once a local switch exists.
+        # compile against. OCaml packages themselves, dune included, are
+        # managed by opam once a local switch exists.
         nativeBuildInputs = with pkgs; [
           opam
-          dune # bootstraps *.opam generation before a switch exists; opam's
-          # own `dune` dependency takes over via PATH once one does
           pkg-config
           git # opam VCS pins, and `dune subst` in the opam build
         ];
@@ -64,9 +72,24 @@
           # environment comes from direnv / nix develop, not opam's hooks.
           opam_init='opam init --bare --no-setup --yes'
           bootstrap="$opam_init && opam switch create . --deps-only --yes && opam install . --deps-only --with-dev-setup --yes"
-          if ! ls -- *.opam >/dev/null 2>&1; then
-            bootstrap="dune build && $bootstrap"
-          elif ls -- *.opam.locked >/dev/null 2>&1; then
+          # The tests below are `find | grep -q .` rather than `ls -- *.opam`:
+          # direnv runs this hook in a bash with `nullglob` on, where an
+          # unmatched glob expands to nothing, so `ls --` lists the directory
+          # and always succeeds, and the "no file" branch is never taken. find
+          # takes the pattern itself, so the answer does not depend on shell
+          # options, and the same text can be pasted into zsh or bash.
+          if ! find . -maxdepth 1 -name '*.opam' | grep -q .; then
+            # No .opam file yet: dune writes it from dune-project, and has to
+            # run before the switch exists, because the switch is created from
+            # that file (its compiler is chosen to satisfy the file's `ocaml`
+            # bound; a switch made first would have to guess). The opam-file
+            # shell supplies the compiler dune needs for this one step.
+            #
+            # Success is "the file appeared", not dune's exit status: dune can
+            # fail on something that is only missing until the packages below
+            # are installed (a library, say), but only after writing the file.
+            bootstrap="{ nix develop .#opam-file --command dune build; find . -maxdepth 1 -name '*.opam' | grep -q .; } && $bootstrap"
+          elif find . -maxdepth 1 -name '*.opam.locked' | grep -q .; then
             bootstrap="$opam_init && opam switch create . --locked --deps-only --yes && opam install . --locked --deps-only --with-dev-setup --yes"
           fi
 

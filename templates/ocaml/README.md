@@ -11,6 +11,18 @@ direnv allow .
 
 This will ensure your shell has the necessary tools installed when entering this directory.
 
+### Generate the `.opam` file (first time only)
+
+If the project root already has a `*.opam` file, skip this step. Otherwise:
+
+```
+nix develop .#opam-file --command dune build
+```
+
+`dune` writes `my-project.opam` from `dune-project` (see `generate_opam_files`). It needs an OCaml compiler just to start, and the opam switch in the next step is created *from* that file, so this step runs in a small separate dev shell (`opam-file` in `flake.nix`) that brings a compiler for this one command. Doing it first matters: the switch's OCaml version is chosen to satisfy the `ocaml` bound in the `.opam` file, which a switch made earlier could only guess.
+
+> Note: it is crucial that this file is tracked by git so that you can skip this step when next setting up this project on a new directory.
+
 ### Create local opam switch
 
 ```
@@ -23,24 +35,6 @@ The first command creates this project's own opam root in `./.opam-root` (see [A
 Run these inside the dev shell (direnv, or `nix develop`): it is what points `opam` at the project's root.
 
 > Note: after this step you may need to kill your terminal (`ctrl+d`) and reopen a new one. Alternatively, run `direnv reload`.
-
-#### Conditional step: is there a `.opam` file?
-
-If there is, then skip this step and continue to the [next](#install-opam-packages). Otherwise, we need to do some first-time-setup:
-
-```
-opam install dune --yes
-```
-
-will install the `dune` project management system for OCaml projects. Then run
-
-```
-dune build
-```
-
-this will create the `*.opam` file in the project root.
-
-> Note: it is crucial that this file is tracked by git so that you can skip this step when next setting up this project on a new directory.
 
 ### Install opam packages
 

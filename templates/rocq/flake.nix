@@ -20,14 +20,22 @@
       nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
   in {
     devShells = forAllSystems (pkgs: {
+      # Used for one step only: writing the *.opam file when the project has
+      # none yet (see the shellHook below). dune needs an OCaml compiler just
+      # to start, and the opam switch that would supply one is created *from*
+      # that file, so this shell brings its own. It stays out of `default` so
+      # the everyday shell never carries a second compiler that could be
+      # picked up instead of the switch's.
+      opam-file = pkgs.mkShell {
+        nativeBuildInputs = with pkgs; [ocaml dune];
+      };
+
       default = pkgs.mkShell {
         # Nix provides opam and the system libraries that opam packages
-        # compile against. OCaml/Rocq packages themselves are managed by
-        # opam once a local switch exists.
+        # compile against. OCaml/Rocq packages themselves, dune included, are
+        # managed by opam once a local switch exists.
         nativeBuildInputs = with pkgs; [
           opam
-          dune # bootstraps *.opam generation before a switch exists; opam's
-          # own `dune` dependency takes over via PATH once one does
           pkg-config
           git # opam VCS pins, and `dune subst` in the opam build
           gnumake # rocq-core's own opam build uses a Makefile
@@ -78,9 +86,27 @@
           # this project's own root).
           rocq_repos='default,rocq-released=https://rocq-prover.org/opam/released'
           bootstrap="$opam_init && opam switch create . --repositories=$rocq_repos --deps-only --yes && opam install . --deps-only --with-dev-setup --yes"
-          if ! ls -- *.opam >/dev/null 2>&1; then
-            bootstrap="dune build && $bootstrap"
-          elif ls -- *.opam.locked >/dev/null 2>&1; then
+          # The tests below are `find | grep -q .` rather than `ls -- *.opam`:
+          # direnv runs this hook in a bash with `nullglob` on, where an
+          # unmatched glob expands to nothing, so `ls --` lists the directory
+          # and always succeeds, and the "no file" branch is never taken. find
+          # takes the pattern itself, so the answer does not depend on shell
+          # options, and the same text can be pasted into zsh or bash.
+          note=
+          if ! find . -maxdepth 1 -name '*.opam' | grep -q .; then
+            # No .opam file yet: dune writes it from dune-project, and has to
+            # run before the switch exists, because the switch is created from
+            # that file (its compiler is chosen to satisfy the file's `ocaml`
+            # bound; a switch made first would have to guess). The opam-file
+            # shell supplies the compiler dune needs for this one step.
+            #
+            # Success is "the file appeared", not dune's exit status, and here
+            # that matters: dune stops on "Program rocq not found" (rocq is
+            # one of the packages the switch is about to install) but only
+            # after writing the file.
+            bootstrap="{ nix develop .#opam-file --command dune build; find . -maxdepth 1 -name '*.opam' | grep -q .; } && $bootstrap"
+            note="(Expect dune to report 'Program rocq not found' on the way: rocq is installed by a later step, and the .opam file is written regardless.)"
+          elif find . -maxdepth 1 -name '*.opam.locked' | grep -q .; then
             bootstrap="$opam_init && opam switch create . --repositories=$rocq_repos --locked --deps-only --yes && opam install . --locked --deps-only --with-dev-setup --yes"
           fi
 
@@ -90,6 +116,7 @@
             echo "No local opam switch in ./_opam (or it is incomplete)."
             echo "Create it with:"
             echo "    $bootstrap"
+            [ -n "$note" ] && echo "$note"
 
             # nix-direnv *executes* this hook, and direnv can inherit the
             # terminal's stdin — a bare `read` there would hang every `cd`
@@ -108,7 +135,7 @@
             fi
           fi
 
-          unset bootstrap opam_init rocq_repos
+          unset bootstrap opam_init rocq_repos note
         '';
       };
     });

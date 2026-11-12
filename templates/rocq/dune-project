@@ -17,8 +17,8 @@
 (package
  (name my-project)
  ; Lets `dune build` succeed before you've added any library/executable
- ; stanzas -- needed for the opam-file-generation bootstrap step below to
- ; exit cleanly on a brand new project. Harmless once you add real stanzas.
+ ; stanzas; without it dune reports the package as empty, which is an error
+ ; (the .opam file is still written). Harmless once you add real stanzas.
  (allow_empty)
  (synopsis "A short synopsis")
  (description "A longer description")
