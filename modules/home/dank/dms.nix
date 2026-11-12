@@ -52,6 +52,15 @@
   # out-of-store symlink below) are completely untouched by this; the
   # filter only affects what git sees, never the file on disk.
   #
+  # State keys are deleted and then re-assigned, rather than assigned in
+  # place, so they always land last in the object. DMS omits a key from the
+  # file while it is at DMS's own default (showDock's is false, so a hidden
+  # dock drops the line), and writes it back at its schema position when it
+  # isn't. jq's in-place assignment keeps a present key where it is but
+  # appends a missing one, which made the cleaned file - and so the diff
+  # against HEAD - depend on whether the dock happened to be shown. Pinning
+  # the position makes it identical in every state.
+  #
   # customThemeFile is handled here as a standalone assignment rather than
   # folded into dankSettingsStateKeys/dankSettingsStateDefaults: unlike
   # showDock, dankMaterialShellSettingsOverlay always force-overwrites it
@@ -77,7 +86,7 @@
       --argjson defaults '${builtins.toJSON dankSettingsStateDefaults}' \
       --argjson overlayKeys '${builtins.toJSON dankSettingsOverlayKeys}' \
       '.customThemeFile = ""
-       | (reduce $keys[] as $k (.; .[$k] = $defaults[$k]))
+       | (reduce $keys[] as $k (.; del(.[$k]) | .[$k] = $defaults[$k]))
        | del(.[$overlayKeys[]])
        | .desktopWidgetInstances |= map(
            .positions = {}
