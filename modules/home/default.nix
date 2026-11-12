@@ -27,7 +27,7 @@
     ./globalprotect
     ./dictation
     ./zathura # epub reader?
-    ./navi # commadn cheatsheet tool
+    ./navi # cheatsheets, incl. keyboard shortcuts (navi/cheats)
   ];
 
   # options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";
