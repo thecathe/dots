@@ -1,4 +1,11 @@
-{lib, ...}: {
+{
+  config,
+  lib,
+  ...
+}: let
+  # stylix's monospace font, or null where this module is used without stylix.
+  monoFont = lib.attrByPath ["stylix" "fonts" "monospace" "name"] null config;
+in {
   programs.kitty = lib.mkForce {
     enable = true;
     shellIntegration.enableZshIntegration = true;
@@ -48,30 +55,38 @@
       "ctrl+shift+home" = "no_op";
       "ctrl+shift+end" = "no_op";
     };
-    settings = {
-      ##
-      confirm_os_window_close = 0;
-      map_timeout = "2.0";
-      allow_remote_control = "yes";
-      listen_on = "unix:/tmp/kitty-{kitty_pid}";
-      ##
-      dynamic_background_opacity = true;
-      background_opacity = "0.9";
-      background_blur = 5;
-      ##
-      enable_audio_bell = false;
-      ##
-      enabled_layouts = "splits";
-      #      window_padding_width = 5;
-      #      window_border_width = "0.2pt";
-      ##
-      tab_bar_style = "powerline";
-      tab_powerline_style = "angled";
-      ##
-      cursor_trail = 10;
-      cursor_trail_decay = "0.1 0.4";
-      cursor_blink_interval = "1.0";
-      cursor_stop_blinking_after = "0";
-    };
+    settings =
+      {
+        ##
+        confirm_os_window_close = 0;
+        map_timeout = "2.0";
+        allow_remote_control = "yes";
+        listen_on = "unix:/tmp/kitty-{kitty_pid}";
+        ##
+        dynamic_background_opacity = true;
+        background_opacity = "0.9";
+        background_blur = 5;
+        ##
+        enable_audio_bell = false;
+        ##
+        enabled_layouts = "splits";
+        #      window_padding_width = 5;
+        #      window_border_width = "0.2pt";
+        ##
+        tab_bar_style = "powerline";
+        tab_powerline_style = "angled";
+        ##
+        cursor_trail = 10;
+        cursor_trail_decay = "0.1 0.4";
+        cursor_blink_interval = "1.0";
+        cursor_stop_blinking_after = "0";
+      }
+      // lib.optionalAttrs (monoFont == "JetBrainsMono Nerd Font Mono") {
+        # JetBrains Mono draws `***` as a ligature with a raised middle star, so the
+        # stars a password prompt echoes (sudo-rs) shift as the run grows. Draw `*`
+        # from the same family's no-ligature twin (installed with it): every other
+        # ligature stays, only those containing `*` (`/*`, `**`, `*>`) are lost.
+        symbol_map = "U+002A JetBrainsMonoNL Nerd Font Mono";
+      };
   };
 }
