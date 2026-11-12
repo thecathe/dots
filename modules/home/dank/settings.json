@@ -20,7 +20,6 @@
   "launcherLogoMode": "os",
   "fontFamily": "UbuntuSans Nerd Font",
   "monoFontFamily": "JetBrainsMono Nerd Font Mono",
-  "showDock": true,
   "dockSmartAutoHide": true,
   "dockUseOverlayLayer": true,
   "dockGroupByApp": true,
@@ -445,5 +444,6 @@
       "trigger": "qrg"
     }
   },
-  "configVersion": 18
+  "configVersion": 18,
+  "showDock": true
 }
