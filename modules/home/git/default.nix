@@ -20,6 +20,7 @@ in {
     settings.push.recurseSubmodules = "check"; # refuse to push a superproject whose submodule commits aren't pushed
     ignores = [
       "_opam/" # opam local switches
+      ".opam-root/" # a project's own opam root (its dev shell sets OPAMROOT to it)
       "_build/" # build files
       ".direnv/" # direnv cache
       ".vscode/" # vscode settings

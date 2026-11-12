@@ -2,7 +2,8 @@
 .vscode/*
 !.vscode/settings.json
 
-# dune build output and the local opam switch
+# dune build output, the local opam switch and the project's own opam root
 _build/
 _opam/
+.opam-root/
 *.install
