@@ -12,7 +12,8 @@
 # environment variable, reaches every shell and program, and works on a host
 # that is not NixOS, where nothing under /usr can be written. Linked file by file
 # so other tools (tic, kitten ssh) can still add entries beside it. Root's own
-# $HOME does not see it: `sudo -i` on such a host still lacks the entry.
+# $HOME does not see it. On NixOS, modules/nixos/terminfo.nix covers root; on any
+# other host `sudo apt install kitty-terminfo` (Debian, Ubuntu) does, by hand.
 {pkgs, ...}: {
   home.file.".terminfo" = {
     source = "${pkgs.kitty.terminfo}/share/terminfo";

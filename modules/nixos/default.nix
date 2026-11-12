@@ -8,6 +8,7 @@
     ./waydroid
     ./git.nix
     ./zsh.nix
+    ./terminfo.nix
     ./direnv.nix
     ./fonts.nix
     ./firefox.nix

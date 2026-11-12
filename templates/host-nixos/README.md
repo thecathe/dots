@@ -35,7 +35,8 @@ use the `host-home` template instead.
 
 ## Logging in over ssh from kitty
 
-Nothing to set up: `home.nix` imports `dots.homeModules.default`, which puts kitty's terminfo entry in
-`~/.terminfo`. Without it, `ssh NEW_HOST` from kitty finds no definition for `xterm-kitty` and the shell's
-line editor garbles what is typed. Keep that import. (Root's own `~/.terminfo` is not covered, so `sudo -i`
-there still lacks the entry.)
+Nothing to set up. Without kitty's terminfo entry, `ssh NEW_HOST` from kitty finds no definition for
+`xterm-kitty` and the shell's line editor garbles what is typed. Two imports supply it, so keep both:
+`home.nix` imports `dots.homeModules.default`, which puts the entry in your `~/.terminfo`, and
+`configuration.nix` imports `dots.nixosModules.default`, which installs it system-wide, so root has it too
+(`sudo -i`, root's own logins).
