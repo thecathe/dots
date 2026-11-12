@@ -5,7 +5,7 @@
 #   code-workspace <name>                    open ~/workspaces/vscode/<name>.code-workspace
 #                                            (prompts to clone missing repos first)
 #   code-workspace --on <host> [name]        open the workspace on a Remote-SSH host from the
-#                                            manifest's "remotes" (no name: the host's home folder)
+#                                            manifest's "remotes" (no name: an empty window on the host)
 #   code-workspace --clone-missing [name|all]  clone missing repos, no prompt
 #   code-workspace --sync-profiles           copy profile choices made in VSCode
 #                                            (storage.json) into manifest.json
@@ -149,7 +149,9 @@ launch() {
 
 # Remote-SSH hosts. The manifest's "remotes" maps an ssh host alias to
 #   { "home": "<its $HOME>", "workspaces": ["<name>", ...] }
-# and the workspaces listed get a launcher entry that opens them on that host.
+# and the workspaces listed get a launcher entry that opens them on that host
+# ("home" is only needed for those). The host itself gets an entry that opens an
+# empty window connected to it.
 # Nothing is generated per remote: the workspace files are the ones in this very
 # repo, checked out at the same place under the remote's $HOME (the layout is
 # identical on every host), so the remote window opens the copy on the host and
@@ -176,11 +178,14 @@ remote_uri() {
 
 launch_remote() {
   local host=$1 name=${2:-} home rel profile
-  home=$(remote_home "$host")
-  [ -n "$home" ] || die "no remote '$host' with an absolute \"home\" in $manifest"
+  jq -e --arg h "$host" '.remotes[$h]' "$manifest" >/dev/null || die "no remote '$host' in $manifest"
+  # No workspace: a new empty window connected to the host, so VSCode shows its
+  # Welcome page and no folder is opened.
   if [ -z "$name" ]; then
-    exec code --folder-uri "$(remote_uri "$host" "$home")"
+    exec code --new-window --remote "ssh-remote+$host"
   fi
+  home=$(remote_home "$host")
+  [ -n "$home" ] || die "remote '$host' needs an absolute \"home\" in $manifest to open '$name'"
   [ -f "$root/$name.code-workspace" ] || die "no workspace '$name' in $root"
   rel=${root#"$HOME"/}
   [ "$rel" != "$root" ] || die "$root is not under $HOME, so its place under $host's home is unknown"
@@ -250,9 +255,9 @@ sync_entries() {
   here=$(uname -n)
   for host in $(remote_hosts); do
     [ "$host" = "$here" ] && continue
-    [ -n "$(remote_home "$host")" ] || continue # --check reports it
     write_entry "code-remote-$host.desktop" "Code ($host)" \
-      "VSCode on $host over SSH" "$self --on $host"
+      "VSCode connected to $host over SSH, no folder open" "$self --on $host"
+    [ -n "$(remote_home "$host")" ] || continue # the workspaces need it; --check reports it
     for n in $(remote_workspaces "$host"); do
       [ -f "$root/$n.code-workspace" ] || continue # --check reports it
       write_entry "code-remote-$host--$n.desktop" "Code ($host): $n" \
@@ -286,7 +291,10 @@ check() {
     [ -f "$root/$n.code-workspace" ] || { echo "profiles: no workspace file for '$n'"; bad=1; }
   done
   for host in $(remote_hosts); do
-    [ -n "$(remote_home "$host")" ] || { echo "remotes: '$host' needs \"home\", the absolute path of its \$HOME"; bad=1; }
+    if [ -z "$(remote_home "$host")" ] && [ -n "$(remote_workspaces "$host")" ]; then
+      echo "remotes: '$host' lists workspaces, so it needs \"home\", the absolute path of its \$HOME"
+      bad=1
+    fi
     for n in $(remote_workspaces "$host"); do
       [ -f "$root/$n.code-workspace" ] || { echo "remotes: '$host' lists '$n', which has no workspace file"; bad=1; }
     done
