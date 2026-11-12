@@ -5,6 +5,10 @@
 ; kitty.nix turns on). `[unbound]` means kitty can do it but no key is set yet; bind one in
 ; modules/home/shell/kitty.nix if you reach for it often.
 ;
+; `alt+w` (panes, like vim's ctrl+w) and `alt+g` (tabs, like vim's g) are prefixes: press the
+; prefix, let go, then press the second key within 2 seconds (`map_timeout` in kitty.nix).
+; `alt+w H` means alt+w, then shift+h.
+;
 ; Groups are the tags on the `%` lines. List one group with, for example,
 ;   navi --tag-rules 'kitty,tabs'      only tabs
 ;   navi --tag-rules 'mine'            only the bindings set in kitty.nix
@@ -12,22 +16,44 @@
 
 % kitty, panes, mine
 
-# [alt+enter] Split this pane side by side
+# [alt+enter, alt+w v] Split this pane side by side
 kitten @ action --self 'launch --cwd=current --location=vsplit'
 
-# [alt+shift+enter] Split this pane, one above the other
+# [alt+shift+enter, alt+w s] Split this pane, one above the other
 kitten @ action --self 'launch --cwd=current --location=hsplit'
+
+# [alt+w h/j/k/l] Focus the neighbouring pane
+kitten @ action --self 'neighboring_window <direction>'
+
+# [alt+w H/J/K/L] Move this pane to the edge of the tab, making it span that whole side
+kitten @ action --self 'layout_action move_to_screen_edge <edge>'
+
+# [alt+w x, ctrl+shift+f] Swap this pane with the next one
+kitten @ action --self 'move_window_forward'
+
+# [alt+w r] Turn this pane's split from side by side into stacked, or back
+kitten @ action --self 'layout_action rotate'
+
+# [alt+w =] Give every split an equal share again
+kitten @ action --self 'layout_action equalize'
+
+# [alt+w z, alt+w Z] Maximize this pane along one axis (z width, Z height; run again to restore)
+kitten @ action --self 'layout_action maximize <axis>'
+
+# [alt+w c, ctrl+shift+w] Close this pane
+kitten @ action --self 'close_window'
+
+# [alt+w w, ctrl+shift+]] Focus the next pane
+kitten @ action --self 'next_window'
+
+$ direction: printf '%s\n' left right up down
+$ edge: printf '%s\n' left right top bottom
+$ axis: printf '%s\n' horizontal vertical
 
 % kitty, panes
 
 # [ctrl+shift+enter] New pane (kitty picks the split)
 kitten @ action --self 'new_window'
-
-# [ctrl+shift+w] Close this pane
-kitten @ action --self 'close_window'
-
-# [unbound] Turn this pane's split from side by side into stacked, or back
-kitten @ action --self 'layout_action rotate'
 
 # [unbound] Swap the two panes of this split (rotate 180)
 kitten @ action --self 'layout_action rotate 180'
@@ -38,20 +64,8 @@ kitten @ action --self 'start_resizing_window'
 # [unbound] Set how much of its split this pane takes
 kitten @ action --self 'layout_action bias <percent>'
 
-# [unbound] Maximize this pane along one axis (run again to restore)
-kitten @ action --self 'layout_action maximize <axis>'
-
-# [unbound] Give every split an equal share again
-kitten @ action --self 'layout_action equalize'
-
 # [unbound] Move this pane in a direction, swapping with its neighbour
 kitten @ action --self 'move_window <direction>'
-
-# [unbound] Move this pane to the edge of the tab, making it span that whole side
-kitten @ action --self 'layout_action move_to_screen_edge <edge>'
-
-# [ctrl+shift+f] Swap this pane with the next one
-kitten @ action --self 'move_window_forward'
 
 # [ctrl+shift+b] Swap this pane with the previous one
 kitten @ action --self 'move_window_backward'
@@ -59,27 +73,24 @@ kitten @ action --self 'move_window_backward'
 # [ctrl+shift+`] Make this pane the first one
 kitten @ action --self 'move_window_to_top'
 
-# [ctrl+shift+]] Focus the next pane
-kitten @ action --self 'next_window'
-
 # [ctrl+shift+[] Focus the previous pane
 kitten @ action --self 'previous_window'
 
 $ percent: printf '%s\n' 50 60 70 80
-$ axis: printf '%s\n' horizontal vertical
 $ direction: printf '%s\n' left right up down
-$ edge: printf '%s\n' left right top bottom
+
+% kitty, tabs, mine
+
+# [alt+g t, ctrl+tab] Next tab
+kitten @ action --self 'next_tab'
+
+# [alt+g T, ctrl+shift+tab] Previous tab
+kitten @ action --self 'previous_tab'
 
 % kitty, tabs
 
 # [ctrl+shift+t] New tab
 kitten @ action --self 'new_tab'
-
-# [ctrl+tab] Next tab
-kitten @ action --self 'next_tab'
-
-# [ctrl+shift+tab] Previous tab
-kitten @ action --self 'previous_tab'
 
 # [ctrl+shift+alt+t] Rename this tab
 kitten @ action --self 'set_tab_title'
@@ -93,29 +104,31 @@ kitten @ action --self 'move_tab_backward'
 # [ctrl+shift+q] Close this tab
 kitten @ action --self 'close_tab'
 
-% kitty, move
+% kitty, move, mine
 
 ; A pane moves between tabs and OS windows with detach_window, a whole tab with detach_tab.
 ; A tab that holds a single pane becomes a pane of another tab by moving that pane there.
 ; Tabs can also be dragged along the tab bar, or out of it into their own OS window.
 
-# [unbound] Move this pane into a new tab
+# [alt+w T] Move this pane into a new tab
 kitten @ action --self 'detach_window new-tab'
 
-# [unbound] Move this pane (or a single-pane tab) into another tab, chosen from a list
+# [alt+w m] Move this pane (or a single-pane tab) into another tab, chosen from a list
 kitten @ action --self 'detach_window ask'
+
+# [alt+w O] Move this pane into its own OS window
+kitten @ action --self 'detach_window'
+
+# [alt+g o] Move this whole tab into its own OS window
+kitten @ action --self 'detach_tab'
+
+# [alt+g O] Move this whole tab into another OS window, chosen from a list
+kitten @ action --self 'detach_tab ask'
+
+% kitty, move
 
 # [unbound] Move this pane into the tab you were last in
 kitten @ action --self 'detach_window tab-prev'
-
-# [unbound] Move this pane into its own OS window
-kitten @ action --self 'detach_window'
-
-# [unbound] Move this whole tab into its own OS window
-kitten @ action --self 'detach_tab'
-
-# [unbound] Move this whole tab into another OS window, chosen from a list
-kitten @ action --self 'detach_tab ask'
 
 % kitty, windows
 
