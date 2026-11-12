@@ -1,5 +1,5 @@
 # Host constructors: the wiring every host repeats (stylix, DankMaterialShell,
-# home-manager, snapd, the unfree allow-list, the vscode-extensions overlay).
+# home-manager, the unfree allow-list, the vscode-extensions overlay).
 # A host supplies only what is specific to it, so a host definition can live
 # outside this repo and consume it as `dots.lib.mkNixos` / `dots.lib.mkHome`.
 #
@@ -74,11 +74,6 @@ in {
               ];
               users.${user} = import home;
             };
-          }
-
-          inputs.nix-snapd.nixosModules.default
-          {
-            services.snap.enable = true;
           }
         ]
         ++ modulesAfter;
