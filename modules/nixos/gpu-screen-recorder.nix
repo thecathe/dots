@@ -87,8 +87,6 @@
     done
   '';
 
-  recorder = pkgs.gpu-screen-recorder.override {ffmpeg = pkgs.ffmpeg_8;};
-
   # Sets each of cfg.settings in the UI's config file, which the UI otherwise
   # owns (it rewrites the whole file whenever a setting is saved, so a read-only
   # symlink would break that). It runs before every start, so what is declared
@@ -154,23 +152,6 @@ in {
     programs.gpu-screen-recorder = {
       enable = true;
       ui.enable = true;
-
-      # nixpkgs builds it against ffmpeg 9, whose NVENC headers need API 13.1,
-      # but the 595 driver offers 13.0, so gsr drops every NVENC codec
-      # ("gsr_get_supported_video_codecs_nvenc: your nvidia driver only supports
-      # nvenc api version 13.0 ...") and is left with software h264 and the
-      # experimental Vulkan encoders. ffmpeg 8 (8.1) brings them back (checked
-      # with `gpu-screen-recorder --info`: h264, hevc, av1, 10-bit and HDR).
-      # Not 7, which also does: the recorder warns that its mp4 muxer lacks
-      # working hybrid_fragmented movflags and may stutter (it wants 8 or newer).
-      # Drop this once the driver catches up with the headers.
-      #
-      # The UI starts the recorder from its own wrapper's PATH, and the module
-      # installs the plain UI package (it only overrides a private copy, for
-      # the hotkeys wrapper), so the UI has to be given the same recorder or it
-      # would go on starting the one without NVENC.
-      package = recorder;
-      ui.package = pkgs.gpu-screen-recorder-ui.override {gpu-screen-recorder = recorder;};
     };
 
     # The UI owns the replay buffer (and the commands niri sends it), so it has
