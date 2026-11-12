@@ -8,6 +8,7 @@
     ../shared/identity.nix
     ../shared/services.nix
     ./nixd.nix
+    ./nix-your-shell.nix
     ./wm
     ./dank
     ./wallpaper
