@@ -64,9 +64,15 @@
           # environment comes from direnv / nix develop, not opam's hooks.
           opam_init='opam init --bare --no-setup --yes'
           bootstrap="$opam_init && opam switch create . --deps-only --yes && opam install . --deps-only --with-dev-setup --yes"
-          if ! ls -- *.opam >/dev/null 2>&1; then
+          # The tests below are `find | grep -q .` rather than `ls -- *.opam`:
+          # direnv runs this hook in a bash with `nullglob` on, where an
+          # unmatched glob expands to nothing, so `ls --` lists the directory
+          # and always succeeds, and the "no file" branch is never taken. find
+          # takes the pattern itself, so the answer does not depend on shell
+          # options, and the same text can be pasted into zsh or bash.
+          if ! find . -maxdepth 1 -name '*.opam' | grep -q .; then
             bootstrap="dune build && $bootstrap"
-          elif ls -- *.opam.locked >/dev/null 2>&1; then
+          elif find . -maxdepth 1 -name '*.opam.locked' | grep -q .; then
             bootstrap="$opam_init && opam switch create . --locked --deps-only --yes && opam install . --locked --deps-only --with-dev-setup --yes"
           fi
 
