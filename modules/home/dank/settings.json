@@ -401,7 +401,7 @@
         "topProcessSortBy": "cpu",
         "layoutMode": "auto",
         "graphInterval": 60,
-        "showOnOverviewOnly": true
+        "showOnOverviewOnly": false
       },
       "positions": {}
     },
@@ -409,7 +409,7 @@
       "id": "dw_1788204403608_4ycfrzy1q",
       "widgetType": "dankDesktopWeather",
       "name": "Dank Desktop Weather",
-      "enabled": true,
+      "enabled": false,
       "config": {
         "showPressure": true,
         "showHourlyForecast": true,
