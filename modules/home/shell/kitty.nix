@@ -75,6 +75,10 @@ in {
         ##
         tab_bar_style = "powerline";
         tab_powerline_style = "angled";
+        # The default template plus kitty's OSC 7501 status symbol (working / blocked / failed / finished).
+        # Claude Code stops putting a glyph in the title once the terminal answers its probe for that
+        # protocol (kitty >= 0.50), so this is the only place the status shows. Empty for tabs reporting none.
+        tab_title_template = "{fmt.fg.red}{bell_symbol}{activity_symbol}{fmt.fg.tab}{tab.program_status and tab.program_status + ' '}{tab.last_focused_progress_percent}{title}";
         ##
         cursor_trail = 10;
         cursor_trail_decay = "0.1 0.4";
