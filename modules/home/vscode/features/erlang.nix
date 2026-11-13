@@ -70,6 +70,17 @@ in {
       "editor.defaultFormatter" = "erlang-language-platform.erlang-language-platform";
     };
     "erlang.codeLensEnabled" = true;
+    # Run `elp` from PATH instead of the server the extension bundles. The
+    # marketplace build ships a macOS (Mach-O) bin/elp, which cannot execute
+    # on Linux ("cannot execute binary file"), and an empty serverPath makes
+    # the extension launch exactly that. A project's devShell provides `elp`,
+    # put on the extension host's PATH by mkhl.direnv.
+    #
+    # Set here, in user settings, not just in a project's .vscode/settings.json:
+    # the setting is window-scoped, which a multi-root workspace (any
+    # *.code-workspace with several folders) does not read from a folder's
+    # .vscode/settings.json.
+    "elp.serverPath" = "elp";
     "elp" = {
       "hoverActions.enable" = true;
       "typesOnHover.enable" = true;
