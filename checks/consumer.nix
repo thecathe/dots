@@ -114,6 +114,17 @@
     "consumer-modules: unexpected profiles ${toString (inputs.nixpkgs.lib.attrNames vscode.profiles)}";
     assert inputs.nixpkgs.lib.assertMsg (hm.config.dots.vscode.extraPath == [])
     "consumer-modules: Erlang reached VS Code's PATH without an Erlang profile";
+    # LaTeX Workshop and vscode-pdf clash, so each profile has exactly one:
+    # `default` carries latex, the others get vscode-pdf (groups.nix).
+    assert let
+      lib = inputs.nixpkgs.lib;
+      has = id: profile: lib.elem id (map (e: e.vscodeExtUniqueId or "") vscode.profiles.${profile}.extensions);
+    in
+      lib.assertMsg
+      (has "James-Yu.latex-workshop" "default"
+        && !has "tomoki1207.pdf" "default"
+        && lib.all (p: has "tomoki1207.pdf" p && !has "James-Yu.latex-workshop" p) ["java" "python" "rocq" "haskell"])
+      "consumer-modules: a profile has both or neither of LaTeX Workshop and vscode-pdf";
       hm.activationPackage.drvPath;
 
   # The globalprotect module imported by path on its own, as a second user would
