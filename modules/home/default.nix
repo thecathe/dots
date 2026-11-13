@@ -24,6 +24,7 @@
     ./vscode
     ./obsidian
     ./claude
+    ./devlog
     ./opam
     ./globalprotect
     ./dictation

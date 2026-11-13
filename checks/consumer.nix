@@ -259,7 +259,34 @@
     assert lib.assertMsg (customPlugin.settings.maxDurationSecs == 180 && custom.dots.dictation.settings.audio.max_duration_secs == customPlugin.settings.maxDurationSecs)
     "consumer-dictation-widget: a host's audio.max_duration_secs does not reach the widget, or disagrees with the daemon's config";
       check "consumer-dictation-widget-evaluates" modulesOn;
+
+  # The devlog module imported by path on its own. With a clone configured it must
+  # install dlsync and put a quiet, pull-only SessionStart hook into the Claude
+  # Code settings (quiet because a hook's stdout is Claude's context; pull-only
+  # because pushing is the user's call); with the hook switched off, or no
+  # clone, it must not add the hook, and the disabled module installs nothing.
+  devlogModule = "${dots}/modules/home/devlog";
+  devlogConsumer = let
+    lib = inputs.nixpkgs.lib;
+    clone = {dots.devlog.dir = "/home/consumer/devlog";};
+    on = (consumerConfig [devlogModule clone]).config;
+    noHook = (consumerConfig [devlogModule clone {dots.devlog.claudeHook = false;}]).config;
+    off = (consumerConfig [devlogModule]).config;
+    script = c: c.home.activation.dlsyncClaudeHook.data;
+    hasDlsync = c: lib.any (p: lib.getName p == "dlsync") c.home.packages;
+  in
+    assert lib.assertMsg (hasDlsync on && hasDlsync noHook && !(hasDlsync off))
+    "consumer-devlog: dlsync is installed when, and only when, a clone is configured";
+    assert lib.assertMsg (lib.hasInfix "dots:managed" (script on) && lib.hasInfix "startup|resume" (script on) && lib.hasInfix "bin/dlsync --quiet" (script on))
+    "consumer-devlog: the SessionStart hook is not a quiet dlsync on startup and resume";
+    assert lib.assertMsg (!(lib.hasInfix "--push" (script on)))
+    "consumer-devlog: the session hook pushes; pushing is the user's call";
+    assert lib.assertMsg (!(lib.hasInfix "startup|resume" (script noHook)) && !(lib.hasInfix "startup|resume" (script off)))
+    "consumer-devlog: the hook is added although it is switched off, or there is no clone";
+      check "consumer-devlog-evaluates" [devlogModule clone];
 in {
+  # The devlog module alone, by path.
+  consumer-devlog = devlogConsumer;
   # The globalprotect module alone, by path.
   consumer-globalprotect = globalprotectConsumer;
   # The dictation module alone, by path.
