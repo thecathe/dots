@@ -6,6 +6,10 @@
   # stylix's monospace font, or null where this module is used without stylix.
   monoFont = lib.attrByPath ["stylix" "fonts" "monospace" "name"] null config;
 in {
+  # kitty runs draw_title() from this file for `{custom}` in tab_title_template. It is loaded from kitty's
+  # config directory, so it cannot live next to the config in the store.
+  xdg.configFile."kitty/tab_bar.py".source = ./kitty-tab-bar.py;
+
   programs.kitty = lib.mkForce {
     enable = true;
     shellIntegration.enableZshIntegration = true;
@@ -75,10 +79,11 @@ in {
         ##
         tab_bar_style = "powerline";
         tab_powerline_style = "angled";
-        # The default template plus kitty's OSC 7501 status symbol (working / blocked / failed / finished).
-        # Claude Code stops putting a glyph in the title once the terminal answers its probe for that
-        # protocol (kitty >= 0.50), so this is the only place the status shows. Empty for tabs reporting none.
-        tab_title_template = "{fmt.fg.red}{bell_symbol}{activity_symbol}{fmt.fg.tab}{tab.program_status and tab.program_status + ' '}{tab.last_focused_progress_percent}{title}";
+        # The default template plus a persistent status marker (kitty-tab-bar.py, installed above as tab_bar.py):
+        # working / ready / done / blocked / error. Claude Code stops putting a glyph in the title once the
+        # terminal answers its probe for the Program Status Protocol (kitty >= 0.50), and kitty's own
+        # {tab.program_status} shows nothing for idle and drops `done` once seen, so the marker is built here.
+        tab_title_template = "{fmt.fg.red}{bell_symbol}{activity_symbol}{fmt.fg.tab}{custom}{tab.last_focused_progress_percent}{title}";
         ##
         cursor_trail = 10;
         cursor_trail_decay = "0.1 0.4";
