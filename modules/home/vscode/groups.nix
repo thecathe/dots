@@ -43,7 +43,6 @@ in let
       spellcheck
       disable-breakpoint
       unicode-math-symbols
-      pdf
     ]
     ++ defaultGroup;
   pythonGroup = [features.python] ++ defaultGroup;
@@ -67,38 +66,50 @@ in let
     ]
     ++ defaultGroup;
   javaGroup = [features.java] ++ defaultGroup;
-in {
-  # latex merged in here (rather than into the defaultGroup binding above,
-  # which every other group also extends) until upstream fixes per-profile
-  # extension enablement and the dedicated `latex` profile actually works
-  default = defaultGroup ++ [features.latex];
-  latex = latexGroup;
-  ocaml = ocamlGroup;
-  rocq = rocqGroup;
-  forester = foresterGroup;
-  python = pythonGroup;
-  go = goGroup;
-  haskell = haskellGroup;
-  erlang = erlangGroup;
-  java = javaGroup;
-  indimo = with features;
-    [
-      web
-      sql
-      disable-breakpoint
-    ]
-    ++ defaultGroup
-    ++ erlangGroup
-    ++ goGroup
-    ++ pythonGroup;
-  mebi = defaultGroup ++ rocqGroup;
-  cloakaml = defaultGroup ++ ocamlGroup ++ erlangGroup;
-  webserver = with features;
-    [
-      web
-      sql
-      ssh
-      disable-breakpoint
-    ]
-    ++ defaultGroup;
-}
+in let
+  profiles = {
+    # latex merged in here (rather than into the defaultGroup binding above,
+    # which every other group also extends) until upstream fixes per-profile
+    # extension enablement and the dedicated `latex` profile actually works
+    default = defaultGroup ++ [features.latex];
+    latex = latexGroup;
+    ocaml = ocamlGroup;
+    rocq = rocqGroup;
+    forester = foresterGroup;
+    python = pythonGroup;
+    go = goGroup;
+    haskell = haskellGroup;
+    erlang = erlangGroup;
+    java = javaGroup;
+    indimo = with features;
+      [
+        web
+        sql
+        disable-breakpoint
+      ]
+      ++ defaultGroup
+      ++ erlangGroup
+      ++ goGroup
+      ++ pythonGroup;
+    mebi = defaultGroup ++ rocqGroup;
+    cloakaml = defaultGroup ++ ocamlGroup ++ erlangGroup;
+    webserver = with features;
+      [
+        web
+        sql
+        ssh
+        disable-breakpoint
+      ]
+      ++ defaultGroup;
+  };
+
+  # LaTeX Workshop and vscode-pdf both claim *.pdf, so a profile gets exactly
+  # one: LaTeX Workshop if its group has `latex`, vscode-pdf otherwise. Decided
+  # here once, not listed per group, so new or composed groups can't get it wrong.
+  # A flake importing this file with its own `features` and no `pdf` gets none.
+  withPdfUnlessLatex = group:
+    if builtins.elem features.latex group || !(features ? pdf)
+    then group
+    else group ++ [features.pdf];
+in
+  builtins.mapAttrs (_: withPdfUnlessLatex) profiles
