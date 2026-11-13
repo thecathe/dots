@@ -126,7 +126,7 @@ in {
       # is not configured correctly"). --no-sandbox skips that requirement.
       #
       # The PATH prefix is the enabled features' extraPath: today only erlang's
-      # (rebar3/escript for pgourlain.erlang's bridge, see features/erlang.nix),
+      # (erl/rebar3, which ELP needs to load a project, see features/erlang.nix),
       # so only a machine with an Erlang-using profile gets Erlang. It is a
       # safety net while per-profile extension activation stays an upstream
       # weak point (nix-community/home-manager#7880, #8793).
