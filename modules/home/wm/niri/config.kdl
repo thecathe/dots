@@ -502,10 +502,11 @@ binds {
 
     // Moving a column to another monitor goes through niri-move-column (default.nix,
     // move-column.sh), not the move-column-to-monitor-* actions: it is the same move,
-    // plus 100% width when the column lands on a portrait monitor. niri keeps a
-    // column's width across a move and only applies default-column-width to windows
-    // that open, so this is the only way to get the portrait monitor's full width
-    // for a window that came from another monitor.
+    // plus the column is maximized while it is on a portrait monitor and un-maximized
+    // when it leaves, so Mod+F still has a width to toggle to. niri keeps a column's
+    // width across a move and only applies default-column-width to windows that open,
+    // so this is the only way to give the portrait monitor's full width to a window
+    // that came from another monitor.
     Mod+Shift+Ctrl+Left  { spawn "niri-move-column" "left"; }
     Mod+Shift+Ctrl+Down  { spawn "niri-move-column" "down"; }
     Mod+Shift+Ctrl+Up    { spawn "niri-move-column" "up"; }

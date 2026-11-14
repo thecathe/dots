@@ -9,14 +9,25 @@
   # so the hosts that have it are the ones that get its key binds.
   gpuScreenRecorder = osConfig != null && (osConfig.dots.gpuScreenRecorder.enable or false);
 
+  # The gap between windows, from the one `gaps` line of config.kdl's layout
+  # block: niri-move-column judges "full width" as the monitor's width less a gap
+  # on each side. Fails the build, not the keybind, if that line ever changes shape.
+  niriGaps = let
+    found = lib.findFirst (m: m != null) null (map (builtins.match "    gaps ([0-9]+)") (lib.splitString "\n" (builtins.readFile ./config.kdl)));
+  in
+    if found == null
+    then throw "modules/home/wm/niri/config.kdl has no `    gaps N` line; niri-move-column needs it"
+    else builtins.head found;
+
   # Bound to Mod+Shift+Ctrl+arrows/hjkl in config.kdl instead of the plain
-  # move-column-to-monitor-* actions: after a move onto a portrait monitor it
-  # sets the column to 100% width (see move-column.sh for why niri can't do that
-  # by itself). `niri` is the compositor's own package, so the `niri msg` client
-  # and the running compositor are the same version.
+  # move-column-to-monitor-* actions: a column moved onto a portrait monitor is
+  # maximized there and un-maximized when it leaves (see move-column.sh for why
+  # niri can't do that by itself). `niri` is the compositor's own package, so
+  # the `niri msg` client and the running compositor are the same version.
   niriMoveColumn = pkgs.writeShellApplication {
     name = "niri-move-column";
     runtimeInputs = [config.wayland.windowManager.niri.package pkgs.jq];
+    runtimeEnv.NIRI_GAPS = niriGaps;
     text = builtins.readFile ./move-column.sh;
   };
 in {
