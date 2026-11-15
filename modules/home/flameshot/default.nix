@@ -21,9 +21,20 @@
 #   a config file  generated from `settings`, installed read-only.
 #
 # How it captures (Flameshot 14): on Wayland only through the XDG screenshot
-# portal. Here that is xdg-desktop-portal-gnome asking niri over
-# org.gnome.Shell.Screenshot, so nothing else (grim, slurp) has to be installed.
-# The overlay is a frameless full-screen window sized to one output.
+# portal; it has no other path. Here that is xdg-desktop-portal-gnome asking niri
+# over org.gnome.Shell.Screenshot. The overlay is a frameless full-screen window
+# sized to one output.
+#
+# DOES NOT WORK WITH MORE THAN ONE OUTPUT on niri 26.04. Niri's handler for that
+# call (`screenshot_all_outputs`, src/niri.rs) says "FIXME: support multiple
+# outputs" and `ensure!(outputs.len() == 1)`, so with two monitors every capture
+# fails: niri logs "error taking a screenshot: Condition failed: outputs.len() == 1
+# (2 vs 1)", the portal logs "Failed to get screenshot ... internal error", and
+# 30 seconds later Flameshot's own "portal timed out" notifications arrive (seen
+# on `nixos` on 2026-11-15, its first live run). One output is fine. Do not enable
+# this on a host with more than one until niri lifts the limit or something else
+# serves the portal's Screenshot; the devlog entry dots/flameshot.md lists the
+# ways out.
 #
 # Known rough edges (worked out from Flameshot's source and niri's documented
 # behaviour, not yet seen on a real desktop; see the devlog entry
