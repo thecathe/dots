@@ -292,6 +292,8 @@
     "consumer-flameshot: xdg-desktop-portal-wlr is not among the portals";
     assert lib.assertMsg (multi.systemd.user.services.xdg-desktop-portal-wlr.Service.BusName == "org.freedesktop.impl.portal.desktop.wlr")
     "consumer-flameshot: the wlr portal unit does not own the wlr portal name";
+    assert lib.assertMsg (!(lib.hasPrefix (toString pkgs.xdg-desktop-portal-wlr) (lib.head (lib.toList multi.systemd.user.services.xdg-desktop-portal-wlr.Service.ExecStart))) && multi.dots.flameshot.portalPngLevel == 0)
+    "consumer-flameshot: the wlr portal is the stock package, not the one built with the uncompressed-PNG grim";
     assert lib.assertMsg (lib.hasInfix "/bin/flameshot-screen\"" (niriFile multi) && !(lib.hasInfix "\"gui\"" (niriFile multi)))
     "consumer-flameshot: with screenOrder, Print does not run the per-output wrapper";
       pkgs.writeText "consumer-flameshot-evaluates" (builtins.unsafeDiscardStringContext (
