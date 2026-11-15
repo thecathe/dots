@@ -21,27 +21,39 @@
 #   a config file  generated from `settings`, installed read-only.
 #
 # How it captures (Flameshot 14): on Wayland only through the XDG screenshot
-# portal; it has no other path. Here that is xdg-desktop-portal-gnome asking niri
-# over org.gnome.Shell.Screenshot. The overlay is a frameless full-screen window
+# portal; it has no other path. The overlay is a frameless full-screen window
 # sized to one output.
 #
-# DOES NOT WORK WITH MORE THAN ONE OUTPUT on niri 26.04. Niri's handler for that
-# call (`screenshot_all_outputs`, src/niri.rs) says "FIXME: support multiple
-# outputs" and `ensure!(outputs.len() == 1)`, so with two monitors every capture
-# fails: niri logs "error taking a screenshot: Condition failed: outputs.len() == 1
+# With more than one output, `wlrScreenshotPortal` is needed. By default the
+# portal's Screenshot is served by xdg-desktop-portal-gnome asking niri over
+# org.gnome.Shell.Screenshot, and niri 26.04's handler for that call
+# (`screenshot_all_outputs`, src/niri.rs) says "FIXME: support multiple outputs"
+# and `ensure!(outputs.len() == 1)`. So with two monitors every capture fails:
+# niri logs "error taking a screenshot: Condition failed: outputs.len() == 1
 # (2 vs 1)", the portal logs "Failed to get screenshot ... internal error", and
 # 30 seconds later Flameshot's own "portal timed out" notifications arrive (seen
-# on `nixos` on 2026-11-15, its first live run). One output is fine. Do not enable
-# this on a host with more than one until niri lifts the limit or something else
-# serves the portal's Screenshot; the devlog entry dots/flameshot.md lists the
-# ways out.
+# on `nixos` on 2026-11-15, the first live run). One output is fine as it is.
+#
+# `wlrScreenshotPortal` serves only Screenshot from xdg-desktop-portal-wlr
+# instead, which runs `grim` over the whole desktop (niri implements the
+# wlr-screencopy protocol grim uses); the other interfaces, screencasting
+# included, stay where they were. Tried in an isolated portal session against
+# the two real outputs of `nixos` (a rotated 1080x1920 and a 1920x1080): both
+# came back at the right size, in about a second each.
+#
+# Flameshot then asks which output to use before every capture (a window with a
+# preview of each, waiting for a click): `captureActiveMonitor` would skip that
+# but is refused on Wayland, and `flameshot gui` has no output option. `screenOrder`
+# skips it: `flameshot screen --edit -n N` opens the same overlay on output number
+# N, and a small wrapper on the Print key looks up the focused output (the one the
+# pointer is on) in `screenOrder` to find N.
 #
 # Known rough edges (worked out from Flameshot's source and niri's documented
 # behaviour, not yet seen on a real desktop; see the devlog entry
 # dots/flameshot.md):
-#   - With more than one output Flameshot first opens a window with a preview of
-#     each and waits for a click. `captureActiveMonitor` would skip it but is
-#     refused on Wayland, and `flameshot gui` has no output option.
+#   - Whether niri puts the full-screen overlay on the output Flameshot asks for
+#     is not known; the wrapper picks the focused output, which is also where
+#     niri would put it if it ignores the request.
 #   - A pin is an ordinary floating window, so it belongs to one workspace; it
 #     does not follow you to the next one, and it opens centred, not where the
 #     selection was.
@@ -63,6 +75,40 @@
 
   flameshot = "${cfg.package}/bin/flameshot";
 
+  # The niri client has to match the running compositor, so use the same package
+  # the niri module installs.
+  niriPackage = let
+    p = config.wayland.windowManager.niri.package;
+  in
+    if p == null
+    then pkgs.niri
+    else p;
+
+  # Print with `screenOrder` set: open Flameshot's overlay on the output the
+  # pointer is on, without its output picker. Anything unexpected (niri not
+  # answering, an output missing from the list) falls back to the plain
+  # `flameshot gui`, which still works and asks.
+  screenWrapper = pkgs.writeShellApplication {
+    name = "flameshot-screen";
+    runtimeInputs = [niriPackage pkgs.jq cfg.package];
+    text = ''
+      order=(${lib.escapeShellArgs cfg.screenOrder})
+      focused=$(niri msg --json focused-output | jq -r '.name // empty' || true)
+      for i in "''${!order[@]}"; do
+        if [ "''${order[$i]}" = "$focused" ]; then
+          exec flameshot screen --edit -n "$i"
+        fi
+      done
+      exec flameshot gui
+    '';
+  };
+
+  # What the bind runs.
+  captureCommand =
+    if cfg.screenOrder == []
+    then ''"${flameshot}" "gui"''
+    else ''"${screenWrapper}/bin/flameshot-screen"'';
+
   # Included from niri's config.kdl the way dictation's binds are. The bind
   # replaces config.kdl's own `Print { screenshot; }` (niri replaces a conflicting
   # bind from an included file instead of reporting an error), and the window
@@ -72,7 +118,7 @@
   # that asks niri to stop processing shortcuts also stops this.
   bindLines =
     [
-      ''${cfg.bind} repeat=false hotkey-overlay-title="Screenshot: select, draw, pin (Flameshot)" { spawn "${flameshot}" "gui"; }''
+      ''${cfg.bind} repeat=false hotkey-overlay-title="Screenshot: select, draw, pin (Flameshot)" { spawn ${captureCommand}; }''
     ]
     ++ lib.optional (cfg.niriBind != null)
     ''${cfg.niriBind} hotkey-overlay-title="Screenshot: niri's own selector" { screenshot; }'';
@@ -117,6 +163,42 @@ in {
       '';
     };
 
+    wlrScreenshotPortal = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Serve the XDG Screenshot portal from xdg-desktop-portal-wlr (which runs
+        `grim`) instead of from niri. Needed on a host with more than one output:
+        niri 26.04's own handler refuses to capture then, and Flameshot has no
+        other way to capture on Wayland (see the top of this file). Adds the
+        portal to home-manager's portal set, starts it as a user service, and
+        writes the user-level `niri-portals.conf` with Screenshot pointed at it.
+        That file replaces the system one rather than merging with it, so it
+        repeats the rest of niri's list (gnome and gtk, with Access, FileChooser,
+        Notification and Secret as they are on `nixos`); a host that sets the
+        same file itself (the work laptop's `xdg.configFile`) must not turn this on.
+      '';
+    };
+
+    screenOrder = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [];
+      example = ["HDMI-A-1" "DP-1"];
+      description = ''
+        The outputs in the order Flameshot (Qt) numbers them, which follows the
+        order the compositor announces them, not their position. With this set,
+        Print opens the overlay straight on the output the pointer is on instead
+        of asking which one: the wrapper takes the focused output's name from
+        niri and passes its place in this list to `flameshot screen --edit -n`.
+        An output that is not in the list gets the plain `flameshot gui` (with its
+        question). To find the order on a host, run
+        `flameshot screen -n 0 -p /tmp/f` and then `-n 1`, and compare the images'
+        sizes with `niri msg outputs`. If the wrong output shows up later, the
+        order changed (a monitor was unplugged and replugged, for instance) and
+        this list is what to fix.
+      '';
+    };
+
     settings = lib.mkOption {
       type = iniFormat.type;
       default = {};
@@ -130,49 +212,86 @@ in {
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    dots.flameshot.settings.General = {
-      # The daemon has nothing to show: the key starts a capture, and the DMS bar
-      # has its own tray, which would otherwise gain an icon for it.
-      disabledTrayIcon = lib.mkDefault true;
-      # No "Flameshot is running" notification at every login.
-      showStartupLaunchMessage = lib.mkDefault false;
-      # What niri's screenshot did, which this replaces: the file lands in
-      # ~/Pictures/Screenshots under the same name pattern, and copying to the
-      # clipboard saves it too. (config.kdl's `screenshot-path` is the original.)
-      savePath = lib.mkDefault "${config.home.homeDirectory}/Pictures/Screenshots";
-      savePathFixed = lib.mkDefault true;
-      filenamePattern = lib.mkDefault "Screenshot from %F %H-%M-%S";
-      saveAfterCopy = lib.mkDefault true;
-    };
-
-    home.packages = [cfg.package];
-
-    xdg.configFile."flameshot/flameshot.ini".source = configFile;
-
-    systemd.user.services.flameshot = {
-      Unit = {
-        Description = "Flameshot: screenshot overlay and pinned screenshots";
-        After = ["graphical-session.target"];
-        PartOf = ["graphical-session.target"];
-        # The config is read at start; a changed file is a new store path, which
-        # would otherwise leave the old daemon running on the old settings.
-        X-Restart-Triggers = [configFile];
-        # A crash on start (no display yet, a broken config) is retried a few
-        # times, then stays failed and visible in `systemctl --user status`.
-        StartLimitIntervalSec = 60;
-        StartLimitBurst = 5;
+  config = lib.mkIf cfg.enable (lib.mkMerge [
+    {
+      dots.flameshot.settings.General = {
+        # The daemon has nothing to show: the key starts a capture, and the DMS bar
+        # has its own tray, which would otherwise gain an icon for it.
+        disabledTrayIcon = lib.mkDefault true;
+        # No "Flameshot is running" notification at every login.
+        showStartupLaunchMessage = lib.mkDefault false;
+        # What niri's screenshot did, which this replaces: the file lands in
+        # ~/Pictures/Screenshots under the same name pattern, and copying to the
+        # clipboard saves it too. (config.kdl's `screenshot-path` is the original.)
+        savePath = lib.mkDefault "${config.home.homeDirectory}/Pictures/Screenshots";
+        savePathFixed = lib.mkDefault true;
+        filenamePattern = lib.mkDefault "Screenshot from %F %H-%M-%S";
+        saveAfterCopy = lib.mkDefault true;
       };
-      Service = {
-        ExecStart = flameshot;
-        Restart = "on-failure";
-        RestartSec = 5;
-      };
-      Install.WantedBy = ["graphical-session.target"];
-    };
 
-    wayland.windowManager.niri.extraConfig = ''
-      include "${niriFile}"
-    '';
-  };
+      home.packages = [cfg.package];
+
+      xdg.configFile."flameshot/flameshot.ini".source = configFile;
+
+      systemd.user.services.flameshot = {
+        Unit = {
+          Description = "Flameshot: screenshot overlay and pinned screenshots";
+          After = ["graphical-session.target"];
+          PartOf = ["graphical-session.target"];
+          # The config is read at start; a changed file is a new store path, which
+          # would otherwise leave the old daemon running on the old settings.
+          X-Restart-Triggers = [configFile];
+          # A crash on start (no display yet, a broken config) is retried a few
+          # times, then stays failed and visible in `systemctl --user status`.
+          StartLimitIntervalSec = 60;
+          StartLimitBurst = 5;
+        };
+        Service = {
+          ExecStart = flameshot;
+          Restart = "on-failure";
+          RestartSec = 5;
+        };
+        Install.WantedBy = ["graphical-session.target"];
+      };
+
+      wayland.windowManager.niri.extraConfig = ''
+        include "${niriFile}"
+      '';
+    }
+
+    (lib.mkIf cfg.wlrScreenshotPortal {
+      # home-manager's niri module already turns xdg.portal on with only the gnome
+      # portal; the frontend reads its portal definitions from that profile (the
+      # NIX_XDG_DESKTOP_PORTAL_DIR it sets), so wlr's has to be added here.
+      xdg.portal.enable = lib.mkDefault true;
+      xdg.portal.extraPortals = [pkgs.xdg-desktop-portal-wlr];
+      xdg.portal.config.niri = {
+        default = lib.mkDefault ["gnome" "gtk"];
+        "org.freedesktop.impl.portal.Access" = lib.mkDefault ["gtk"];
+        "org.freedesktop.impl.portal.FileChooser" = lib.mkDefault ["gtk"];
+        "org.freedesktop.impl.portal.Notification" = lib.mkDefault ["gtk"];
+        "org.freedesktop.impl.portal.Secret" = lib.mkDefault ["gnome-keyring"];
+        "org.freedesktop.impl.portal.Screenshot" = ["wlr"];
+      };
+
+      # Running from login, so there is nothing for D-Bus to activate on the
+      # first Print. (The package also ships a unit of this name; this one in
+      # ~/.config/systemd/user takes precedence.)
+      systemd.user.services.xdg-desktop-portal-wlr = {
+        Unit = {
+          Description = "Portal service (wlroots implementation: Screenshot only here)";
+          After = ["graphical-session.target"];
+          PartOf = ["graphical-session.target"];
+          ConditionEnvironment = "WAYLAND_DISPLAY";
+        };
+        Service = {
+          Type = "dbus";
+          BusName = "org.freedesktop.impl.portal.desktop.wlr";
+          ExecStart = "${pkgs.xdg-desktop-portal-wlr}/libexec/xdg-desktop-portal-wlr";
+          Restart = "on-failure";
+        };
+        Install.WantedBy = ["graphical-session.target"];
+      };
+    })
+  ]);
 }
