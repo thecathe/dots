@@ -237,6 +237,18 @@
         }
       ]).config;
     off = (consumerConfig [flameshotModule]).config;
+    # Two outputs: the wlr Screenshot portal and the per-output wrapper on Print.
+    multiModules = [
+      flameshotModule
+      {
+        dots.flameshot = {
+          enable = true;
+          wlrScreenshotPortal = true;
+          screenOrder = ["HDMI-A-1" "DP-1"];
+        };
+      }
+    ];
+    multi = (consumerConfig multiModules).config;
     # The file the one `include "<path>"` line in niri's config points at, read.
     # replaceStrings keeps the string context that says the path is a build
     # output (builtins.match would drop it, and pure evaluation then refuses the
@@ -268,7 +280,23 @@
     "consumer-flameshot: bind/niriBind did not move or drop the keys";
     assert lib.assertMsg (!(off.systemd.user.services ? flameshot) && !(off.xdg.configFile ? "flameshot/flameshot.ini") && !(lib.hasInfix "flameshot" off.wayland.windowManager.niri.extraConfig))
     "consumer-flameshot: the disabled module still adds a unit, a config file or a niri include";
-      check "consumer-flameshot-evaluates" [flameshotModule {dots.flameshot.enable = true;}];
+    assert lib.assertMsg (!(on.systemd.user.services ? xdg-desktop-portal-wlr) && !(on.xdg.portal.config ? niri))
+    "consumer-flameshot: the wlr portal is added although wlrScreenshotPortal is off";
+    assert lib.assertMsg (lib.hasInfix "/bin/flameshot\" \"gui\"" (niriFile on) && !(lib.hasInfix "flameshot-screen" (niriFile on)))
+    "consumer-flameshot: without screenOrder, Print is not plain `flameshot gui`";
+    assert lib.assertMsg (multi.xdg.portal.config.niri."org.freedesktop.impl.portal.Screenshot" == "wlr")
+    "consumer-flameshot: Screenshot is not routed to the wlr portal";
+    assert lib.assertMsg (multi.xdg.portal.config.niri.default == "gnome;gtk" && multi.xdg.portal.config.niri."org.freedesktop.impl.portal.Access" == "gtk" && multi.xdg.portal.config.niri."org.freedesktop.impl.portal.FileChooser" == "gtk")
+    "consumer-flameshot: the user-level portal config dropped part of niri's list (it replaces the system file rather than merging)";
+    assert lib.assertMsg (lib.any (p: lib.hasInfix "xdg-desktop-portal-wlr" (toString p)) multi.xdg.portal.extraPortals)
+    "consumer-flameshot: xdg-desktop-portal-wlr is not among the portals";
+    assert lib.assertMsg (multi.systemd.user.services.xdg-desktop-portal-wlr.Service.BusName == "org.freedesktop.impl.portal.desktop.wlr")
+    "consumer-flameshot: the wlr portal unit does not own the wlr portal name";
+    assert lib.assertMsg (lib.hasInfix "/bin/flameshot-screen\"" (niriFile multi) && !(lib.hasInfix "\"gui\"" (niriFile multi)))
+    "consumer-flameshot: with screenOrder, Print does not run the per-output wrapper";
+      pkgs.writeText "consumer-flameshot-evaluates" (builtins.unsafeDiscardStringContext (
+        consumer [flameshotModule {dots.flameshot.enable = true;}] + consumer multiModules
+      ));
 
   # The DMS bar indicator for dictation (modules/home/dank/dictation-status.nix) next
   # to the dictation module, with the DMS plugin options stood in for by a bare
