@@ -39,7 +39,16 @@
 # wlr-screencopy protocol grim uses); the other interfaces, screencasting
 # included, stay where they were. Tried in an isolated portal session against
 # the two real outputs of `nixos` (a rotated 1080x1920 and a 1920x1080): both
-# came back at the right size, in about a second each.
+# came back at the right size.
+#
+# Speed: xdg-desktop-portal-wlr runs plain `grim -- /tmp/out.png`, and grim's
+# default PNG compression took about 540 ms for both outputs, half of the
+# time from Print to the overlay. The portal is built with a `grim` that writes
+# uncompressed PNGs (`portalPngLevel`, default 0: about 100 ms for the same
+# capture; Flameshot reads the file and deletes it straight away). Measured end
+# to end with `flameshot screen -n N -p` in an isolated session on `nixos`:
+# about 1085/855 ms (the two outputs) at the default, 750/535 at level 1 and
+# 575/355 at level 0.
 #
 # Flameshot then asks which output to use before every capture (a window with a
 # preview of each, waiting for a click): `captureActiveMonitor` would skip that
@@ -102,6 +111,13 @@
       exec flameshot gui
     '';
   };
+
+  # xdg-desktop-portal-wlr takes its `grim` as a build input, so the faster one is
+  # swapped in there; it is a plain wrapper, the same grim underneath.
+  fastGrim = pkgs.writeShellScriptBin "grim" ''
+    exec ${pkgs.grim}/bin/grim -l ${toString cfg.portalPngLevel} "$@"
+  '';
+  wlrPortal = pkgs.xdg-desktop-portal-wlr.override {grim = fastGrim;};
 
   # What the bind runs.
   captureCommand =
@@ -177,6 +193,18 @@ in {
         repeats the rest of niri's list (gnome and gtk, with Access, FileChooser,
         Notification and Secret as they are on `nixos`); a host that sets the
         same file itself (the work laptop's `xdg.configFile`) must not turn this on.
+      '';
+    };
+
+    portalPngLevel = lib.mkOption {
+      type = lib.types.ints.between 0 9;
+      default = 0;
+      description = ''
+        PNG compression level (0 to 9) of the screenshot the wlr portal takes, when
+        `wlrScreenshotPortal` is on. The default grim level is 6 and takes about
+        540 ms for the two outputs of `nixos`; 0 stores the pixels uncompressed (about
+        100 ms, a 23 MB temporary file that Flameshot deletes once it has loaded it).
+        The picture is the same at every level.
       '';
     };
 
@@ -264,7 +292,7 @@ in {
       # portal; the frontend reads its portal definitions from that profile (the
       # NIX_XDG_DESKTOP_PORTAL_DIR it sets), so wlr's has to be added here.
       xdg.portal.enable = lib.mkDefault true;
-      xdg.portal.extraPortals = [pkgs.xdg-desktop-portal-wlr];
+      xdg.portal.extraPortals = [wlrPortal];
       xdg.portal.config.niri = {
         default = lib.mkDefault ["gnome" "gtk"];
         "org.freedesktop.impl.portal.Access" = lib.mkDefault ["gtk"];
@@ -287,7 +315,7 @@ in {
         Service = {
           Type = "dbus";
           BusName = "org.freedesktop.impl.portal.desktop.wlr";
-          ExecStart = "${pkgs.xdg-desktop-portal-wlr}/libexec/xdg-desktop-portal-wlr";
+          ExecStart = "${wlrPortal}/libexec/xdg-desktop-portal-wlr";
           Restart = "on-failure";
         };
         Install.WantedBy = ["graphical-session.target"];
