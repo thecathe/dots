@@ -6,8 +6,8 @@
 // the keys never reached any other program, VS Code's Alt+Z or the Print
 // screenshot binds above included. gsr-ui-cli tells the running gsr-ui what to
 // do over its socket instead. The keys are the recorder's own defaults with Mod+
-// added (Mod+Alt+Z, Mod+Alt+F9, ...); the screenshot ones are left out, niri's
-// own Print binds cover them.
+// added (Mod+Alt+Z, Mod+Alt+F9, ...); the screenshot ones are left out, the
+// Print binds (niri's own, or Flameshot's where dots.flameshot is on) cover them.
 //
 // One key moved: the recorder's region recording is Ctrl+F9, and Mod+Alt+Ctrl+F9
 // would hold Ctrl+Alt+F9, the chord that switches to a text console, so it is

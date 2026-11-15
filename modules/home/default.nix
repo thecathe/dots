@@ -28,6 +28,7 @@
     ./opam
     ./globalprotect
     ./dictation
+    ./flameshot
     ./zathura # epub reader?
     ./navi # cheatsheets, incl. keyboard shortcuts (navi/cheats)
   ];
