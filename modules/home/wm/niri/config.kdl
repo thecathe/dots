@@ -686,6 +686,9 @@ binds {
     // Mod+Space       { switch-layout "next"; }
     // Mod+Shift+Space { switch-layout "prev"; }
 
+    // niri's own screenshot UI. On a host with dots.flameshot enabled, Print is
+    // Flameshot's instead (modules/home/flameshot adds that bind in an included
+    // file, which replaces this one) and niri's selector moves to Shift+Print.
     Print { screenshot; }
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }

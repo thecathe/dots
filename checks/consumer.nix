@@ -214,6 +214,62 @@
     "consumer-dictation: the disabled module still adds a unit, a config file or a niri include";
       check "consumer-dictation-evaluates" [dictationModule {dots.dictation.enable = true;}];
 
+  # The flameshot module imported by path on its own. Enabled, it must run the
+  # daemon as a user unit (a short-lived `flameshot gui` would take the pins and
+  # the clipboard with it when it exits), write the config with the tray icon off,
+  # and add one niri file: Flameshot on Print, niri's own selector on Shift+Print,
+  # and a rule that floats pins (title fixed in Flameshot's source). A host can
+  # move the keys and replace any default; disabled, the module adds nothing.
+  flameshotModule = "${dots}/modules/home/flameshot";
+  flameshotConsumer = let
+    lib = inputs.nixpkgs.lib;
+    on = (consumerConfig [flameshotModule {dots.flameshot.enable = true;}]).config;
+    custom =
+      (consumerConfig [
+        flameshotModule
+        {
+          dots.flameshot = {
+            enable = true;
+            bind = "Mod+Shift+S";
+            niriBind = null;
+            settings.General.disabledTrayIcon = false;
+          };
+        }
+      ]).config;
+    off = (consumerConfig [flameshotModule]).config;
+    # The file the one `include "<path>"` line in niri's config points at, read.
+    # replaceStrings keeps the string context that says the path is a build
+    # output (builtins.match would drop it, and pure evaluation then refuses the
+    # read); the file is a writeText, so reading it builds a few bytes.
+    niriFile = c: let
+      extra = c.wayland.windowManager.niri.extraConfig;
+      path = builtins.replaceStrings ["include" "\"" "\n" " "] ["" "" "" ""] extra;
+    in
+      assert lib.assertMsg (lib.hasInfix "include \"" extra && lib.hasSuffix "flameshot.kdl" path)
+      "consumer-flameshot: niri's extraConfig is not the one include of flameshot.kdl";
+        builtins.readFile path;
+    iniFile = c: builtins.readFile c.xdg.configFile."flameshot/flameshot.ini".source;
+  in
+    assert lib.assertMsg (lib.hasSuffix "/bin/flameshot" (lib.head (lib.toList on.systemd.user.services.flameshot.Service.ExecStart)))
+    "consumer-flameshot: the unit does not run the flameshot daemon";
+    assert lib.assertMsg (lib.hasInfix "disabledTrayIcon=true" (iniFile on) && lib.hasInfix "showStartupLaunchMessage=false" (iniFile on))
+    "consumer-flameshot: the daemon would show a tray icon or a startup notification";
+    assert lib.assertMsg (lib.hasInfix "Screenshots" (iniFile on) && lib.hasInfix "saveAfterCopy=true" (iniFile on))
+    "consumer-flameshot: screenshots do not land in ~/Pictures/Screenshots, or copying does not save, as niri's did";
+    assert lib.assertMsg (lib.hasInfix "disabledTrayIcon=false" (iniFile custom))
+    "consumer-flameshot: a host's setting did not replace the default";
+    assert lib.assertMsg (lib.hasInfix "Print repeat=false" (niriFile on) && lib.hasInfix "/bin/flameshot\" \"gui\"" (niriFile on))
+    "consumer-flameshot: Print does not run `flameshot gui`";
+    assert lib.assertMsg (lib.hasInfix "Shift+Print hotkey-overlay-title=\"Screenshot: niri's own selector\" { screenshot; }" (niriFile on))
+    "consumer-flameshot: niri's own selector is not kept on Shift+Print";
+    assert lib.assertMsg (lib.hasInfix "match title=\"^flameshot-pin$\"" (niriFile on) && lib.hasInfix "open-floating true" (niriFile on))
+    "consumer-flameshot: pinned screenshots are not set to float";
+    assert lib.assertMsg (lib.hasInfix "Mod+Shift+S repeat=false" (niriFile custom) && !(lib.hasInfix "{ screenshot; }" (niriFile custom)))
+    "consumer-flameshot: bind/niriBind did not move or drop the keys";
+    assert lib.assertMsg (!(off.systemd.user.services ? flameshot) && !(off.xdg.configFile ? "flameshot/flameshot.ini") && !(lib.hasInfix "flameshot" off.wayland.windowManager.niri.extraConfig))
+    "consumer-flameshot: the disabled module still adds a unit, a config file or a niri include";
+      check "consumer-flameshot-evaluates" [flameshotModule {dots.flameshot.enable = true;}];
+
   # The DMS bar indicator for dictation (modules/home/dank/dictation-status.nix) next
   # to the dictation module, with the DMS plugin options stood in for by a bare
   # attribute set (the real ones come from DMS's own home-manager module, which this
@@ -304,6 +360,8 @@ in {
   consumer-dictation = dictationConsumer;
   # The dictation bar indicator next to it, with DMS's plugin options stubbed.
   consumer-dictation-widget = dictationWidgetConsumer;
+  # The flameshot module alone, by path.
+  consumer-flameshot = flameshotConsumer;
   # The area modules with dots.vscode, as a second user's flake uses them.
   consumer-modules = pkgs.writeText "consumer-modules-evaluates" (builtins.unsafeDiscardStringContext modulesConsumer);
   # shell + nvim by path, plus the vscode module above: the full downstream shape.
