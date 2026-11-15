@@ -264,8 +264,8 @@
   in
     assert lib.assertMsg (lib.hasSuffix "/bin/flameshot" (lib.head (lib.toList on.systemd.user.services.flameshot.Service.ExecStart)))
     "consumer-flameshot: the unit does not run the flameshot daemon";
-    assert lib.assertMsg (lib.hasInfix "disabledTrayIcon=true" (iniFile on) && lib.hasInfix "showStartupLaunchMessage=false" (iniFile on))
-    "consumer-flameshot: the daemon would show a tray icon or a startup notification";
+    assert lib.assertMsg (lib.hasInfix "disabledTrayIcon=true" (iniFile on) && lib.hasInfix "showStartupLaunchMessage=false" (iniFile on) && lib.hasInfix "showAbortNotification=false" (iniFile on))
+    "consumer-flameshot: the daemon would show a tray icon, or a startup or abort notification";
     assert lib.assertMsg (lib.hasInfix "Screenshots" (iniFile on) && lib.hasInfix "saveAfterCopy=true" (iniFile on))
     "consumer-flameshot: screenshots do not land in ~/Pictures/Screenshots, or copying does not save, as niri's did";
     assert lib.assertMsg (lib.hasInfix "disabledTrayIcon=false" (iniFile custom))

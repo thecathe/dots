@@ -248,6 +248,8 @@ in {
         disabledTrayIcon = lib.mkDefault true;
         # No "Flameshot is running" notification at every login.
         showStartupLaunchMessage = lib.mkDefault false;
+        # No "Screenshot aborted." notification when a capture is cancelled with Esc.
+        showAbortNotification = lib.mkDefault false;
         # What niri's screenshot did, which this replaces: the file lands in
         # ~/Pictures/Screenshots under the same name pattern, and copying to the
         # clipboard saves it too. (config.kdl's `screenshot-path` is the original.)
