@@ -108,6 +108,7 @@
       vscode = {imports = [dotsArgs ./modules/home/vscode];};
       shell = {imports = [dotsArgs ./modules/home/shell];};
       nvim = {imports = [dotsArgs ./modules/home/nvim];};
+      # apps
       flameshot = {imports = [dotsArgs ./modules/home/flameshot];};
       # Needs nothing from dots' inputs, hence no dotsArgs.
       globalprotect = {imports = [./modules/home/globalprotect];};
