@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+# Behaviour of repos against real repositories under a throwaway root: a
+# repository with a bare origin, merged and unmerged branches, a dirty tree
+# and a linked worktree; one with no remote, detached; one on master; a linked
+# worktree at the top level (skipped as a repository); an excluded one. Run by
+# checks/repos.nix (repos, git and jq on PATH); run by hand the same way.
+set -u
+
+root=$(mktemp -d)
+trap 'rm -rf "$root"' EXIT
+export HOME=$root/home GIT_CONFIG_NOSYSTEM=1
+mkdir -p "$HOME"
+git config --global user.name tester
+git config --global user.email tester@example.invalid
+git config --global init.defaultBranch main
+git config --global core.editor false
+
+fails=0
+ok() { printf 'ok    %s\n' "$1"; }
+bad() {
+  printf 'FAIL  %s\n' "$1"
+  fails=$((fails + 1))
+}
+check() { # check NAME CONDITION-COMMAND...
+  local name=$1
+  shift
+  if "$@"; then ok "$name"; else bad "$name"; fi
+}
+not() { ! "$@"; }
+# field ID JQ-EXPR: that field of the repository ID in the last status
+field() { jq -r --arg id "$1" ".repos[] | select(.id == \$id) | $2" <<<"$json"; }
+is() { [ "$(field "$1" "$2")" = "$3" ]; }
+# listed ID: whether the last status lists the repository
+listed() { jq -e --arg id "$1" '.repos[] | select(.id == $id)' <<<"$json" >/dev/null; }
+json_ok() { jq -e . <<<"$json" >/dev/null; }
+commit() { # commit DIR FILE CONTENT MESSAGE
+  printf '%s\n' "$3" >"$1/$2"
+  git -C "$1" add "$2"
+  git -C "$1" commit -q -m "$4"
+}
+
+g=$root/git
+export REPOS_ROOT=$g
+export REPOS_INTEGRATION='{"o/legacy":"master"}'
+export REPOS_EXCLUDE='["o/skip"]'
+unset REPOS_CONFIG
+
+# o/a: origin, branches, dirty, a worktree at the top level.
+origin=$root/a.git
+git init -q --bare "$origin"
+mkdir -p "$g/o"
+git clone -q "$origin" "$g/o/a" 2>/dev/null
+A=$g/o/a
+commit "$A" README "one" "docs: one"
+git -C "$A" push -q origin main
+git -C "$A" switch -q -c chore/done
+commit "$A" done "x" "chore: done"
+git -C "$A" switch -q main
+git -C "$A" merge -q --no-ff -m "Merge branch 'chore/done'" chore/done
+git -C "$A" switch -q -c feat/wip
+commit "$A" wip "y" "feat: wip 1"
+commit "$A" wip2 "z" "feat: wip 2"
+git -C "$A" push -q -u origin feat/wip 2>/dev/null
+git -C "$A" push -q origin --delete feat/wip 2>/dev/null # its upstream is now gone
+git -C "$A" fetch -q --prune
+git -C "$A" switch -q main
+git -C "$A" worktree add -q "$g/o/a-wt" -b feat/other
+echo dirty >"$A/README"
+echo untracked >"$g/o/a-wt/new"
+
+# o/b: no remote, detached HEAD.
+git init -q "$g/o/b"
+commit "$g/o/b" f "1" "one"
+commit "$g/o/b" f "2" "two"
+git -C "$g/o/b" checkout -q HEAD~1
+
+# o/legacy: master, named by the integration map.
+git init -q -b master "$g/o/legacy"
+commit "$g/o/legacy" f "1" "one"
+git -C "$g/o/legacy" switch -q -c topic
+commit "$g/o/legacy" t "1" "topic"
+git -C "$g/o/legacy" switch -q master
+
+# o/skip: excluded. o/notgit: no .git at all.
+git init -q "$g/o/skip"
+mkdir -p "$g/o/notgit"
+
+json=$(repos --json)
+check "status is JSON" json_ok
+check "root reported" [ "$(jq -r .root <<<"$json")" = "$g" ]
+check "three repositories, sorted" [ "$(jq -r '.repos | map(.id) | join(",")' <<<"$json")" = "o/a,o/b,o/legacy" ]
+check "the top-level worktree is not a repository" not listed o/a-wt
+check "excluded one left out" not listed o/skip
+
+check "a: branch main" is o/a .branch main
+check "a: upstream" is o/a .upstream origin/main
+check "a: ahead 2 (merge + chore)" is o/a .ahead 2
+check "a: behind 0" is o/a .behind 0
+check "a: one changed path" is o/a .dirty 1
+check "a: no operation" is o/a .operation null
+check "a: fetched set" [ "$(field o/a .fetched)" != null ]
+check "a: integration main" is o/a .integration main
+check "a: chore/done merged" is o/a '.branches[] | select(.name == "chore/done") | .merged' true
+check "a: feat/wip unmerged, 2 ahead, upstream gone" is o/a '.branches[] | select(.name == "feat/wip") | [.merged, .ahead, .gone] | join(",")' "false,2,true"
+check "a: main is head and integration" is o/a '.branches[] | select(.name == "main") | [.head, .integration] | join(",")' "true,true"
+# feat/other (the worktree's branch) sits on main's commit, so it counts as merged.
+check "a: unmerged 1 (feat/wip)" is o/a .unmerged 1
+check "a: feat/other merged, nothing beyond main" is o/a '.branches[] | select(.name == "feat/other") | [.merged, .ahead] | join(",")' "true,0"
+check "a: worktrees main first" is o/a '.worktrees[0] | [.main, .path] | join(",")' "true,$A"
+check "a: linked worktree with its branch and one changed path" is o/a '.worktrees[1] | [.main, .path, .branch, .dirty, .exists] | map(tostring) | join(",")' "false,$g/o/a-wt,feat/other,1,true"
+
+check "b: detached" is o/b .detached true
+check "b: no upstream, no remote" is o/b '[.upstream, .remote, .ahead] | map(tostring) | join(",")' "null,null,null"
+check "b: integration main" is o/b .integration main
+
+check "legacy: integration from the map" is o/legacy .integration master
+check "legacy: topic unmerged by master" is o/legacy '.branches[] | select(.name == "topic") | .merged' false
+
+table=$(repos)
+check "table lists each repository" grep -q "^o/a " <<<"$table"
+check "table says changed" grep -q "1 changed" <<<"$table"
+check "table says unmerged" grep -q "1 unmerged" <<<"$table"
+check "table says worktree" grep -q "1 worktree " <<<"$table"
+
+# Operation in progress.
+git -C "$g/o/legacy" switch -q topic
+printf 'conflict\n' >"$g/o/legacy/f"
+git -C "$g/o/legacy" commit -q -am "topic: f"
+git -C "$g/o/legacy" switch -q master
+printf 'other\n' >"$g/o/legacy/f"
+git -C "$g/o/legacy" commit -q -am "master: f"
+git -C "$g/o/legacy" merge -q topic >/dev/null 2>&1 || true
+json=$(repos --json)
+check "legacy: merge in progress" is o/legacy .operation merge
+git -C "$g/o/legacy" merge --abort
+
+# Actions.
+out=$(repos path o/a)
+check "path" [ "$out" = "$A" ]
+out=$(repos path o/none 2>&1)
+code=$?
+check "path of a missing repository: exit 2" [ "$code" -eq 2 ]
+
+out=$(repos branch-delete o/a feat/wip 2>&1)
+code=$?
+check "unmerged branch is refused (exit 3)" [ "$code" -eq 3 ]
+check "...with git's reason on stdout" grep -q "not fully merged" <<<"$out"
+check "...and still there" git -C "$A" show-ref -q --verify refs/heads/feat/wip
+out=$(repos branch-delete o/a chore/done 2>&1)
+code=$?
+check "merged branch deleted" [ "$code" -eq 0 ]
+check "...and gone" not git -C "$A" show-ref -q --verify refs/heads/chore/done
+
+out=$(repos worktree-remove o/a "$g/o/a-wt" 2>&1)
+code=$?
+check "dirty worktree is refused (exit 3)" [ "$code" -eq 3 ]
+check "...and still there" [ -d "$g/o/a-wt" ]
+rm "$g/o/a-wt/new"
+out=$(repos worktree-remove o/a "$g/o/a-wt" 2>&1)
+code=$?
+check "clean worktree removed" [ "$code" -eq 0 ]
+check "...and gone" [ ! -d "$g/o/a-wt" ]
+
+rm -rf "$g/o/b"
+git -C "$A" worktree add -q "$root/elsewhere" -b feat/else
+rm -rf "$root/elsewhere"
+json=$(repos --json)
+check "a worktree whose directory is gone says so" is o/a '.worktrees[] | select(.path == "'"$root"'/elsewhere") | .exists' false
+out=$(repos worktree-prune o/a 2>&1)
+json=$(repos --json)
+check "worktree-prune forgets it" [ "$(field o/a '[.worktrees[] | select(.path == "'"$root"'/elsewhere")] | length')" = 0 ]
+
+out=$(repos fetch o/a 2>&1)
+code=$?
+check "fetch from the bare origin" [ "$code" -eq 0 ]
+check "...reports it" grep -q "^o/a: fetched" <<<"$out"
+json=$(repos --json)
+check "...and fetched is now set" [ "$(field o/a .fetched)" != null ]
+out=$(repos fetch o/legacy 2>&1)
+code=$?
+check "fetch with no remote is not an error" [ "$code" -eq 0 ]
+check "...and says so" grep -q "no remote" <<<"$out"
+git -C "$A" remote set-url origin "$root/missing.git"
+out=$(repos fetch 2>&1)
+code=$?
+check "a failing fetch is exit 3" [ "$code" -eq 3 ]
+check "...naming the repository" grep -q "^o/a: failed" <<<"$out"
+
+# The config file, as the module writes it.
+conf=$root/conf.json
+printf '{"root":"%s","integration":{"o/legacy":"master"},"exclude":["o/legacy"]}\n' "$g" >"$conf"
+json=$(env -u REPOS_ROOT -u REPOS_INTEGRATION -u REPOS_EXCLUDE REPOS_CONFIG="$conf" repos --json)
+check "config file: root" [ "$(jq -r .root <<<"$json")" = "$g" ]
+check "config file: exclude" not listed o/legacy
+json=$(env -u REPOS_INTEGRATION -u REPOS_EXCLUDE REPOS_CONFIG="$conf" REPOS_EXCLUDE='[]' repos --json)
+check "environment overrides a config field" jq -e '.repos[] | select(.id == "o/legacy") | select(.integration == "master")' <<<"$json" >/dev/null
+
+repos nonsense >/dev/null 2>&1
+check "unknown command is usage (64)" [ $? -eq 64 ]
+
+echo
+if [ "$fails" -eq 0 ]; then
+  echo "all checks passed"
+else
+  echo "$fails check(s) failed"
+  exit 1
+fi
