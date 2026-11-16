@@ -124,6 +124,10 @@
           "enabled": true
         },
         {
+          "id": "dotsRepos",
+          "enabled": true
+        },
+        {
           "id": "notificationButton",
           "enabled": true
         },
@@ -267,6 +271,10 @@
         },
         {
           "id": "dotsServices",
+          "enabled": true
+        },
+        {
+          "id": "dotsRepos",
           "enabled": true
         },
         "notificationButton",
