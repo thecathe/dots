@@ -31,6 +31,7 @@
     ./flameshot
     ./zathura # epub reader?
     ./navi # cheatsheets, incl. keyboard shortcuts (navi/cheats)
+    ./repos # the `repos` CLI; with DMS, the repositories bar menu (dank/repos-menu.nix)
   ];
 
   # options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";

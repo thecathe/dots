@@ -125,6 +125,7 @@
       import ./checks/consumer.nix {inherit inputs;}
       // import ./checks/templates.nix {inherit inputs;}
       // import ./checks/dlsync.nix {inherit inputs;}
+      // import ./checks/repos.nix {inherit inputs;}
       // {
         formatting = inputs.nixpkgs.legacyPackages.x86_64-linux.runCommand "formatting" {} ''
           ${alejandra}/bin/alejandra --check --quiet ${inputs.self} && touch $out
