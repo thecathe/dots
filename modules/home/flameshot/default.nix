@@ -32,7 +32,8 @@
 # niri logs "error taking a screenshot: Condition failed: outputs.len() == 1
 # (2 vs 1)", the portal logs "Failed to get screenshot ... internal error", and
 # 30 seconds later Flameshot's own "portal timed out" notifications arrive (seen
-# on `nixos` on 2026-11-15, the first live run). One output is fine as it is.
+# on `nixos` on 2026-11-15, the first live run). A host that only ever has one
+# output is fine as it is, and needs none of what follows.
 #
 # `wlrScreenshotPortal` serves only Screenshot from xdg-desktop-portal-wlr
 # instead, which runs `grim` over the whole desktop (niri implements the
@@ -103,20 +104,65 @@
     text = ''
       order=(${lib.escapeShellArgs cfg.screenOrder})
       focused=$(niri msg --json focused-output | jq -r '.name // empty' || true)
-      for i in "''${!order[@]}"; do
-        if [ "''${order[$i]}" = "$focused" ]; then
-          exec flameshot screen --edit -n "$i"
+      # Qt only knows the outputs that are switched on, so the number is the
+      # place among those, not in the whole list. If one is on that the list does
+      # not name, the numbering cannot be trusted: ask (`gui`, which does not
+      # ask when there is a single screen).
+      mapfile -t enabled < <(niri msg --json outputs | jq -r 'to_entries[] | select(.value.logical != null) | .key' || true)
+      for name in "''${enabled[@]}"; do
+        listed=0
+        for o in "''${order[@]}"; do
+          if [ "$o" = "$name" ]; then listed=1; fi
+        done
+        if [ "$listed" = 0 ]; then
+          exec flameshot gui
         fi
+      done
+      n=0
+      for o in "''${order[@]}"; do
+        for name in "''${enabled[@]}"; do
+          if [ "$name" = "$o" ]; then
+            if [ "$o" = "$focused" ]; then
+              exec flameshot screen --edit -n "$n"
+            fi
+            n=$((n + 1))
+          fi
+        done
       done
       exec flameshot gui
     '';
   };
 
   # xdg-desktop-portal-wlr takes its `grim` as a build input, so the faster one is
-  # swapped in there; it is a plain wrapper, the same grim underneath.
-  fastGrim = pkgs.writeShellScriptBin "grim" ''
-    exec ${pkgs.grim}/bin/grim -l ${toString cfg.portalPngLevel} "$@"
-  '';
+  # swapped in there; it is a wrapper around the same grim.
+  #
+  # It also pads the picture out to the origin of niri's layout. grim captures the
+  # bounding box of the outputs that are on, but Flameshot assumes the picture
+  # starts at the layout's (0, 0) (its crop clamps the minimum at 0, see
+  # `cropToMonitor` in src/utils/screengrabber.cpp). They differ when the only
+  # outputs on do not reach the origin: with the Dell at x=0 switched off, the
+  # AOC is left alone at x=1080, grim's picture is 1920 wide, Flameshot expects
+  # 3000, scales by 1920/3000, cuts a 1229 px strip from x=691 and stretches it
+  # back to 1920. grim's `-g` takes a region of the layout, and the part that no
+  # output covers comes out transparent, so asking for 0,0 to the far corner
+  # gives the picture Flameshot expects. niri not answering leaves grim as it was.
+  fastGrim = pkgs.writeShellApplication {
+    name = "grim";
+    runtimeInputs = [niriPackage pkgs.jq];
+    text = ''
+      region=$(niri msg --json outputs | jq -r '
+        [.[] | .logical | select(. != null)] | select(length > 0)
+        | ([.[].x] | min | if . > 0 then 0 else . end) as $x0
+        | ([.[].y] | min | if . > 0 then 0 else . end) as $y0
+        | ([.[] | .x + .width] | max) as $x1
+        | ([.[] | .y + .height] | max) as $y1
+        | "\($x0),\($y0) \($x1 - $x0)x\($y1 - $y0)"' || true)
+      if [ -n "$region" ]; then
+        exec ${pkgs.grim}/bin/grim -l ${toString cfg.portalPngLevel} -g "$region" "$@"
+      fi
+      exec ${pkgs.grim}/bin/grim -l ${toString cfg.portalPngLevel} "$@"
+    '';
+  };
   wlrPortal = pkgs.xdg-desktop-portal-wlr.override {grim = fastGrim;};
 
   # What the bind runs.
@@ -218,8 +264,10 @@ in {
         Print opens the overlay straight on the output the pointer is on instead
         of asking which one: the wrapper takes the focused output's name from
         niri and passes its place in this list to `flameshot screen --edit -n`.
-        An output that is not in the list gets the plain `flameshot gui` (with its
-        question). To find the order on a host, run
+        List every output the host can have: only the ones switched on at the
+        time count, so with the Dell off the AOC is number 0, not 1. An output
+        that is on but not in the list gets the plain `flameshot gui` (with its
+        question, unless it is the only screen). To find the order on a host, run
         `flameshot screen -n 0 -p /tmp/f` and then `-n 1`, and compare the images'
         sizes with `niri msg outputs`. If the wrong output shows up later, the
         order changed (a monitor was unplugged and replugged, for instance) and
