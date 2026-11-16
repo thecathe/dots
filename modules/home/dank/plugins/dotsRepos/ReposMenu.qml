@@ -21,6 +21,10 @@ PluginComponent {
     readonly property var worktreeRemoveCommand: pluginData.worktreeRemoveCommand || []
     readonly property var terminalCommand: pluginData.terminalCommand || []
     readonly property var openCommand: pluginData.openCommand || []
+    readonly property var branchPublishCommand: pluginData.branchPublishCommand || []
+    readonly property var branchPushCommand: pluginData.branchPushCommand || []
+    readonly property var branchPullCommand: pluginData.branchPullCommand || []
+    readonly property var branchSwitchCommand: pluginData.branchSwitchCommand || []
 
     // The last status: [{ id, owner, name, path, branch, detached, integration,
     // upstream, ahead, behind, dirty, operation, fetched, branches, unmerged, worktrees }].
@@ -33,6 +37,8 @@ PluginComponent {
     property string busy: ""
     // The repository whose details are open, "" when none. One at a time.
     property string expanded: ""
+    // The branch whose actions are open ("<id>:<branch>"), "" when none.
+    property string expandedBranch: ""
 
     readonly property int attention: repos.filter(r => root.needsAttention(r)).length
 
@@ -86,6 +92,32 @@ PluginComponent {
     }
     function removeWorktree(repo, worktree) {
         run("remove:" + repo.id + ":" + worktree.path, worktreeRemoveCommand.concat([repo.id, worktree.path]), repo.id + ": remove worktree");
+    }
+
+    // The actions a branch's "..." offers: only those that would succeed, so
+    // that git's refusals (unmerged, dirty, diverged) are never the answer.
+    // Publish: no upstream, or one that is gone. Push: ahead of its upstream and
+    // not behind it (never forced). Pull: the checked-out branch, behind its
+    // upstream, with a clean tree (fast-forward only). Switch: another branch,
+    // with a clean tree. Nothing while an operation is in progress.
+    function branchActions(repo, b) {
+        const out = [];
+        const clean = (repo.dirty || 0) === 0 && !repo.operation;
+        const hasUpstream = b.upstream !== null && b.upstream !== undefined && !b.gone;
+        if (!hasUpstream && repo.remote)
+            out.push({ key: "publish", label: "Publish", icon: "cloud_upload" });
+        if (hasUpstream && (b.aheadUpstream || 0) > 0 && (b.behindUpstream || 0) === 0)
+            out.push({ key: "push", label: "Push", icon: "upload" });
+        if (b.head && hasUpstream && (b.behindUpstream || 0) > 0 && clean)
+            out.push({ key: "pull", label: "Pull (fast-forward)", icon: "download" });
+        if (!b.head && clean)
+            out.push({ key: "switch", label: "Switch to", icon: "swap_horiz" });
+        return out;
+    }
+    function branchAction(repo, b, key) {
+        expandedBranch = "";
+        const commands = { publish: branchPublishCommand, push: branchPushCommand, pull: branchPullCommand, switch: branchSwitchCommand };
+        run(key + ":" + repo.id + ":" + b.name, commands[key].concat([repo.id, b.name]), repo.id + ": " + key + " " + b.name);
     }
 
     // Fire and forget: a terminal (kitty --detach) and a file manager both
@@ -191,6 +223,7 @@ PluginComponent {
                 function onShouldBeVisibleChanged() {
                     if (popout.parentPopout.shouldBeVisible) {
                         root.expanded = "";
+                        root.expandedBranch = "";
                         root.refresh();
                     }
                 }
@@ -410,7 +443,7 @@ PluginComponent {
                                 }
 
                                 StyledText {
-                                    text: (item.modelData.upstream ? "upstream " + item.modelData.upstream : "no upstream") + " · fetched " + root.ago(item.modelData.fetched) + " · merges into " + item.modelData.integration
+                                    text: (item.modelData.upstream ? "upstream " + item.modelData.upstream : "no upstream") + " · fetched " + root.ago(item.modelData.fetched) + " (fetch only downloads) · merges into " + item.modelData.integration
                                     color: Theme.surfaceVariantText
                                     font.pixelSize: Theme.fontSizeSmall
                                     topPadding: Theme.spacingXS
@@ -421,11 +454,15 @@ PluginComponent {
                                 Repeater {
                                     model: item.modelData.branches || []
 
-                                    delegate: Rectangle {
-                                        id: branchRow
+                                    delegate: Column {
+                                        id: branchItem
 
                                         required property var modelData
                                         readonly property bool deletable: modelData.merged && !modelData.head && !modelData.integration
+                                        // The actions that would succeed for this branch (publish,
+                                        // push, pull, switch); the "..." shows only when there are any.
+                                        readonly property var actions: root.branchActions(item.modelData, modelData)
+                                        readonly property bool isOpen: root.expandedBranch === item.modelData.id + ":" + modelData.name
                                         readonly property string note: {
                                             const parts = [];
                                             if (modelData.ahead > 0)
@@ -434,65 +471,154 @@ PluginComponent {
                                                 parts.push("merged");
                                             if (modelData.gone)
                                                 parts.push("upstream gone");
+                                            else if (modelData.upstream !== null && ((modelData.aheadUpstream || 0) > 0 || (modelData.behindUpstream || 0) > 0))
+                                                parts.push("↑" + (modelData.aheadUpstream || 0) + " ↓" + (modelData.behindUpstream || 0));
                                             return parts.join(" · ");
                                         }
 
                                         width: parent.innerWidth
-                                        height: 30
-                                        radius: Theme.cornerRadius
-                                        color: "transparent"
+                                        spacing: 0
 
-                                        Row {
-                                            anchors.left: parent.left
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            spacing: Theme.spacingS
+                                        Rectangle {
+                                            id: branchRow
 
-                                            DankIcon {
-                                                name: branchRow.modelData.head ? "radio_button_checked" : "radio_button_unchecked"
-                                                size: Theme.iconSizeSmall
-                                                color: branchRow.modelData.head ? Theme.primary : Theme.surfaceVariantText
+                                            width: parent.width
+                                            height: 30
+                                            radius: Theme.cornerRadius
+                                            color: branchItem.isOpen ? Theme.primaryHover : "transparent"
+
+                                            Row {
+                                                anchors.left: parent.left
                                                 anchors.verticalCenter: parent.verticalCenter
+                                                spacing: Theme.spacingS
+
+                                                DankIcon {
+                                                    name: branchItem.modelData.head ? "radio_button_checked" : "radio_button_unchecked"
+                                                    size: Theme.iconSizeSmall
+                                                    color: branchItem.modelData.head ? Theme.primary : Theme.surfaceVariantText
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+
+                                                StyledText {
+                                                    text: branchItem.modelData.name
+                                                    color: Theme.surfaceText
+                                                    font.pixelSize: Theme.fontSizeSmall
+                                                    font.weight: branchItem.modelData.head ? Font.Bold : Font.Normal
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+
+                                                StyledText {
+                                                    text: branchItem.note
+                                                    color: branchItem.modelData.merged || branchItem.modelData.gone ? Theme.surfaceVariantText : Theme.warning
+                                                    font.pixelSize: Theme.fontSizeSmall
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
                                             }
 
-                                            StyledText {
-                                                text: branchRow.modelData.name
-                                                color: Theme.surfaceText
-                                                font.pixelSize: Theme.fontSizeSmall
-                                                font.weight: branchRow.modelData.head ? Font.Bold : Font.Normal
+                                            Row {
+                                                anchors.right: parent.right
                                                 anchors.verticalCenter: parent.verticalCenter
-                                            }
+                                                spacing: 0
 
-                                            StyledText {
-                                                text: branchRow.note
-                                                color: branchRow.modelData.merged || branchRow.modelData.gone ? Theme.surfaceVariantText : Theme.warning
-                                                font.pixelSize: Theme.fontSizeSmall
-                                                anchors.verticalCenter: parent.verticalCenter
+                                                // The branch's actions, under its row while open.
+                                                Rectangle {
+                                                    visible: branchItem.actions.length > 0
+                                                    width: 28
+                                                    height: 28
+                                                    radius: 14
+                                                    color: moreArea.containsMouse || branchItem.isOpen ? Theme.primaryHover : "transparent"
+
+                                                    DankIcon {
+                                                        anchors.centerIn: parent
+                                                        name: "more_horiz"
+                                                        size: Theme.iconSizeSmall
+                                                        color: branchItem.isOpen ? Theme.primary : Theme.surfaceVariantText
+                                                    }
+
+                                                    MouseArea {
+                                                        id: moreArea
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: root.expandedBranch = branchItem.isOpen ? "" : item.modelData.id + ":" + branchItem.modelData.name
+                                                    }
+                                                }
+
+                                                Rectangle {
+                                                    visible: branchItem.deletable
+                                                    width: 28
+                                                    height: 28
+                                                    radius: 14
+                                                    color: deleteArea.containsMouse ? Theme.errorHover : "transparent"
+
+                                                    DankIcon {
+                                                        anchors.centerIn: parent
+                                                        name: "delete"
+                                                        size: Theme.iconSizeSmall
+                                                        color: deleteArea.containsMouse ? Theme.error : Theme.surfaceVariantText
+                                                    }
+
+                                                    MouseArea {
+                                                        id: deleteArea
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        enabled: root.busy === ""
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: root.deleteBranch(item.modelData, branchItem.modelData)
+                                                    }
+                                                }
                                             }
                                         }
 
-                                        Rectangle {
-                                            visible: branchRow.deletable
-                                            width: 28
-                                            height: 28
-                                            radius: 14
-                                            anchors.right: parent.right
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            color: deleteArea.containsMouse ? Theme.errorHover : "transparent"
+                                        Column {
+                                            visible: branchItem.isOpen
+                                            width: parent.width
+                                            spacing: 0
 
-                                            DankIcon {
-                                                anchors.centerIn: parent
-                                                name: "delete"
-                                                size: Theme.iconSizeSmall
-                                                color: deleteArea.containsMouse ? Theme.error : Theme.surfaceVariantText
-                                            }
+                                            Repeater {
+                                                model: branchItem.actions
 
-                                            MouseArea {
-                                                id: deleteArea
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                enabled: root.busy === ""
-                                                cursorShape: Qt.PointingHandCursor
-                                                onClicked: root.deleteBranch(item.modelData, branchRow.modelData)
+                                                delegate: Rectangle {
+                                                    id: branchActionRow
+
+                                                    required property var modelData
+
+                                                    width: parent.width
+                                                    height: 28
+                                                    radius: Theme.cornerRadius
+                                                    color: branchActionArea.containsMouse ? Theme.primaryHover : "transparent"
+
+                                                    Row {
+                                                        anchors.left: parent.left
+                                                        // Lines up with the branch's name above.
+                                                        anchors.leftMargin: Theme.iconSizeSmall + Theme.spacingS
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        spacing: Theme.spacingS
+
+                                                        DankIcon {
+                                                            name: branchActionRow.modelData.icon
+                                                            size: Theme.iconSizeSmall
+                                                            color: Theme.surfaceVariantText
+                                                            anchors.verticalCenter: parent.verticalCenter
+                                                        }
+
+                                                        StyledText {
+                                                            text: branchActionRow.modelData.label
+                                                            color: Theme.surfaceText
+                                                            font.pixelSize: Theme.fontSizeSmall
+                                                            anchors.verticalCenter: parent.verticalCenter
+                                                        }
+                                                    }
+
+                                                    MouseArea {
+                                                        id: branchActionArea
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        enabled: root.busy === ""
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: root.branchAction(item.modelData, branchItem.modelData, branchActionRow.modelData.key)
+                                                    }
+                                                }
                                             }
                                         }
                                     }
