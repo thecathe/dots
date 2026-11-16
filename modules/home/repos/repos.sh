@@ -10,6 +10,10 @@
 #   repos branch-delete ID NAME  delete a local branch, only if it is merged (git branch -d)
 #   repos worktree-remove ID DIR remove a linked worktree, only if it is clean (git worktree remove)
 #   repos worktree-prune ID      forget worktrees whose directory is gone
+#   repos branch-publish ID NAME push a branch with no upstream and set it (git push -u)
+#   repos branch-push ID NAME    push a branch to its upstream (never forced)
+#   repos branch-pull ID NAME    fast-forward the checked-out branch from its upstream
+#   repos branch-switch ID NAME  check a branch out, only with a clean tree
 #   repos path ID                print the repository's directory
 #
 # A repository is `<root>/<owner>/<name>` with a `.git` directory. A directory
@@ -63,6 +67,10 @@ usage: repos                        one line per repository
        repos branch-delete ID NAME  delete a merged local branch
        repos worktree-remove ID DIR remove a clean linked worktree
        repos worktree-prune ID      forget worktrees whose directory is gone
+       repos branch-publish ID NAME push a branch with no upstream and set it (git push -u)
+       repos branch-push ID NAME    push a branch to its upstream (never forced)
+       repos branch-pull ID NAME    fast-forward the checked-out branch from its upstream
+       repos branch-switch ID NAME  check a branch out, only with a clean tree
        repos path ID                print the repository's directory
 ID is <owner>/<name> under the root (REPOS_ROOT, default ~/Documents/git).
 EOF
@@ -167,13 +175,23 @@ describe() {
       while IFS=$'\t' read -r name up track; do
         local n_ahead is_merged=false
         n_ahead=$(g rev-list --count "$integration..$name" 2>/dev/null || echo 0)
+        # Against its own upstream, for push and pull; null without one (or gone).
+        up_ahead=null
+        up_behind=null
+        if [ -n "$up" ] && uc=$(g rev-list --left-right --count "$up...$name" 2>/dev/null); then
+          up_behind=${uc%%[[:space:]]*}
+          up_ahead=${uc##*[[:space:]]}
+        fi
         grep -qx -- "$name" <<<"$merged" && is_merged=true
         jq -n -c --arg name "$name" --arg up "$up" --arg track "$track" --argjson ahead "$n_ahead" \
+          --argjson upAhead "$up_ahead" --argjson upBehind "$up_behind" \
           --argjson merged "$is_merged" --arg head "$branch" --arg integration "$integration" '{
             name: $name,
             upstream: (if $up == "" then null else $up end),
             gone: ($track | test("gone")),
             ahead: $ahead,
+            aheadUpstream: $upAhead,
+            behindUpstream: $upBehind,
             merged: $merged,
             head: ($name == $head),
             integration: ($name == $integration)
@@ -301,6 +319,43 @@ case $cmd in
     [ $# -eq 3 ] || usage
     dir=$(repo_dir "$2")
     git -C "$dir" worktree remove -- "$3" 2>&1 || exit 3
+    ;;
+  branch-publish)
+    [ $# -eq 3 ] || usage
+    dir=$(repo_dir "$2")
+    remote=$(git -C "$dir" remote | head -n 1)
+    [ -n "$remote" ] || {
+      echo "$2: no remote"
+      exit 3
+    }
+    timeout 120 git -C "$dir" push -u "$remote" "$3" 2>&1 || exit 3
+    ;;
+  branch-push)
+    [ $# -eq 3 ] || usage
+    dir=$(repo_dir "$2")
+    up=$(git -C "$dir" rev-parse --abbrev-ref --symbolic-full-name "$3@{u}" 2>/dev/null) || {
+      echo "$3: no upstream (publish it first)"
+      exit 3
+    }
+    timeout 120 git -C "$dir" push "${up%%/*}" "$3:${up#*/}" 2>&1 || exit 3
+    ;;
+  branch-pull)
+    [ $# -eq 3 ] || usage
+    dir=$(repo_dir "$2")
+    [ "$(git -C "$dir" symbolic-ref --short -q HEAD)" = "$3" ] || {
+      echo "$3 is not checked out"
+      exit 3
+    }
+    timeout 120 git -C "$dir" pull --ff-only 2>&1 || exit 3
+    ;;
+  branch-switch)
+    [ $# -eq 3 ] || usage
+    dir=$(repo_dir "$2")
+    [ -z "$(git -C "$dir" --no-optional-locks status --porcelain)" ] || {
+      echo "$2 has uncommitted changes"
+      exit 3
+    }
+    git -C "$dir" switch "$3" 2>&1 || exit 3
     ;;
   worktree-prune)
     [ $# -eq 2 ] || usage

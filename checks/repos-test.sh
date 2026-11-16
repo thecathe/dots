@@ -161,6 +161,49 @@ code=$?
 check "clean worktree removed" [ "$code" -eq 0 ]
 check "...and gone" [ ! -d "$g/o/a-wt" ]
 
+# Branch actions. feat/wip's upstream is gone; feat/other has none.
+out=$(repos branch-publish o/a feat/wip 2>&1)
+code=$?
+check "publish recreates the gone upstream" [ "$code" -eq 0 ]
+json=$(repos --json)
+check "...no longer gone, in step" is o/a '.branches[] | select(.name == "feat/wip") | [.gone, .aheadUpstream, .behindUpstream] | map(tostring) | join(",")' "false,0,0"
+check "a branch without an upstream has null counts" is o/a '.branches[] | select(.name == "feat/other") | [.aheadUpstream, .behindUpstream] | map(tostring) | join(",")' "null,null"
+git -C "$A" switch -q feat/wip
+commit "$A" wip3 "w" "feat: wip 3"
+json=$(repos --json)
+check "ahead of its upstream after a commit" is o/a '.branches[] | select(.name == "feat/wip") | .aheadUpstream' 1
+out=$(repos branch-push o/a feat/wip 2>&1)
+code=$?
+check "push" [ "$code" -eq 0 ]
+json=$(repos --json)
+check "...now in step" is o/a '.branches[] | select(.name == "feat/wip") | .aheadUpstream' 0
+out=$(repos branch-push o/a feat/other 2>&1)
+code=$?
+check "push without an upstream is refused (exit 3)" [ "$code" -eq 3 ]
+git clone -q "$origin" "$root/other" 2>/dev/null
+git -C "$root/other" switch -q feat/wip
+commit "$root/other" theirs "t" "theirs"
+git -C "$root/other" push -q origin feat/wip 2>/dev/null
+git -C "$A" fetch -q
+json=$(repos --json)
+check "behind its upstream after their push" is o/a '.branches[] | select(.name == "feat/wip") | .behindUpstream' 1
+out=$(repos branch-pull o/a main 2>&1)
+code=$?
+check "pull of a branch not checked out is refused (exit 3)" [ "$code" -eq 3 ]
+out=$(repos branch-pull o/a feat/wip 2>&1)
+code=$?
+check "pull fast-forwards" [ "$code" -eq 0 ]
+json=$(repos --json)
+check "...and in step" is o/a '.branches[] | select(.name == "feat/wip") | .behindUpstream' 0
+out=$(repos branch-switch o/a main 2>&1)
+code=$?
+check "switch with uncommitted changes is refused (exit 3)" [ "$code" -eq 3 ]
+git -C "$A" checkout -q -- README
+out=$(repos branch-switch o/a main 2>&1)
+code=$?
+check "switch when clean" [ "$code" -eq 0 ]
+check "...is on main" [ "$(git -C "$A" symbolic-ref --short HEAD)" = main ]
+
 rm -rf "$g/o/b"
 git -C "$A" worktree add -q "$root/elsewhere" -b feat/else
 rm -rf "$root/elsewhere"

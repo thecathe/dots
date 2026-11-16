@@ -31,6 +31,10 @@ in {
         fetchCommand = [repos "fetch"];
         branchDeleteCommand = [repos "branch-delete"];
         worktreeRemoveCommand = [repos "worktree-remove"];
+        branchPublishCommand = [repos "branch-publish"];
+        branchPushCommand = [repos "branch-push"];
+        branchPullCommand = [repos "branch-pull"];
+        branchSwitchCommand = [repos "branch-switch"];
         terminalCommand = ["${config.programs.kitty.package}/bin/kitty" "--detach" "--directory"];
         openCommand = ["${pkgs.xdg-utils}/bin/xdg-open"];
       };

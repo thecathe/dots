@@ -20,7 +20,11 @@ TestCase {
         branchDeleteCommand: ["repos", "branch-delete"],
         worktreeRemoveCommand: ["repos", "worktree-remove"],
         terminalCommand: ["kitty", "--detach", "--directory"],
-        openCommand: ["xdg-open"]
+        openCommand: ["xdg-open"],
+        branchPublishCommand: ["repos", "branch-publish"],
+        branchPushCommand: ["repos", "branch-push"],
+        branchPullCommand: ["repos", "branch-pull"],
+        branchSwitchCommand: ["repos", "branch-switch"]
     })
 
     // dots: on main, 2 changed paths, ahead 1, a merged branch (deletable), an
@@ -34,9 +38,9 @@ TestCase {
               integration: "main", upstream: "origin/main", remote: "origin", ahead: 1, behind: 0, dirty: 2,
               operation: null, fetched: 1, unmerged: 1,
               branches: [
-                  { name: "main", upstream: "origin/main", gone: false, ahead: 0, merged: true, head: true, integration: true },
-                  { name: "chore/old", upstream: null, gone: false, ahead: 0, merged: true, head: false, integration: false },
-                  { name: "feat/new", upstream: "origin/feat/new", gone: true, ahead: 4, merged: false, head: false, integration: false }
+                  { name: "main", upstream: "origin/main", gone: false, ahead: 0, aheadUpstream: 1, behindUpstream: 0, merged: true, head: true, integration: true },
+                  { name: "chore/old", upstream: null, gone: false, ahead: 0, aheadUpstream: null, behindUpstream: null, merged: true, head: false, integration: false },
+                  { name: "feat/new", upstream: "origin/feat/new", gone: true, ahead: 4, aheadUpstream: null, behindUpstream: null, merged: false, head: false, integration: false }
               ],
               worktrees: [
                   { path: "/g/me/dots", branch: "main", detached: false, main: true, dirty: null, exists: true },
@@ -45,12 +49,12 @@ TestCase {
             { id: "me/forest", owner: "me", name: "forest", path: "/g/me/forest", branch: "main", detached: false,
               integration: "main", upstream: "origin/main", remote: "origin", ahead: 0, behind: 0, dirty: 0,
               operation: null, fetched: null, unmerged: 0,
-              branches: [ { name: "main", upstream: "origin/main", gone: false, ahead: 0, merged: true, head: true, integration: true } ],
+              branches: [ { name: "main", upstream: "origin/main", gone: false, ahead: 0, aheadUpstream: 0, behindUpstream: 0, merged: true, head: true, integration: true } ],
               worktrees: [ { path: "/g/me/forest", branch: "main", detached: false, main: true, dirty: null, exists: true } ] },
             { id: "other/thing", owner: "other", name: "thing", path: "/g/other/thing", branch: "main", detached: false,
               integration: "main", upstream: "origin/main", remote: "origin", ahead: 0, behind: 3, dirty: 0,
               operation: "rebase", fetched: 1, unmerged: 0,
-              branches: [ { name: "main", upstream: "origin/main", gone: false, ahead: 0, merged: true, head: true, integration: true } ],
+              branches: [ { name: "main", upstream: "origin/main", gone: false, ahead: 0, aheadUpstream: 0, behindUpstream: 0, merged: true, head: true, integration: true } ],
               worktrees: [ { path: "/g/other/thing", branch: "main", detached: false, main: true, dirty: null, exists: true } ] }
         ]
     })
@@ -135,7 +139,7 @@ TestCase {
         compare(plugin.expanded, "me/dots");
         verify(texts().indexOf("Fetch") >= 0 && texts().indexOf("Terminal") >= 0, JSON.stringify(texts()));
         textItem("chore/old"); textItem("feat/new"); textItem("Worktrees"); textItem("/tmp/wt/dots-feat");
-        textItem("upstream origin/main · fetched " + plugin.ago(1) + " · merges into main");
+        textItem("upstream origin/main · fetched " + plugin.ago(1) + " (fetch only downloads) · merges into main");
         open("thing");
         compare(plugin.expanded, "other/thing");
         verify(texts().indexOf("chore/old") < 0, "dots' details should have closed");
@@ -234,5 +238,40 @@ TestCase {
         Proc.statusOut = JSON.stringify({ root: "/nowhere", generated: 1, repos: [] });
         plugin.refresh(); wait(30);
         textItem("No repositories under /nowhere");
+    }
+
+    function test_branch_actions_offered_only_where_they_would_succeed() {
+        open("dots");
+        // main: ahead of its upstream -> push. chore/old: no upstream -> publish. feat/new: upstream gone -> publish.
+        // dots has 2 changed paths, so no switch and no pull anywhere.
+        compare(icons("more_horiz").length, 3, JSON.stringify(texts()));
+        clickCentre(icons("more_horiz")[0]); wait(30);
+        textItem("Push");
+        verify(texts().indexOf("Pull (fast-forward)") < 0 && texts().indexOf("Switch to") < 0 && texts().indexOf("Publish") < 0, JSON.stringify(texts()));
+        clickCentre(icons("more_horiz")[1]); wait(30);
+        textItem("Publish");
+        verify(texts().indexOf("Push") < 0, "one branch open at a time: " + JSON.stringify(texts()));
+        open("forest");
+        compare(icons("more_horiz").length, 0, "in step and checked out: nothing to offer");
+        open("thing");
+        compare(icons("more_horiz").length, 0, "behind, but mid-rebase: nothing to offer");
+    }
+
+    function test_branch_action_runs_its_command_and_checks_again() {
+        open("dots");
+        clickCentre(icons("more_horiz")[1]); wait(30);
+        const before = statusCalls();
+        clickCentre(textItem("Publish")); wait(30);
+        const a = actions();
+        compare(a.length, 1);
+        compare(a[0].id, "dotsRepos.action.publish:me/dots:chore/old");
+        compare(JSON.stringify(a[0].command), JSON.stringify(["repos", "branch-publish", "me/dots", "chore/old"]));
+        compare(statusCalls(), before + 1);
+        compare(plugin.expandedBranch, "", "the list closes after an action");
+    }
+
+    function test_branch_row_shows_its_own_ahead_behind() {
+        open("dots");
+        textItem("merged · ↑1 ↓0");
     }
 }
