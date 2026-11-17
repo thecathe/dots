@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import qs.Common
 import qs.Modules.Plugins
 import qs.Services
@@ -178,8 +179,12 @@ PluginComponent {
             return Math.floor(s / 3600) + "h ago";
         return Math.floor(s / 86400) + "d ago";
     }
-    // A worktree's path without the root in front of it.
-    function shortPath(path) {
+    // A worktree's path without what is already known: the repository's own
+    // directory when the worktree sits inside it (".claude/worktrees/x"), else
+    // the root in front of it.
+    function shortPath(path, repoPath) {
+        if (repoPath && path.indexOf(repoPath + "/") === 0)
+            return path.substring(repoPath.length + 1);
         if (rootDir !== "" && path.indexOf(rootDir + "/") === 0)
             return path.substring(rootDir.length + 1);
         return path;
@@ -322,9 +327,31 @@ PluginComponent {
                                 radius: Theme.cornerRadius
                                 color: area.containsMouse || item.isOpen ? Theme.primaryHover : "transparent"
 
-                                Row {
+                                // Room is shared, not claimed: the summary takes what it needs up
+                                // to 60% of the row (past that it wraps to a second line, then
+                                // elides), the name keeps up to 70% of the rest, and the branch
+                                // gets whatever remains and elides first.
+                                StyledText {
+                                    id: summaryLabel
+
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: Theme.spacingM
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.min(Math.ceil(implicitWidth) + 1, row.width * 0.6)
+                                    horizontalAlignment: Text.AlignRight
+                                    maximumLineCount: 2
+                                    text: item.summaryText
+                                    color: item.tint
+                                    font.pixelSize: Theme.fontSizeSmall
+                                }
+
+                                RowLayout {
+                                    id: rowTitle
+
                                     anchors.left: parent.left
                                     anchors.leftMargin: Theme.spacingM
+                                    anchors.right: summaryLabel.left
+                                    anchors.rightMargin: Theme.spacingS
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: Theme.spacingS
 
@@ -332,31 +359,24 @@ PluginComponent {
                                         name: item.isOpen ? "expand_more" : "chevron_right"
                                         size: Theme.iconSizeSmall
                                         color: Theme.surfaceVariantText
-                                        anchors.verticalCenter: parent.verticalCenter
                                     }
 
                                     StyledText {
+                                        Layout.maximumWidth: Math.max(80, rowTitle.width * 0.7)
                                         text: item.modelData.name
                                         color: Theme.surfaceText
                                         font.pixelSize: Theme.fontSizeMedium
-                                        anchors.verticalCenter: parent.verticalCenter
+                                        wrapMode: Text.NoWrap
                                     }
 
                                     StyledText {
+                                        Layout.fillWidth: true
+                                        Layout.maximumWidth: implicitWidth
                                         text: item.modelData.branch
                                         color: Theme.surfaceVariantText
                                         font.pixelSize: Theme.fontSizeSmall
-                                        anchors.verticalCenter: parent.verticalCenter
+                                        wrapMode: Text.NoWrap
                                     }
-                                }
-
-                                StyledText {
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: Theme.spacingM
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: item.summaryText
-                                    color: item.tint
-                                    font.pixelSize: Theme.fontSizeSmall
                                 }
 
                                 MouseArea {
@@ -487,8 +507,14 @@ PluginComponent {
                                             radius: Theme.cornerRadius
                                             color: branchItem.isOpen ? Theme.primaryHover : "transparent"
 
-                                            Row {
+                                            // The name and its note stop short of the icons: the note
+                                            // keeps what it needs up to half the row, the name elides.
+                                            RowLayout {
+                                                id: branchTitle
+
                                                 anchors.left: parent.left
+                                                anchors.right: branchIcons.left
+                                                anchors.rightMargin: branchIcons.width > 0 ? Theme.spacingS : 0
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 spacing: Theme.spacingS
 
@@ -496,26 +522,30 @@ PluginComponent {
                                                     name: branchItem.modelData.head ? "radio_button_checked" : "radio_button_unchecked"
                                                     size: Theme.iconSizeSmall
                                                     color: branchItem.modelData.head ? Theme.primary : Theme.surfaceVariantText
-                                                    anchors.verticalCenter: parent.verticalCenter
                                                 }
 
                                                 StyledText {
+                                                    Layout.fillWidth: true
+                                                    Layout.maximumWidth: implicitWidth
                                                     text: branchItem.modelData.name
                                                     color: Theme.surfaceText
                                                     font.pixelSize: Theme.fontSizeSmall
                                                     font.weight: branchItem.modelData.head ? Font.Bold : Font.Normal
-                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    wrapMode: Text.NoWrap
                                                 }
 
                                                 StyledText {
+                                                    Layout.maximumWidth: branchTitle.width * 0.5
                                                     text: branchItem.note
                                                     color: branchItem.modelData.merged || branchItem.modelData.gone ? Theme.surfaceVariantText : Theme.warning
                                                     font.pixelSize: Theme.fontSizeSmall
-                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    wrapMode: Text.NoWrap
                                                 }
                                             }
 
                                             Row {
+                                                id: branchIcons
+
                                                 anchors.right: parent.right
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 spacing: 0
@@ -655,8 +685,16 @@ PluginComponent {
                                         radius: Theme.cornerRadius
                                         color: "transparent"
 
-                                        Row {
+                                        // The path and its note stop short of the icons. A path is
+                                        // the long part (a worktree under .claude/worktrees is 60
+                                        // characters), so it elides in the middle, where the name
+                                        // that tells worktrees apart stays at the end.
+                                        RowLayout {
+                                            id: worktreeTitle
+
                                             anchors.left: parent.left
+                                            anchors.right: worktreeIcons.left
+                                            anchors.rightMargin: worktreeIcons.width > 0 ? Theme.spacingS : 0
                                             anchors.verticalCenter: parent.verticalCenter
                                             spacing: Theme.spacingS
 
@@ -664,25 +702,30 @@ PluginComponent {
                                                 name: "folder"
                                                 size: Theme.iconSizeSmall
                                                 color: Theme.surfaceVariantText
-                                                anchors.verticalCenter: parent.verticalCenter
                                             }
 
                                             StyledText {
-                                                text: root.shortPath(worktreeRow.modelData.path)
+                                                Layout.fillWidth: true
+                                                Layout.maximumWidth: implicitWidth
+                                                text: root.shortPath(worktreeRow.modelData.path, item.modelData.path)
                                                 color: Theme.surfaceText
                                                 font.pixelSize: Theme.fontSizeSmall
-                                                anchors.verticalCenter: parent.verticalCenter
+                                                wrapMode: Text.NoWrap
+                                                elide: Text.ElideMiddle
                                             }
 
                                             StyledText {
+                                                Layout.maximumWidth: worktreeTitle.width * 0.4
                                                 text: worktreeRow.note
                                                 color: worktreeRow.modelData.dirty > 0 || !worktreeRow.modelData.exists ? Theme.warning : Theme.surfaceVariantText
                                                 font.pixelSize: Theme.fontSizeSmall
-                                                anchors.verticalCenter: parent.verticalCenter
+                                                wrapMode: Text.NoWrap
                                             }
                                         }
 
                                         Row {
+                                            id: worktreeIcons
+
                                             anchors.right: parent.right
                                             anchors.verticalCenter: parent.verticalCenter
                                             spacing: 0
