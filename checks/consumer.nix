@@ -358,10 +358,12 @@
       check "consumer-dictation-widget-evaluates" modulesOn;
 
   # The devlog module imported by path on its own. With a clone configured it must
-  # install dlsync and put a quiet, pull-only SessionStart hook into the Claude
-  # Code settings (quiet because a hook's stdout is Claude's context; pull-only
-  # because pushing is the user's call); with the hook switched off, or no
-  # clone, it must not add the hook, and the disabled module installs nothing.
+  # install dlsync and orient and put orient's SessionStart hook into the Claude
+  # Code settings (run with --hook so its exit status stays 0 and its output
+  # stays Claude's context; pull-only because pushing is the user's call), plus
+  # the one permission rule for `orient push-workbench`; with the hook switched
+  # off, or no clone, it must add neither, and the disabled module installs
+  # nothing.
   devlogModule = "${dots}/modules/home/devlog";
   devlogConsumer = let
     lib = inputs.nixpkgs.lib;
@@ -369,17 +371,23 @@
     on = (consumerConfig [devlogModule clone]).config;
     noHook = (consumerConfig [devlogModule clone {dots.devlog.claudeHook = false;}]).config;
     off = (consumerConfig [devlogModule]).config;
-    script = c: c.home.activation.dlsyncClaudeHook.data;
-    hasDlsync = c: lib.any (p: lib.getName p == "dlsync") c.home.packages;
+    script = c: c.home.activation.orientClaudeHook.data;
+    has = name: c: lib.any (p: lib.getName p == name) c.home.packages;
   in
-    assert lib.assertMsg (hasDlsync on && hasDlsync noHook && !(hasDlsync off))
+    assert lib.assertMsg (has "dlsync" on && has "dlsync" noHook && !(has "dlsync" off))
     "consumer-devlog: dlsync is installed when, and only when, a clone is configured";
-    assert lib.assertMsg (lib.hasInfix "dots:managed" (script on) && lib.hasInfix "startup|resume" (script on) && lib.hasInfix "bin/dlsync --quiet" (script on))
-    "consumer-devlog: the SessionStart hook is not a quiet dlsync on startup and resume";
+    assert lib.assertMsg (has "orient" on && has "orient" noHook && !(has "orient" off))
+    "consumer-devlog: orient is installed when, and only when, a clone is configured";
+    assert lib.assertMsg (lib.hasInfix "dots:managed" (script on) && lib.hasInfix "startup|resume" (script on) && lib.hasInfix "bin/orient --hook" (script on))
+    "consumer-devlog: the SessionStart hook is not orient --hook on startup and resume";
     assert lib.assertMsg (!(lib.hasInfix "--push" (script on)))
     "consumer-devlog: the session hook pushes; pushing is the user's call";
+    assert lib.assertMsg (lib.hasInfix ''["Bash(orient push-workbench)"]'' (script on) && !(lib.hasInfix "--create" (script on)))
+    "consumer-devlog: the permission is not exactly the one guarded push, without --create";
     assert lib.assertMsg (!(lib.hasInfix "startup|resume" (script noHook)) && !(lib.hasInfix "startup|resume" (script off)))
     "consumer-devlog: the hook is added although it is switched off, or there is no clone";
+    assert lib.assertMsg (lib.hasInfix "--argjson allow '[]'" (script noHook) && lib.hasInfix "--argjson allow '[]'" (script off))
+    "consumer-devlog: the permission is allowed although the hook is switched off, or there is no clone";
       check "consumer-devlog-evaluates" [devlogModule clone];
 in {
   # The devlog module alone, by path.
