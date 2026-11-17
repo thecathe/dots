@@ -18,9 +18,11 @@
 
   # A program the menu starts is a child of dms.service, and stopping that
   # service (any rebuild that changes the DMS plugins or settings restarts it)
-  # kills its whole cgroup, so an editor started from here, when none was
-  # running, would die with the next rebuild. A transient scope of its own
-  # keeps it alive; DMS wraps its own commands the same way (SessionService).
+  # kills its whole cgroup, so a terminal or an editor started from here would
+  # die with the next rebuild, work in it included (a VS Code that was already
+  # running is only handed the folder, but a new one is a child too). A
+  # transient scope of its own keeps it alive; DMS wraps its own commands the
+  # same way (SessionService).
   detached = ["systemd-run" "--user" "--scope" "--collect" "--quiet"];
 in {
   # The options the menu reads, so this file also works imported on its own
@@ -43,7 +45,7 @@ in {
         branchPushCommand = [repos "branch-push"];
         branchPullCommand = [repos "branch-pull"];
         branchSwitchCommand = [repos "branch-switch"];
-        terminalCommand = ["${config.programs.kitty.package}/bin/kitty" "--detach" "--directory"];
+        terminalCommand = detached ++ ["${config.programs.kitty.package}/bin/kitty" "--detach" "--directory"];
         openCommand = ["${pkgs.xdg-utils}/bin/xdg-open"];
         # The editor the vscode module builds (the --no-sandbox wrapper), when
         # there is one: without it the menu has no VS Code button.
