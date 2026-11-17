@@ -451,6 +451,26 @@ TestCase {
         pill.parent.destroy();
     }
 
+    // dots.repos.hoverDelayMs reaches the plugin as the hoverDelayMs setting.
+    function test_hover_delay_comes_from_the_settings() {
+        compare(plugin.hoverDelay, 250, "the default when the setting is absent");
+        plugin.pluginData = Object.assign({}, data, { hoverDelayMs: 600 });
+        compare(plugin.hoverDelay, 600);
+        plugin.pluginData = Object.assign({}, data, { hoverDelayMs: 0 });
+        compare(plugin.hoverDelay, 0, "zero means at once, it is not 'unset'");
+    }
+
+    function test_the_configured_delay_is_the_one_the_pill_waits() {
+        // Longer than the 250 ms default, so only the configured value passes both waits.
+        plugin.pluginData = Object.assign({}, data, { hoverDelayMs: 400 });
+        plugin.pointerChanged(true);
+        wait(320);
+        compare(plugin.overviewShown, false, "still inside the configured delay");
+        wait(250);
+        compare(plugin.overviewShown, true);
+        plugin.pointerChanged(false);
+    }
+
     function test_a_pointer_that_leaves_before_the_delay_never_opens_it() {
         plugin.hoverDelay = 60;
         plugin.pointerChanged(true);
