@@ -47,7 +47,7 @@ PluginComponent {
     property int freshMs: 30000
     // How a repository row's width is split into columns: the name, the branch, and the
     // status takes the rest. The same on every row, which is what makes them columns.
-    readonly property real colNameShare: 0.32
+    readonly property real colNameShare: 0.37
     readonly property real colBranchShare: 0.22
     // The same for the branch and worktree rows under an open repository: the name takes
     // this share, its note the rest, and two 28px icon slots stay free on the right.
