@@ -40,8 +40,10 @@ PluginComponent {
     // The pill shows its overview while the pointer has rested on it for hoverDelay
     // ms. Resting there also checks again if the last status is older than freshMs,
     // so the counts are not the ones from whenever the menu was last opened.
+    // hoverDelay comes from dots.repos.hoverDelayMs; 0 is a valid choice (at once),
+    // so the fallback tests for undefined rather than for falsy.
     property bool overviewShown: false
-    property int hoverDelay: 250
+    property int hoverDelay: pluginData.hoverDelayMs !== undefined ? pluginData.hoverDelayMs : 250
     property int freshMs: 30000
     // The action under way ("fetch", "fetch:<id>", "delete:<id>:<branch>",
     // "remove:<id>:<path>"), "" when none. One at a time.

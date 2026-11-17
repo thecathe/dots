@@ -1,9 +1,10 @@
 # The DMS "Repositories" bar menu (plugins/dotsRepos): every git repository
 # under dots.repos.root, with its branch, how far it is ahead of and behind its
 # upstream, its changed paths, its unmerged branches and its worktrees. Nothing
-# polls: opening the popout, or resting the pointer on the bar pill (which then
-# grows to an overview of the counts), runs `repos --json` once, the latter only
-# if the last check is older than half a minute (modules/home/repos). A
+# polls: opening the popout, or resting the pointer on the bar pill for
+# dots.repos.hoverDelayMs (which then grows to an overview of the counts), runs
+# `repos --json` once, the latter only if the last check is older than half a
+# minute (modules/home/repos). A
 # repository's row opens to its branches and worktrees and the actions: fetch,
 # open the directory, a terminal there, VS Code there, delete a merged branch,
 # remove a clean worktree. The commands come from here, so the QML never
@@ -37,6 +38,7 @@ in {
       src = ./plugins/dotsRepos;
       settings = {
         root = cfg.root;
+        hoverDelayMs = cfg.hoverDelayMs;
         # Each is an argv the menu appends to: nothing, repository IDs, "ID
         # NAME", "ID DIR", or a directory.
         statusCommand = [repos "--json"];

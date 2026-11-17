@@ -51,6 +51,18 @@ in {
       defaultText = lib.literalMD "the `repos` CLI built from the options above";
       description = "The `repos` CLI; the DMS menu runs this one.";
     };
+
+    hoverDelayMs = lib.mkOption {
+      type = lib.types.ints.between 0 10000;
+      default = 250;
+      example = 600;
+      description = ''
+        How long, in milliseconds, the pointer must rest on the bar pill before
+        it grows to the overview of counts (and checks the repositories again if
+        the last check is old). A pointer sweeping past does nothing; `0` shows
+        the overview at once. Read by the DMS menu only.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
