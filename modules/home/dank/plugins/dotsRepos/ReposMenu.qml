@@ -1,12 +1,14 @@
 import QtQuick
+import QtQuick.Layouts
 import qs.Common
 import qs.Modules.Plugins
 import qs.Services
 import qs.Widgets
 
 // Bar pill + popout listing every git repository under dots.repos.root.
-// Nothing runs while the popout is closed: opening it runs the status command
-// once (`repos --json`, modules/home/repos/repos.sh), whose JSON gives each
+// Nothing runs while the popout is closed and the pointer is elsewhere: opening
+// it, or resting the pointer on the pill (which then shows an overview, see
+// below), runs the status command once (`repos --json`, modules/home/repos/repos.sh), whose JSON gives each
 // repository's branch, how far it is ahead of and behind its upstream, its
 // changed paths, an operation in progress, its local branches (merged into the
 // integration branch or not) and its worktrees. A row opens to those and to
@@ -21,6 +23,7 @@ PluginComponent {
     readonly property var worktreeRemoveCommand: pluginData.worktreeRemoveCommand || []
     readonly property var terminalCommand: pluginData.terminalCommand || []
     readonly property var openCommand: pluginData.openCommand || []
+    readonly property var codeCommand: pluginData.codeCommand || []
     readonly property var branchPublishCommand: pluginData.branchPublishCommand || []
     readonly property var branchPushCommand: pluginData.branchPushCommand || []
     readonly property var branchPullCommand: pluginData.branchPullCommand || []
@@ -32,6 +35,14 @@ PluginComponent {
     property string rootDir: pluginData.root || ""
     property bool checking: false
     property bool loaded: false
+    // When the last status arrived (Date.now(), ms); 0 before the first.
+    property double checkedAt: 0
+    // The pill shows its overview while the pointer has rested on it for hoverDelay
+    // ms. Resting there also checks again if the last status is older than freshMs,
+    // so the counts are not the ones from whenever the menu was last opened.
+    property bool overviewShown: false
+    property int hoverDelay: 250
+    property int freshMs: 30000
     // The action under way ("fetch", "fetch:<id>", "delete:<id>:<branch>",
     // "remove:<id>:<path>"), "" when none. One at a time.
     property string busy: ""
@@ -42,7 +53,8 @@ PluginComponent {
 
     readonly property int attention: repos.filter(r => root.needsAttention(r)).length
 
-    function refresh() {
+    // quiet: a check nobody asked for (the pointer on the pill) does not toast a failure.
+    function refresh(quiet) {
         if (statusCommand.length === 0)
             return;
         checking = true;
@@ -50,7 +62,8 @@ PluginComponent {
         Proc.runCommand("dotsRepos.status", statusCommand, (stdout, exitCode) => {
             checking = false;
             if (exitCode !== 0) {
-                ToastService.showError("Repositories: status failed (exit " + exitCode + ")");
+                if (!quiet)
+                    ToastService.showError("Repositories: status failed (exit " + exitCode + ")");
                 return;
             }
             try {
@@ -59,8 +72,10 @@ PluginComponent {
                 if (data.root)
                     rootDir = data.root;
                 loaded = true;
+                checkedAt = Date.now();
             } catch (e) {
-                ToastService.showError("Repositories: unreadable status");
+                if (!quiet)
+                    ToastService.showError("Repositories: unreadable status");
             }
         }, 0, 60000);
     }
@@ -134,6 +149,28 @@ PluginComponent {
                 ToastService.showError("Open failed (exit " + exitCode + ")");
         }, 0, -1);
     }
+    // VS Code: `code DIR` hands the directory to the running editor, or starts one.
+    // The command is wrapped by the module so that a newly started editor is not
+    // left in the shell's own cgroup (see repos-menu.nix).
+    function openCode(path) {
+        Proc.runCommand("dotsRepos.code", codeCommand.concat([path]), (stdout, exitCode) => {
+            if (exitCode !== 0)
+                ToastService.showError("VS Code failed (exit " + exitCode + ")");
+        }, 0, -1);
+    }
+
+    // The buttons under an open repository, in order. VS Code only when the module
+    // gave the menu a command for it.
+    readonly property var repoActions: {
+        const out = [
+            { key: "fetch", label: "Fetch", icon: "sync" },
+            { key: "open", label: "Open", icon: "folder_open" },
+            { key: "terminal", label: "Terminal", icon: "terminal" }
+        ];
+        if (codeCommand.length > 0)
+            out.push({ key: "code", label: "VS Code", icon: "code" });
+        return out;
+    }
 
     // What the row says on the right, and in which colour.
     function needsAttention(r) {
@@ -165,6 +202,116 @@ PluginComponent {
             return Theme.warning;
         return Theme.surfaceVariantText;
     }
+    // The overview: how many repositories fall in each bucket. One repository can be
+    // in several (ahead and with changes); "up to date" is in step with an upstream.
+    // Pull and push are counted as the rows show them: the checked-out branch against
+    // its upstream, as of the last fetch of each repository. "merged" counts the
+    // repositories that have a merged branch the menu would offer to delete.
+    function overviewOf(list) {
+        const o = { total: list.length, upToDate: 0, behind: 0, ahead: 0, merged: 0, dirty: 0, unmerged: 0, noUpstream: 0, stuck: 0 };
+        for (const r of list) {
+            if (r.upstream === null || r.upstream === undefined)
+                o.noUpstream++;
+            else if ((r.ahead || 0) === 0 && (r.behind || 0) === 0)
+                o.upToDate++;
+            if ((r.behind || 0) > 0)
+                o.behind++;
+            if ((r.ahead || 0) > 0)
+                o.ahead++;
+            if ((r.branches || []).some(b => b.merged && !b.head && !b.integration))
+                o.merged++;
+            if ((r.dirty || 0) > 0)
+                o.dirty++;
+            if ((r.unmerged || 0) > 0)
+                o.unmerged++;
+            if (r.operation || r.detached)
+                o.stuck++;
+        }
+        return o;
+    }
+    readonly property var overview: overviewOf(repos)
+    // The buckets, in the order they are shown; the colours are the rows' (red: needs
+    // attention, orange: unfinished work, grey: nothing to do), green for in step.
+    readonly property var overviewKinds: [
+        { key: "upToDate", icon: "check_circle", phrase: "up to date", color: Theme.success, always: true },
+        { key: "behind", icon: "download", phrase: "to pull", color: Theme.error },
+        { key: "ahead", icon: "upload", phrase: "to push", color: Theme.warning },
+        { key: "merged", icon: "call_merge", phrase: "with merged branches", color: Theme.surfaceVariantText },
+        { key: "dirty", icon: "edit", phrase: "with changes", color: Theme.warning },
+        { key: "unmerged", icon: "fork_right", phrase: "with unmerged branches", color: Theme.warning },
+        { key: "noUpstream", icon: "cloud_off", phrase: "without an upstream", color: Theme.warning },
+        { key: "stuck", icon: "error", phrase: "mid-operation or detached", color: Theme.error }
+    ]
+    // Only the buckets that are not empty, but always "up to date".
+    readonly property var overviewChips: overviewKinds.filter(k => k.always === true || overview[k.key] > 0).map(k => ({
+                key: k.key,
+                icon: k.icon,
+                color: k.color,
+                count: overview[k.key],
+                label: overview[k.key] + " " + k.phrase
+            }))
+
+    // The pointer on the pill: after hoverDelay (so one sweeping past does nothing) the
+    // pill grows to show the overview, and a status older than freshMs is checked again,
+    // quietly, since nobody asked for it. Leaving closes it at once.
+    function pointerChanged(inside) {
+        if (inside) {
+            hoverTimer.restart();
+        } else {
+            hoverTimer.stop();
+            overviewShown = false;
+        }
+    }
+    function hoverRefresh() {
+        if (checking || busy !== "")
+            return;
+        if (loaded && Date.now() - checkedAt < freshMs)
+            return;
+        refresh(true);
+    }
+
+    Timer {
+        id: hoverTimer
+
+        interval: root.hoverDelay
+        onTriggered: {
+            root.overviewShown = true;
+            root.hoverRefresh();
+        }
+    }
+
+    HoverHandler {
+        onHoveredChanged: root.pointerChanged(hovered)
+    }
+
+    // One bucket: its icon and count, or with the words spelled out. The row it sits in
+    // says which (`labelled`): the bar pill has no room for words, the menu has.
+    Component {
+        id: chipDelegate
+
+        Row {
+            required property var modelData
+            readonly property bool labelled: parent && parent.labelled === true
+
+            spacing: 2
+
+            DankIcon {
+                name: parent.modelData.icon
+                size: parent.labelled ? Theme.iconSizeSmall : Theme.barIconSize(root.barThickness, -8)
+                color: parent.modelData.color
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            StyledText {
+                text: parent.labelled ? parent.modelData.label : String(parent.modelData.count)
+                color: parent.modelData.color
+                font.pixelSize: parent.labelled ? Theme.fontSizeSmall : Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
+                wrapMode: Text.NoWrap
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+
     // "2h ago" for an epoch, "never" for null.
     function ago(epoch) {
         if (epoch === null || epoch === undefined)
@@ -178,18 +325,67 @@ PluginComponent {
             return Math.floor(s / 3600) + "h ago";
         return Math.floor(s / 86400) + "d ago";
     }
-    // A worktree's path without the root in front of it.
-    function shortPath(path) {
+    // A worktree's path without what is already known: the repository's own
+    // directory when the worktree sits inside it (".claude/worktrees/x"), else
+    // the root in front of it.
+    function shortPath(path, repoPath) {
+        if (repoPath && path.indexOf(repoPath + "/") === 0)
+            return path.substring(repoPath.length + 1);
         if (rootDir !== "" && path.indexOf(rootDir + "/") === 0)
             return path.substring(rootDir.length + 1);
         return path;
     }
 
+    // The icon, and beside it the overview while the pointer rests on the pill: counts
+    // only, each in the colour the rows use. The pill's width follows this Row's, so it
+    // grows and shrinks with the overview (a vertical bar has no room, so none there).
     horizontalBarPill: Component {
-        DankIcon {
-            name: "account_tree"
-            size: Theme.barIconSize(root.barThickness, -4)
-            color: root.attention > 0 ? Theme.error : Theme.widgetIconColor
+        Row {
+            spacing: Theme.spacingXS
+
+            DankIcon {
+                name: "account_tree"
+                size: Theme.barIconSize(root.barThickness, -4)
+                color: root.attention > 0 ? Theme.error : Theme.widgetIconColor
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Item {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: width > 0
+                clip: true
+                width: root.overviewShown ? overviewRow.implicitWidth : 0
+                height: overviewRow.implicitHeight
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: Theme.shortDuration
+                        easing.type: Easing.OutCubic
+                    }
+                }
+
+                Row {
+                    id: overviewRow
+
+                    property bool labelled: false
+
+                    spacing: Theme.spacingS
+
+                    StyledText {
+                        // Before the first status there is nothing to count.
+                        visible: !root.loaded
+                        text: "…"
+                        color: Theme.surfaceVariantText
+                        font.pixelSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Repeater {
+                        model: root.overviewChips
+                        delegate: chipDelegate
+                    }
+                }
+            }
         }
     }
 
@@ -272,6 +468,33 @@ PluginComponent {
                     width: parent.width
                     spacing: 2
 
+                    // The overview with its words, in the colours the rows use: what the
+                    // pill's counts mean, and what the colours mean.
+                    Flow {
+                        id: overviewStrip
+
+                        property bool labelled: true
+
+                        visible: root.loaded && root.repos.length > 0
+                        width: parent.width
+                        leftPadding: Theme.spacingM
+                        rightPadding: Theme.spacingM
+                        bottomPadding: Theme.spacingS
+                        spacing: Theme.spacingM
+
+                        StyledText {
+                            text: root.repos.length + (root.repos.length === 1 ? " repository" : " repositories")
+                            color: Theme.surfaceText
+                            font.pixelSize: Theme.fontSizeSmall
+                            wrapMode: Text.NoWrap
+                        }
+
+                        Repeater {
+                            model: root.overviewChips
+                            delegate: chipDelegate
+                        }
+                    }
+
                     StyledText {
                         visible: !root.loaded && root.checking
                         text: "Checking…"
@@ -322,9 +545,31 @@ PluginComponent {
                                 radius: Theme.cornerRadius
                                 color: area.containsMouse || item.isOpen ? Theme.primaryHover : "transparent"
 
-                                Row {
+                                // Room is shared, not claimed: the summary takes what it needs up
+                                // to 60% of the row (past that it wraps to a second line, then
+                                // elides), the name keeps up to 70% of the rest, and the branch
+                                // gets whatever remains and elides first.
+                                StyledText {
+                                    id: summaryLabel
+
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: Theme.spacingM
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.min(Math.ceil(implicitWidth) + 1, row.width * 0.6)
+                                    horizontalAlignment: Text.AlignRight
+                                    maximumLineCount: 2
+                                    text: item.summaryText
+                                    color: item.tint
+                                    font.pixelSize: Theme.fontSizeSmall
+                                }
+
+                                RowLayout {
+                                    id: rowTitle
+
                                     anchors.left: parent.left
                                     anchors.leftMargin: Theme.spacingM
+                                    anchors.right: summaryLabel.left
+                                    anchors.rightMargin: Theme.spacingS
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: Theme.spacingS
 
@@ -332,31 +577,24 @@ PluginComponent {
                                         name: item.isOpen ? "expand_more" : "chevron_right"
                                         size: Theme.iconSizeSmall
                                         color: Theme.surfaceVariantText
-                                        anchors.verticalCenter: parent.verticalCenter
                                     }
 
                                     StyledText {
+                                        Layout.maximumWidth: Math.max(80, rowTitle.width * 0.7)
                                         text: item.modelData.name
                                         color: Theme.surfaceText
                                         font.pixelSize: Theme.fontSizeMedium
-                                        anchors.verticalCenter: parent.verticalCenter
+                                        wrapMode: Text.NoWrap
                                     }
 
                                     StyledText {
+                                        Layout.fillWidth: true
+                                        Layout.maximumWidth: implicitWidth
                                         text: item.modelData.branch
                                         color: Theme.surfaceVariantText
                                         font.pixelSize: Theme.fontSizeSmall
-                                        anchors.verticalCenter: parent.verticalCenter
+                                        wrapMode: Text.NoWrap
                                     }
-                                }
-
-                                StyledText {
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: Theme.spacingM
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: item.summaryText
-                                    color: item.tint
-                                    font.pixelSize: Theme.fontSizeSmall
                                 }
 
                                 MouseArea {
@@ -377,16 +615,14 @@ PluginComponent {
 
                                 readonly property real innerWidth: width - leftPadding - Theme.spacingM
 
-                                // Actions: fetch, open, terminal.
-                                Row {
+                                // Actions: fetch, open, terminal, VS Code. A Flow, so a narrow popout or
+                                // a large font wraps the buttons instead of pushing them off the edge.
+                                Flow {
+                                    width: parent.innerWidth
                                     spacing: Theme.spacingS
 
                                     Repeater {
-                                        model: [
-                                            { key: "fetch", label: "Fetch", icon: "sync" },
-                                            { key: "open", label: "Open", icon: "folder_open" },
-                                            { key: "terminal", label: "Terminal", icon: "terminal" }
-                                        ]
+                                        model: root.repoActions
 
                                         delegate: Rectangle {
                                             id: actionButton
@@ -434,6 +670,9 @@ PluginComponent {
                                                         break;
                                                     case "terminal":
                                                         root.openTerminal(item.modelData.path);
+                                                        break;
+                                                    case "code":
+                                                        root.openCode(item.modelData.path);
                                                         break;
                                                     }
                                                 }
@@ -487,8 +726,14 @@ PluginComponent {
                                             radius: Theme.cornerRadius
                                             color: branchItem.isOpen ? Theme.primaryHover : "transparent"
 
-                                            Row {
+                                            // The name and its note stop short of the icons: the note
+                                            // keeps what it needs up to half the row, the name elides.
+                                            RowLayout {
+                                                id: branchTitle
+
                                                 anchors.left: parent.left
+                                                anchors.right: branchIcons.left
+                                                anchors.rightMargin: branchIcons.width > 0 ? Theme.spacingS : 0
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 spacing: Theme.spacingS
 
@@ -496,26 +741,30 @@ PluginComponent {
                                                     name: branchItem.modelData.head ? "radio_button_checked" : "radio_button_unchecked"
                                                     size: Theme.iconSizeSmall
                                                     color: branchItem.modelData.head ? Theme.primary : Theme.surfaceVariantText
-                                                    anchors.verticalCenter: parent.verticalCenter
                                                 }
 
                                                 StyledText {
+                                                    Layout.fillWidth: true
+                                                    Layout.maximumWidth: implicitWidth
                                                     text: branchItem.modelData.name
                                                     color: Theme.surfaceText
                                                     font.pixelSize: Theme.fontSizeSmall
                                                     font.weight: branchItem.modelData.head ? Font.Bold : Font.Normal
-                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    wrapMode: Text.NoWrap
                                                 }
 
                                                 StyledText {
+                                                    Layout.maximumWidth: branchTitle.width * 0.5
                                                     text: branchItem.note
                                                     color: branchItem.modelData.merged || branchItem.modelData.gone ? Theme.surfaceVariantText : Theme.warning
                                                     font.pixelSize: Theme.fontSizeSmall
-                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    wrapMode: Text.NoWrap
                                                 }
                                             }
 
                                             Row {
+                                                id: branchIcons
+
                                                 anchors.right: parent.right
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 spacing: 0
@@ -655,8 +904,16 @@ PluginComponent {
                                         radius: Theme.cornerRadius
                                         color: "transparent"
 
-                                        Row {
+                                        // The path and its note stop short of the icons. A path is
+                                        // the long part (a worktree under .claude/worktrees is 60
+                                        // characters), so it elides in the middle, where the name
+                                        // that tells worktrees apart stays at the end.
+                                        RowLayout {
+                                            id: worktreeTitle
+
                                             anchors.left: parent.left
+                                            anchors.right: worktreeIcons.left
+                                            anchors.rightMargin: worktreeIcons.width > 0 ? Theme.spacingS : 0
                                             anchors.verticalCenter: parent.verticalCenter
                                             spacing: Theme.spacingS
 
@@ -664,25 +921,30 @@ PluginComponent {
                                                 name: "folder"
                                                 size: Theme.iconSizeSmall
                                                 color: Theme.surfaceVariantText
-                                                anchors.verticalCenter: parent.verticalCenter
                                             }
 
                                             StyledText {
-                                                text: root.shortPath(worktreeRow.modelData.path)
+                                                Layout.fillWidth: true
+                                                Layout.maximumWidth: implicitWidth
+                                                text: root.shortPath(worktreeRow.modelData.path, item.modelData.path)
                                                 color: Theme.surfaceText
                                                 font.pixelSize: Theme.fontSizeSmall
-                                                anchors.verticalCenter: parent.verticalCenter
+                                                wrapMode: Text.NoWrap
+                                                elide: Text.ElideMiddle
                                             }
 
                                             StyledText {
+                                                Layout.maximumWidth: worktreeTitle.width * 0.4
                                                 text: worktreeRow.note
                                                 color: worktreeRow.modelData.dirty > 0 || !worktreeRow.modelData.exists ? Theme.warning : Theme.surfaceVariantText
                                                 font.pixelSize: Theme.fontSizeSmall
-                                                anchors.verticalCenter: parent.verticalCenter
+                                                wrapMode: Text.NoWrap
                                             }
                                         }
 
                                         Row {
+                                            id: worktreeIcons
+
                                             anchors.right: parent.right
                                             anchors.verticalCenter: parent.verticalCenter
                                             spacing: 0
