@@ -21,6 +21,7 @@ TestCase {
         worktreeRemoveCommand: ["repos", "worktree-remove"],
         terminalCommand: ["kitty", "--detach", "--directory"],
         openCommand: ["xdg-open"],
+        codeCommand: ["code"],
         branchPublishCommand: ["repos", "branch-publish"],
         branchPushCommand: ["repos", "branch-push"],
         branchPullCommand: ["repos", "branch-pull"],
@@ -342,5 +343,31 @@ TestCase {
         openLong();
         assertClear(rowAround(".claude/worktrees/report-rejected-feedback-and-more", 30), "worktree row");
         readable(".claude/worktrees/report-rejected-feedback-and-more");
+    }
+
+    function test_vscode_button_opens_the_directory_in_vscode() {
+        open("dots");
+        const before = statusCalls();
+        clickCentre(textItem("VS Code")); wait(30);
+        const c = Proc.calls.filter(x => x.id === "dotsRepos.code");
+        compare(c.length, 1);
+        compare(JSON.stringify(c[0].command), JSON.stringify(["code", "/g/me/dots"]));
+        compare(statusCalls(), before, "opening an editor changes nothing, so no recheck");
+        compare(ToastService.errors.length, 0);
+    }
+
+    function test_vscode_failure_is_a_toast() {
+        open("dots");
+        Proc.nextExit = 1;
+        clickCentre(textItem("VS Code")); wait(30);
+        compare(ToastService.errors.length, 1);
+        compare(ToastService.errors[0], "VS Code failed (exit 1)");
+    }
+
+    function test_no_vscode_button_without_a_command() {
+        plugin.pluginData = Object.assign({}, data, { codeCommand: [] });
+        open("dots");
+        textItem("Terminal");
+        verify(texts().indexOf("VS Code") < 0, JSON.stringify(texts()));
     }
 }

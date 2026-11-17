@@ -1,7 +1,7 @@
 {
     "id": "dotsRepos",
     "name": "Repositories",
-    "description": "Bar menu of every git repository under one directory (dots.repos): branch, ahead/behind the upstream, changed paths, unmerged branches and worktrees, checked only when the menu opens. A row opens to its branches and worktrees and the actions: fetch, open the directory, a terminal there, delete a merged branch, remove a clean worktree. Commands come from the plugin settings (dots: modules/home/dank/repos-menu.nix).",
+    "description": "Bar menu of every git repository under one directory (dots.repos): branch, ahead/behind the upstream, changed paths, unmerged branches and worktrees, checked only when the menu opens. A row opens to its branches and worktrees and the actions: fetch, open the directory, a terminal there, VS Code there, delete a merged branch, remove a clean worktree. Commands come from the plugin settings (dots: modules/home/dank/repos-menu.nix).",
     "version": "1.0.0",
     "author": "dots",
     "icon": "account_tree",

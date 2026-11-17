@@ -22,6 +22,7 @@ PluginComponent {
     readonly property var worktreeRemoveCommand: pluginData.worktreeRemoveCommand || []
     readonly property var terminalCommand: pluginData.terminalCommand || []
     readonly property var openCommand: pluginData.openCommand || []
+    readonly property var codeCommand: pluginData.codeCommand || []
     readonly property var branchPublishCommand: pluginData.branchPublishCommand || []
     readonly property var branchPushCommand: pluginData.branchPushCommand || []
     readonly property var branchPullCommand: pluginData.branchPullCommand || []
@@ -134,6 +135,28 @@ PluginComponent {
             if (exitCode !== 0)
                 ToastService.showError("Open failed (exit " + exitCode + ")");
         }, 0, -1);
+    }
+    // VS Code: `code DIR` hands the directory to the running editor, or starts one.
+    // The command is wrapped by the module so that a newly started editor is not
+    // left in the shell's own cgroup (see repos-menu.nix).
+    function openCode(path) {
+        Proc.runCommand("dotsRepos.code", codeCommand.concat([path]), (stdout, exitCode) => {
+            if (exitCode !== 0)
+                ToastService.showError("VS Code failed (exit " + exitCode + ")");
+        }, 0, -1);
+    }
+
+    // The buttons under an open repository, in order. VS Code only when the module
+    // gave the menu a command for it.
+    readonly property var repoActions: {
+        const out = [
+            { key: "fetch", label: "Fetch", icon: "sync" },
+            { key: "open", label: "Open", icon: "folder_open" },
+            { key: "terminal", label: "Terminal", icon: "terminal" }
+        ];
+        if (codeCommand.length > 0)
+            out.push({ key: "code", label: "VS Code", icon: "code" });
+        return out;
     }
 
     // What the row says on the right, and in which colour.
@@ -397,16 +420,14 @@ PluginComponent {
 
                                 readonly property real innerWidth: width - leftPadding - Theme.spacingM
 
-                                // Actions: fetch, open, terminal.
-                                Row {
+                                // Actions: fetch, open, terminal, VS Code. A Flow, so a narrow popout or
+                                // a large font wraps the buttons instead of pushing them off the edge.
+                                Flow {
+                                    width: parent.innerWidth
                                     spacing: Theme.spacingS
 
                                     Repeater {
-                                        model: [
-                                            { key: "fetch", label: "Fetch", icon: "sync" },
-                                            { key: "open", label: "Open", icon: "folder_open" },
-                                            { key: "terminal", label: "Terminal", icon: "terminal" }
-                                        ]
+                                        model: root.repoActions
 
                                         delegate: Rectangle {
                                             id: actionButton
@@ -454,6 +475,9 @@ PluginComponent {
                                                         break;
                                                     case "terminal":
                                                         root.openTerminal(item.modelData.path);
+                                                        break;
+                                                    case "code":
+                                                        root.openCode(item.modelData.path);
                                                         break;
                                                     }
                                                 }
