@@ -5,6 +5,18 @@ deployed to `~/.claude/CLAUDE.md` by home-manager. Edit it there, not here.
 
 A project's own `CLAUDE.md` takes precedence over anything here where they conflict.
 
+## Start of a session
+A SessionStart hook runs `orient`, which brings the devlog up to date and prints an `orient:` block
+for the repository you are in: its devlog folder, how finished work is integrated, its
+`dev/workbench`, and the effort the AI marker assumes. Take it as the project's facts. They are kept
+in `registry.toml` in the devlog (`~/Documents/git/thecathe/devlog`), not in the project.
+- If a line says the devlog is not in step, say so in your first reply.
+- Before changing a project, read the `index.md` of its devlog folder (the block gives the path). If
+  it is long, read the top and search it for the topic instead of reading it whole.
+- With no `orient:` block (no hook on this host, or not a repository with an `origin`), use the
+  defaults in this file: the devlog folder is the repository's name, and finished work is merged
+  into `main` locally.
+
 ## Git workflow
 
 ### Commits
@@ -18,9 +30,10 @@ The integration branch is the long-lived branch that finished work is merged
 into. It is usually `main`, but not always (e.g. a fork that works from a
 customisation branch). Resolve it in this order:
 1. The project's `CLAUDE.md` names it.
-2. It is the branch currently checked out in the project's primary checkout,
+2. The `orient:` block names it (from `registry.toml`).
+3. It is the branch currently checked out in the project's primary checkout,
    when that is a deliberate long-lived branch other than the default.
-3. The repository's default branch (`main`).
+4. The repository's default branch (`main`).
 
 Never infer it from upstream-tracking config: a local branch may track a
 differently named remote branch (e.g. `cathe-customizations` tracking `origin/main`).
@@ -49,15 +62,42 @@ standing branch. When the project's practice is unclear, ask before acting.
 ### Integrating into the integration branch
 - Default method: `git merge --no-ff <branch>`, which preserves the branch
   history. Never squash.
-- The branch and method are per-project settings. If the project's `CLAUDE.md`
-  doesn't state them, ask the user for their preference the first time
-  integration is needed (e.g. local `--no-ff` merge, or a pushed GitHub PR), then
-  record the answer, including the integration branch, in the project's `CLAUDE.md`.
+- Nothing is pushed and no PR is opened unless the author asks. The one standing
+  exception is `orient push-workbench`, below.
+- A repository that is not the author's (the `orient:` block says "not yours")
+  always goes by a PR on the remote, unless the block says its integration branch
+  is pushed to `origin`. The author's own forks are theirs: no PR. Anything that
+  goes upstream is a PR, and never assume that work on a fork touches upstream
+  unless the author says so.
+- The branch and method are facts about the repository, kept in `registry.toml`
+  in the devlog, not in the project's `CLAUDE.md`. If neither the `orient:` block
+  nor the project's `CLAUDE.md` settles them, ask the author the first time
+  integration is needed, then record the answer in `registry.toml` (a devlog
+  commit like any other).
 - If the integration branch has moved by the time you are ready to merge, rebase
   your branch onto it first, then merge. Don't do this earlier merely because it
   moved while you were working.
 - Never discard, reset, or overwrite the user's changes on the integration
   branch. If a conflict or ambiguity arises, stop and discuss it with the user.
+
+### The workbench branch
+- A project may keep your own tooling for it (test drivers, analysis scripts,
+  helpers) on a long-lived branch `dev/workbench`, not on the integration branch.
+  Its `dev/README.md` is the authority on using it: when the `orient:` block
+  shows one, read that first (the block gives the command). Create one only after
+  asking.
+- Never merge it into the integration branch, and never merge the integration
+  branch into it by hand: its README says who, if anyone, keeps it in step. By
+  default it is a shelf, run from a checkout of its own, not a base that work
+  branches start from; a project's README may say otherwise.
+- `orient` fast-forwards it from `origin` at the start of a session. Commit your
+  tooling to it freely.
+- To share it between hosts, `orient push-workbench` pushes that one branch. It
+  refuses unless the repository is the author's, private (checked live) and the
+  push is a plain fast-forward, and it is the only push you may make without
+  asking. Putting the branch on `origin` for the first time needs the author's
+  explicit yes (`orient push-workbench --create`). A public repository's
+  workbench stays local: ask before doing anything else with it.
 
 ### Approval
 - Approval of a plan, or of any long-running autonomous task, covers merging the
@@ -69,9 +109,10 @@ standing branch. When the project's practice is unclear, ask before acting.
 - When a session's design work was interesting or insightful (trade-offs weighed,
   approaches rejected, surprising findings), record it, however little got built.
 - Logs live outside the project they describe, in the shared `devlog` repo
-  (`~/Documents/git/thecathe/devlog`), one folder per project. The project's
-  `CLAUDE.md` names its folder; if it doesn't, ask the first time and record the
-  answer there.
+  (`~/Documents/git/thecathe/devlog`), one folder per project. The `orient:` block
+  names the project's folder (by default the repository's name; `registry.toml`
+  holds the exceptions), or the project's `CLAUDE.md` does. If there is none, ask
+  before starting one, and record the answer in `registry.toml`.
 - A project's folder is laid out as:
   - `index.md`: the single point of entry and table of contents. It links every
     feature entry (title, date, status, one-line summary) and holds one-line
@@ -97,3 +138,6 @@ standing branch. When the project's practice is unclear, ask before acting.
   marked as AI-generated, using the project's marker convention if it has one.
   The marker records the model, the effort level (or "unrecorded"), the date first
   generated, and the date last edited.
+- The effort is what the `orient:` block's "AI-marker effort" line says for your
+  model (set once in `registry.toml`). For a model it does not list, ask the
+  author or write "unrecorded"; do not assume.
