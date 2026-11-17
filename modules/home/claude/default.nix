@@ -6,7 +6,7 @@
   claudeDefaults = builtins.toJSON {
     includeCoAuthoredBy = true; # why lie?
     effortLevel = "xhigh";
-    model = "opus";
+    model = "sonnet";
     permissions = {
       defaultMode = "plan";
       disableBypassPermissionsMode = "disable";
