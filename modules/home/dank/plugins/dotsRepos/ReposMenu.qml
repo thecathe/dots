@@ -45,6 +45,14 @@ PluginComponent {
     property bool overviewShown: false
     property int hoverDelay: pluginData.hoverDelayMs !== undefined ? pluginData.hoverDelayMs : 250
     property int freshMs: 30000
+    // How a repository row's width is split into columns: the name, the branch, and the
+    // status takes the rest. The same on every row, which is what makes them columns.
+    readonly property real colNameShare: 0.37
+    readonly property real colBranchShare: 0.22
+    // The same for the branch and worktree rows under an open repository: the name takes
+    // this share, its note the rest, and two 28px icon slots stay free on the right.
+    readonly property real detailNameShare: 0.60
+    readonly property real iconSlotsWidth: 56
     // The action under way ("fetch", "fetch:<id>", "delete:<id>:<branch>",
     // "remove:<id>:<path>"), "" when none. One at a time.
     property string busy: ""
@@ -547,56 +555,67 @@ PluginComponent {
                                 radius: Theme.cornerRadius
                                 color: area.containsMouse || item.isOpen ? Theme.primaryHover : "transparent"
 
-                                // Room is shared, not claimed: the summary takes what it needs up
-                                // to 60% of the row (past that it wraps to a second line, then
-                                // elides), the name keeps up to 70% of the rest, and the branch
-                                // gets whatever remains and elides first.
+                                // Three columns, the same on every row: the name, the branch and the
+                                // status each get a fixed share of the row (root.colNameShare,
+                                // root.colBranchShare, the status the rest), so they line up down the
+                                // whole list whatever the text in a row is. Text longer than its
+                                // column is cut short (the status wraps to a second line first), it
+                                // never moves or squeezes a neighbour. Nothing here sizes itself
+                                // from its content or centres in leftover room: a RowLayout of
+                                // capped items does exactly that (it centres the group), which is
+                                // what this replaced.
+                                readonly property real gap: Theme.spacingS
+                                readonly property real nameX: Theme.spacingM + Theme.iconSizeSmall + gap
+                                readonly property real columnsWidth: width - nameX - Theme.spacingM - gap * 2
+                                readonly property real nameWidth: Math.floor(columnsWidth * root.colNameShare)
+                                readonly property real branchWidth: Math.floor(columnsWidth * root.colBranchShare)
+                                readonly property real statusWidth: columnsWidth - nameWidth - branchWidth
+
+                                DankIcon {
+                                    x: Theme.spacingM
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    name: item.isOpen ? "expand_more" : "chevron_right"
+                                    size: Theme.iconSizeSmall
+                                    color: Theme.surfaceVariantText
+                                }
+
+                                StyledText {
+                                    id: nameLabel
+
+                                    x: row.nameX
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: row.nameWidth
+                                    horizontalAlignment: Text.AlignLeft
+                                    text: item.modelData.name
+                                    color: Theme.surfaceText
+                                    font.pixelSize: Theme.fontSizeMedium
+                                    wrapMode: Text.NoWrap
+                                }
+
+                                StyledText {
+                                    id: branchLabel
+
+                                    x: row.nameX + row.nameWidth + row.gap
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: row.branchWidth
+                                    horizontalAlignment: Text.AlignLeft
+                                    text: item.modelData.branch
+                                    color: Theme.surfaceVariantText
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    wrapMode: Text.NoWrap
+                                }
+
                                 StyledText {
                                     id: summaryLabel
 
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: Theme.spacingM
+                                    x: row.nameX + row.nameWidth + row.gap + row.branchWidth + row.gap
                                     anchors.verticalCenter: parent.verticalCenter
-                                    width: Math.min(Math.ceil(implicitWidth) + 1, row.width * 0.6)
+                                    width: row.statusWidth
                                     horizontalAlignment: Text.AlignRight
                                     maximumLineCount: 2
                                     text: item.summaryText
                                     color: item.tint
                                     font.pixelSize: Theme.fontSizeSmall
-                                }
-
-                                RowLayout {
-                                    id: rowTitle
-
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: Theme.spacingM
-                                    anchors.right: summaryLabel.left
-                                    anchors.rightMargin: Theme.spacingS
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spacing: Theme.spacingS
-
-                                    DankIcon {
-                                        name: item.isOpen ? "expand_more" : "chevron_right"
-                                        size: Theme.iconSizeSmall
-                                        color: Theme.surfaceVariantText
-                                    }
-
-                                    StyledText {
-                                        Layout.maximumWidth: Math.max(80, rowTitle.width * 0.7)
-                                        text: item.modelData.name
-                                        color: Theme.surfaceText
-                                        font.pixelSize: Theme.fontSizeMedium
-                                        wrapMode: Text.NoWrap
-                                    }
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        Layout.maximumWidth: implicitWidth
-                                        text: item.modelData.branch
-                                        color: Theme.surfaceVariantText
-                                        font.pixelSize: Theme.fontSizeSmall
-                                        wrapMode: Text.NoWrap
-                                    }
                                 }
 
                                 MouseArea {
@@ -683,7 +702,11 @@ PluginComponent {
                                     }
                                 }
 
+                                // About 80 characters, wider than the popout: it wraps inside the
+                                // available width instead of running off the right edge.
                                 StyledText {
+                                    width: parent.innerWidth
+                                    wrapMode: Text.WordWrap
                                     text: (item.modelData.upstream ? "upstream " + item.modelData.upstream : "no upstream") + " · fetched " + root.ago(item.modelData.fetched) + " (fetch only downloads) · merges into " + item.modelData.integration
                                     color: Theme.surfaceVariantText
                                     font.pixelSize: Theme.fontSizeSmall
@@ -728,40 +751,43 @@ PluginComponent {
                                             radius: Theme.cornerRadius
                                             color: branchItem.isOpen ? Theme.primaryHover : "transparent"
 
-                                            // The name and its note stop short of the icons: the note
-                                            // keeps what it needs up to half the row, the name elides.
-                                            RowLayout {
-                                                id: branchTitle
+                                            // Two columns, the same on every row (see the repository
+                                            // rows): the name, and its note right-aligned, both stopping
+                                            // short of the icon slots, which are reserved whether or
+                                            // not this branch has its icons so the columns never move.
+                                            readonly property real nameX: Theme.iconSizeSmall + Theme.spacingS
+                                            readonly property real textWidth: Math.max(0, width - nameX - root.iconSlotsWidth - Theme.spacingS)
+                                            readonly property real nameWidth: Math.floor(textWidth * root.detailNameShare)
+                                            readonly property real noteWidth: Math.max(0, textWidth - nameWidth - Theme.spacingS)
 
-                                                anchors.left: parent.left
-                                                anchors.right: branchIcons.left
-                                                anchors.rightMargin: branchIcons.width > 0 ? Theme.spacingS : 0
+                                            DankIcon {
                                                 anchors.verticalCenter: parent.verticalCenter
-                                                spacing: Theme.spacingS
+                                                name: branchItem.modelData.head ? "radio_button_checked" : "radio_button_unchecked"
+                                                size: Theme.iconSizeSmall
+                                                color: branchItem.modelData.head ? Theme.primary : Theme.surfaceVariantText
+                                            }
 
-                                                DankIcon {
-                                                    name: branchItem.modelData.head ? "radio_button_checked" : "radio_button_unchecked"
-                                                    size: Theme.iconSizeSmall
-                                                    color: branchItem.modelData.head ? Theme.primary : Theme.surfaceVariantText
-                                                }
+                                            StyledText {
+                                                x: branchRow.nameX
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: branchRow.nameWidth
+                                                horizontalAlignment: Text.AlignLeft
+                                                text: branchItem.modelData.name
+                                                color: Theme.surfaceText
+                                                font.pixelSize: Theme.fontSizeSmall
+                                                font.weight: branchItem.modelData.head ? Font.Bold : Font.Normal
+                                                wrapMode: Text.NoWrap
+                                            }
 
-                                                StyledText {
-                                                    Layout.fillWidth: true
-                                                    Layout.maximumWidth: implicitWidth
-                                                    text: branchItem.modelData.name
-                                                    color: Theme.surfaceText
-                                                    font.pixelSize: Theme.fontSizeSmall
-                                                    font.weight: branchItem.modelData.head ? Font.Bold : Font.Normal
-                                                    wrapMode: Text.NoWrap
-                                                }
-
-                                                StyledText {
-                                                    Layout.maximumWidth: branchTitle.width * 0.5
-                                                    text: branchItem.note
-                                                    color: branchItem.modelData.merged || branchItem.modelData.gone ? Theme.surfaceVariantText : Theme.warning
-                                                    font.pixelSize: Theme.fontSizeSmall
-                                                    wrapMode: Text.NoWrap
-                                                }
+                                            StyledText {
+                                                x: branchRow.nameX + branchRow.nameWidth + Theme.spacingS
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: branchRow.noteWidth
+                                                horizontalAlignment: Text.AlignRight
+                                                text: branchItem.note
+                                                color: branchItem.modelData.merged || branchItem.modelData.gone ? Theme.surfaceVariantText : Theme.warning
+                                                font.pixelSize: Theme.fontSizeSmall
+                                                wrapMode: Text.NoWrap
                                             }
 
                                             Row {
@@ -906,42 +932,46 @@ PluginComponent {
                                         radius: Theme.cornerRadius
                                         color: "transparent"
 
-                                        // The path and its note stop short of the icons. A path is
-                                        // the long part (a worktree under .claude/worktrees is 60
-                                        // characters), so it elides in the middle, where the name
-                                        // that tells worktrees apart stays at the end.
-                                        RowLayout {
-                                            id: worktreeTitle
+                                        // Two columns, the same on every row, like the branch rows:
+                                        // the path and its note right-aligned, both stopping short
+                                        // of the icon slots (reserved whether or not the worktree
+                                        // has its icons). A path is the long part (one under
+                                        // .claude/worktrees is 60 characters), so it elides in the
+                                        // middle, where the name that tells worktrees apart stays
+                                        // at the end.
+                                        readonly property real nameX: Theme.iconSizeSmall + Theme.spacingS
+                                        readonly property real textWidth: Math.max(0, width - nameX - root.iconSlotsWidth - Theme.spacingS)
+                                        readonly property real nameWidth: Math.floor(textWidth * root.detailNameShare)
+                                        readonly property real noteWidth: Math.max(0, textWidth - nameWidth - Theme.spacingS)
 
-                                            anchors.left: parent.left
-                                            anchors.right: worktreeIcons.left
-                                            anchors.rightMargin: worktreeIcons.width > 0 ? Theme.spacingS : 0
+                                        DankIcon {
                                             anchors.verticalCenter: parent.verticalCenter
-                                            spacing: Theme.spacingS
+                                            name: "folder"
+                                            size: Theme.iconSizeSmall
+                                            color: Theme.surfaceVariantText
+                                        }
 
-                                            DankIcon {
-                                                name: "folder"
-                                                size: Theme.iconSizeSmall
-                                                color: Theme.surfaceVariantText
-                                            }
+                                        StyledText {
+                                            x: worktreeRow.nameX
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: worktreeRow.nameWidth
+                                            horizontalAlignment: Text.AlignLeft
+                                            text: root.shortPath(worktreeRow.modelData.path, item.modelData.path)
+                                            color: Theme.surfaceText
+                                            font.pixelSize: Theme.fontSizeSmall
+                                            wrapMode: Text.NoWrap
+                                            elide: Text.ElideMiddle
+                                        }
 
-                                            StyledText {
-                                                Layout.fillWidth: true
-                                                Layout.maximumWidth: implicitWidth
-                                                text: root.shortPath(worktreeRow.modelData.path, item.modelData.path)
-                                                color: Theme.surfaceText
-                                                font.pixelSize: Theme.fontSizeSmall
-                                                wrapMode: Text.NoWrap
-                                                elide: Text.ElideMiddle
-                                            }
-
-                                            StyledText {
-                                                Layout.maximumWidth: worktreeTitle.width * 0.4
-                                                text: worktreeRow.note
-                                                color: worktreeRow.modelData.dirty > 0 || !worktreeRow.modelData.exists ? Theme.warning : Theme.surfaceVariantText
-                                                font.pixelSize: Theme.fontSizeSmall
-                                                wrapMode: Text.NoWrap
-                                            }
+                                        StyledText {
+                                            x: worktreeRow.nameX + worktreeRow.nameWidth + Theme.spacingS
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: worktreeRow.noteWidth
+                                            horizontalAlignment: Text.AlignRight
+                                            text: worktreeRow.note
+                                            color: worktreeRow.modelData.dirty > 0 || !worktreeRow.modelData.exists ? Theme.warning : Theme.surfaceVariantText
+                                            font.pixelSize: Theme.fontSizeSmall
+                                            wrapMode: Text.NoWrap
                                         }
 
                                         Row {

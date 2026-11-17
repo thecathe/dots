@@ -345,6 +345,78 @@ TestCase {
         readable(".claude/worktrees/report-rejected-feedback-and-more");
     }
 
+    // Columns: the same column is in the same place on every row, whatever the text in a row.
+    // (A RowLayout of size-capped items centres the leftover room: the name and branch then sat
+    // wherever the status text left space, a different x on each row, and none left-aligned.)
+    function textBoxes(row) {   // the row's texts, left to right
+        return boxesIn(row).filter(b => b.label[0] === "'").sort((a, c) => a.x0 - c.x0);
+    }
+    // Like rowAround, for a text that appears more than once ("main" is a repository's branch
+    // and a branch row's name): the first of its occurrences that sits in such a row.
+    function innerRowAround(text, height) {
+        for (const t of all(popout, it => it.text === text && visibleUp(it))) {
+            let it = t;
+            while (it && !(it.height === height && it.width > 200)) it = it.parent;
+            if (it) return it;
+        }
+        fail("no " + height + "px row around " + text);
+    }
+    function sameColumns(rows, what, edges) {
+        for (let i = 1; i < rows.length; i++)
+            for (let k = 0; k < edges.length; k++) {
+                const a = rows[0][k], b = rows[i][k];
+                compare(b.x0, a.x0, what + ": column " + k + " starts elsewhere in row " + i + " (" + b.label + " vs " + a.label + ")");
+                compare(b.x1, a.x1, what + ": column " + k + " ends elsewhere in row " + i + " (" + b.label + " vs " + a.label + ")");
+            }
+    }
+    function test_name_branch_and_status_keep_their_own_column_down_the_list() {
+        // Short and long names, branches and statuses, and one clean row, in one list.
+        Proc.statusOut = JSON.stringify({ root: "/g", generated: 1, repos: status.repos.concat(longStatus.repos) });
+        plugin.refresh(); wait(30);
+        const rows = ["dots", "forest", "thing", "a-rather-long-repository-name"].map(n => textBoxes(rowOf(n)));
+        for (const r of rows) compare(r.length, 3, "name, branch and status in each row: " + JSON.stringify(r.map(b => b.label)));
+        sameColumns(rows, "repository rows", [0, 1, 2]);
+        const r = rows[0];
+        verify(r[0].x1 <= r[1].x0 && r[1].x1 <= r[2].x0, "the columns must not overlap: " + JSON.stringify(r.map(b => [b.x0, b.x1])));
+        // Left-aligned names and branches, a right-aligned status, in their columns.
+        const name = textItem("dots"), status3 = textItem("clean");
+        compare(name.horizontalAlignment, Text.AlignLeft);
+        compare(status3.horizontalAlignment, Text.AlignRight);
+    }
+    function test_a_long_status_does_not_move_the_name_or_the_branch() {
+        // The old layout gave the name whatever width the status left it.
+        Proc.statusOut = JSON.stringify({ root: "/g", generated: 1, repos: status.repos.concat(longStatus.repos) });
+        plugin.refresh(); wait(30);
+        const clean = textBoxes(rowOf("forest")), long = textBoxes(rowOf("a-rather-long-repository-name"));
+        compare(long[0].x1 - long[0].x0, clean[0].x1 - clean[0].x0, "the name column is as wide next to a long status");
+        compare(long[1].x0, clean[1].x0, "the branch column starts in the same place next to a long status");
+    }
+    function test_branch_rows_keep_their_name_and_note_in_columns() {
+        open("dots");
+        // main has none of the icons, chore/old can be deleted: the icon slots are reserved either way.
+        const rows = ["main", "chore/old", "feat/new"].map(n => textBoxes(innerRowAround(n, 30)));
+        for (const r of rows) compare(r.length, 2, "name and note: " + JSON.stringify(r.map(b => b.label)));
+        sameColumns(rows, "branch rows", [0, 1]);
+        compare(rows[0][0].x0, Theme.iconSizeSmall + Theme.spacingS, "the name starts right after the icon");
+    }
+    function test_the_info_line_wraps_inside_the_popout() {
+        // "upstream origin/main · fetched 2h ago (fetch only downloads) · merges into main" is
+        // about 80 characters, wider than the popout: it used to run off the right edge.
+        open("dots");
+        const info = textItem("upstream origin/main · fetched " + plugin.ago(1) + " (fetch only downloads) · merges into main");
+        const right = info.mapToItem(popout, info.width, 0).x;
+        verify(right <= popout.width + 0.5, "the info line ends at " + right + ", past the popout's " + popout.width);
+        verify(info.lineCount > 1, "a line this long should wrap; it has " + info.lineCount);
+    }
+
+    function test_worktree_rows_line_up_with_the_branch_rows() {
+        open("dots");
+        const wt = textBoxes(innerRowAround("/tmp/wt/dots-feat", 30)), br = textBoxes(innerRowAround("main", 30));
+        compare(wt.length, 2);
+        compare(wt[0].x0, br[0].x0, "worktree path and branch name start in the same column");
+        compare(wt[1].x1, br[1].x1, "worktree note and branch note end in the same column");
+    }
+
     function test_vscode_button_opens_the_directory_in_vscode() {
         open("dots");
         const before = statusCalls();
