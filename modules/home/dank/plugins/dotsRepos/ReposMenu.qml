@@ -702,7 +702,11 @@ PluginComponent {
                                     }
                                 }
 
+                                // About 80 characters, wider than the popout: it wraps inside the
+                                // available width instead of running off the right edge.
                                 StyledText {
+                                    width: parent.innerWidth
+                                    wrapMode: Text.WordWrap
                                     text: (item.modelData.upstream ? "upstream " + item.modelData.upstream : "no upstream") + " · fetched " + root.ago(item.modelData.fetched) + " (fetch only downloads) · merges into " + item.modelData.integration
                                     color: Theme.surfaceVariantText
                                     font.pixelSize: Theme.fontSizeSmall

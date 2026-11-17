@@ -399,6 +399,16 @@ TestCase {
         sameColumns(rows, "branch rows", [0, 1]);
         compare(rows[0][0].x0, Theme.iconSizeSmall + Theme.spacingS, "the name starts right after the icon");
     }
+    function test_the_info_line_wraps_inside_the_popout() {
+        // "upstream origin/main · fetched 2h ago (fetch only downloads) · merges into main" is
+        // about 80 characters, wider than the popout: it used to run off the right edge.
+        open("dots");
+        const info = textItem("upstream origin/main · fetched " + plugin.ago(1) + " (fetch only downloads) · merges into main");
+        const right = info.mapToItem(popout, info.width, 0).x;
+        verify(right <= popout.width + 0.5, "the info line ends at " + right + ", past the popout's " + popout.width);
+        verify(info.lineCount > 1, "a line this long should wrap; it has " + info.lineCount);
+    }
+
     function test_worktree_rows_line_up_with_the_branch_rows() {
         open("dots");
         const wt = textBoxes(innerRowAround("/tmp/wt/dots-feat", 30)), br = textBoxes(innerRowAround("main", 30));
