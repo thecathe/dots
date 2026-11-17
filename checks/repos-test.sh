@@ -238,6 +238,39 @@ check "config file: exclude" not listed o/legacy
 json=$(env -u REPOS_INTEGRATION -u REPOS_EXCLUDE REPOS_CONFIG="$conf" REPOS_EXCLUDE='[]' repos --json)
 check "environment overrides a config field" jq -e '.repos[] | select(.id == "o/legacy") | select(.integration == "master")' <<<"$json" >/dev/null
 
+# Owners: only the repositories of the named owners are listed (and fetched). A
+# second owner, q, so there is something to leave out. By now o/b is gone and
+# o/skip is excluded, so o lists o/a and o/legacy.
+mkdir -p "$g/q"
+for r in x y; do
+  git init -q "$g/q/$r"
+  commit "$g/q/$r" f "1" "one"
+done
+ids() { jq -r '.repos | map(.id) | join(",")' <<<"$json"; }
+
+json=$(repos --json)
+check "owners: none named lists every owner" [ "$(ids)" = "o/a,o/legacy,q/x,q/y" ]
+json=$(REPOS_OWNERS='[]' repos --json)
+check "owners: an empty list is the same" [ "$(ids)" = "o/a,o/legacy,q/x,q/y" ]
+json=$(REPOS_OWNERS='["q"]' repos --json)
+check "owners: only the named owner" [ "$(ids)" = "q/x,q/y" ]
+json=$(REPOS_OWNERS='["o","q"]' repos --json)
+check "owners: several, all of them" [ "$(ids)" = "o/a,o/legacy,q/x,q/y" ]
+json=$(REPOS_OWNERS='["nobody"]' repos --json)
+check "owners: a name matching nothing lists nothing, as valid JSON" [ "$(jq -c .repos <<<"$json")" = '[]' ]
+json=$(REPOS_OWNERS='["q"]' REPOS_EXCLUDE='["q/y"]' repos --json)
+check "owners: exclude still removes single repositories" [ "$(ids)" = "q/x" ]
+out=$(REPOS_OWNERS='["q"]' repos)
+check "owners: the table lists only that owner" [ "$(wc -l <<<"$out")" -eq 2 ]
+check "...and not the other" not grep -q '^o/' <<<"$out"
+out=$(REPOS_OWNERS='["q"]' repos fetch 2>&1)
+check "owners: a bare fetch covers only that owner" [ "$out" = "$(printf 'q/x: no remote\nq/y: no remote')" ]
+out=$(REPOS_OWNERS='["q"]' repos path o/a)
+check "owners: a repository named explicitly is still found" [ "$out" = "$A" ]
+printf '{"root":"%s","owners":["q"]}\n' "$g" >"$conf"
+json=$(env -u REPOS_ROOT -u REPOS_EXCLUDE REPOS_CONFIG="$conf" repos --json)
+check "config file: owners" [ "$(ids)" = "q/x,q/y" ]
+
 repos nonsense >/dev/null 2>&1
 check "unknown command is usage (64)" [ $? -eq 64 ]
 

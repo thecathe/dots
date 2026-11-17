@@ -7,13 +7,14 @@
   root ? null,
   integration ? {},
   exclude ? [],
+  owners ? [],
 }:
 pkgs.writeShellApplication {
   name = "repos";
   runtimeInputs = with pkgs; [git jq coreutils gawk gnugrep util-linux];
   # The default; REPOS_CONFIG in the environment names another file.
   runtimeEnv.REPOS_DEFAULT_CONFIG = pkgs.writeText "repos-config.json" (builtins.toJSON {
-    inherit root integration exclude;
+    inherit root integration exclude owners;
   });
   text = builtins.readFile ./repos.sh;
 }

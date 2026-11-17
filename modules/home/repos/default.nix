@@ -41,11 +41,24 @@ in {
       description = "Repositories (`<owner>/<name>`) to leave out, e.g. a huge checkout that is slow to status.";
     };
 
+    owners = lib.mkOption {
+      type = lib.types.listOf (lib.types.strMatching "[^/]+");
+      default = [];
+      example = ["thecathe"];
+      description = ''
+        Only list the repositories of these owners (the directory under `root`).
+        Empty, the default, lists every owner. This is what the menu, the
+        `repos` table and a bare `repos fetch` cover; `exclude` still removes
+        single repositories from what is left. A repository named to `repos`
+        explicitly (`repos path owner/name`) is found whatever this says.
+      '';
+    };
+
     package = lib.mkOption {
       type = lib.types.package;
       default = import ./package.nix {
         inherit pkgs;
-        inherit (cfg) root exclude;
+        inherit (cfg) root exclude owners;
         integration = cfg.integrationBranch;
       };
       defaultText = lib.literalMD "the `repos` CLI built from the options above";

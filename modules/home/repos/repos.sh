@@ -30,10 +30,15 @@
 # `fetch`, which never prompts: a repository that needs credentials the
 # environment lacks is reported as failed.
 #
-# Configuration: REPOS_CONFIG names a JSON file {root, integration, exclude}
-# (written by package.nix from the dots.repos options); REPOS_ROOT,
-# REPOS_INTEGRATION (the JSON map) and REPOS_EXCLUDE (a JSON list) override
-# its fields. Without either, the root is ~/Documents/git.
+# Which repositories are listed: every one under the root, minus those named in
+# `exclude` (IDs) and, when `owners` is not empty, those of any other owner. The
+# same set is what a bare `fetch` covers. A repository named explicitly to a
+# subcommand (`path`, `branch-delete`, ...) is found whatever the filters say.
+#
+# Configuration: REPOS_CONFIG names a JSON file {root, integration, exclude,
+# owners} (written by package.nix from the dots.repos options); REPOS_ROOT,
+# REPOS_INTEGRATION (the JSON map), REPOS_EXCLUDE and REPOS_OWNERS (JSON lists)
+# override its fields. Without either, the root is ~/Documents/git.
 #
 # Exit codes: 0 done, 2 a repository or branch was not found, 3 git refused
 # (unmerged branch, dirty worktree, failed fetch), 64 bad usage.
@@ -58,6 +63,7 @@ root=${root:-$HOME/Documents/git}
 root=${root%/}
 integration_map=${REPOS_INTEGRATION:-$(conf '.integration' '{}')}
 exclude=${REPOS_EXCLUDE:-$(conf '.exclude' '[]')}
+owners=${REPOS_OWNERS:-$(conf '.owners' '[]')}
 
 usage() {
   cat >&2 <<'EOF'
@@ -99,14 +105,17 @@ repo_dir() {
   printf '%s\n' "$dir"
 }
 
-# Every repository directory under the root, sorted.
+# Every listed repository directory under the root, sorted: not excluded, and of
+# an owner in `owners` when that list is not empty.
 repo_dirs() {
   local gitdir
   for gitdir in "$root"/*/*/.git; do
     [ -d "$gitdir" ] || continue # a .git file is a linked worktree: listed by its repository
     local dir=${gitdir%/.git}
     local id=${dir#"$root"/}
-    if jq -e --arg id "$id" 'index($id) != null' <<<"$exclude" >/dev/null; then
+    # One jq for both lists, so the cost per repository stays what it was.
+    if ! jq -n -e --arg id "$id" --arg owner "${id%%/*}" --argjson ex "$exclude" --argjson ow "$owners" \
+      '($ex | index($id)) == null and ($ow | length == 0 or index($owner) != null)' >/dev/null; then
       continue
     fi
     printf '%s\n' "$dir"
