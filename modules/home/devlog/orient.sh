@@ -151,10 +151,8 @@ load_registry() {
   if ! facts=$(jq -c --arg id "$id" --arg owner "$r_owner" '
     def field($o; $k): if ($o | has($k)) then $o[$k] else null end;
     (.defaults // {}) as $d
-    | ((.repos // {})[$id]) as $e
-    | ($e // {}) as $r
+    | (((.repos // {})[$id]) // {}) as $r
     | {
-        known: ($e != null),
         mine: ((($d.owners // []) | index($owner)) != null),
         devlog: field($r; "devlog"),
         branches: ((field($r; "integration_branch") // "main") | if type == "array" then . else [.] end),
@@ -163,7 +161,7 @@ load_registry() {
         effort: ($d.effort // {})
       }' <<<"$reg" 2>&1); then
     reg_note="registry.toml has an unexpected shape ($(tail -n 1 <<<"$facts"))"
-    facts=$(jq -cn --arg owner "$r_owner" '{known: false, mine: false, devlog: null, branches: ["main"], push: false, upstream: null, effort: {}}')
+    facts=$(jq -cn --arg owner "$r_owner" '{mine: false, devlog: null, branches: ["main"], push: false, upstream: null, effort: {}}')
   fi
 }
 fact() { jq -r "$1" <<<"$facts"; }
@@ -359,8 +357,9 @@ fi
 if find_repo; then
   load_registry
   add "orient: $id ($([[ $(fact '.mine') == true ]] && echo yours || echo "not yours"))"
+  # No entry is the normal case (the registry holds only exceptions), so it is
+  # not worth a line; a registry that is missing or broken is.
   [[ -z $reg_note ]] || add "  registry: $reg_note"
-  [[ $(fact '.known') == true || -n $reg_note ]] || add "  registry: no entry for $id; defaults apply"
   devlog_section
   integration_section
   workbench_section

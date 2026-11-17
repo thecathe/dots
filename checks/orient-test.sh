@@ -203,7 +203,9 @@ check_no_out "devlog = false: no folder to ask about" "no folder"
 mkrepo thecathe brandnew
 work thecathe brandnew
 run --hook
-check_out "an unregistered repository of yours: defaults, and says so" "registry: no entry for thecathe/brandnew; defaults apply"
+check_no_out "an unregistered repository is the normal case: no line about it" "registry:"
+check_out "an unregistered repository of yours: defaults, devlog folder to ask about" "devlog: no folder brandnew/ in $devlog yet; ask the author before starting one"
+check_out "an unregistered repository of yours: the default integration" "integration: main; local git merge --no-ff (never squash); no push or PR unless asked"
 check_out "an unregistered repository of yours is still yours" "orient: thecathe/brandnew (yours)"
 
 mkrepo someone else
