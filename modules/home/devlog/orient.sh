@@ -23,7 +23,10 @@
 #
 # Why --hook exists: a SessionStart hook's stdout reaches Claude only when the
 # hook exits 0, and the preamble must not vanish just because the devlog could
-# not be synced (offline, a conflict). So with --hook a failed sync comes out as
+# not be synced: a clone another session left dirty or mid-merge, a merge
+# conflict, or the git host unreachable or refusing (Claude Code needs only the
+# Anthropic API, so this can happen with a session running fine). So with
+# --hook a failed sync comes out as
 # hook JSON, `systemMessage` for the user and the failure in the context for
 # Claude, and the exit status stays 0.
 #
@@ -224,14 +227,12 @@ integration_section() {
 workbench_section() {
   local lref=refs/heads/$workbench rref=refs/remotes/$remote/$workbench
   local have_l=0 have_r=0 ferr='' fnote='' ahead=0 behind=0 checkout state readme_ref
-  if ((sync_code != 13)); then
-    if ! ferr=$(timeout 15 git -C "$top" fetch --quiet --no-tags "$remote" "+$lref:$rref" 2>&1); then
-      if [[ $ferr == *"couldn't find remote ref"* ]]; then
-        # Gone from the remote (or never there): drop a stale tracking ref, as --prune would.
-        g update-ref -d "$rref" 2>/dev/null || true
-      else
-        fnote="could not fetch $remote ($(head -n 1 <<<"$ferr")); this is the state as of the last fetch"
-      fi
+  if ! ferr=$(timeout 15 git -C "$top" fetch --quiet --no-tags "$remote" "+$lref:$rref" 2>&1); then
+    if [[ $ferr == *"couldn't find remote ref"* ]]; then
+      # Gone from the remote (or never there): drop a stale tracking ref, as --prune would.
+      g update-ref -d "$rref" 2>/dev/null || true
+    else
+      fnote="could not fetch $remote ($(head -n 1 <<<"$ferr")); this is the state as of the last fetch"
     fi
   fi
   g rev-parse --verify -q "$lref" >/dev/null && have_l=1

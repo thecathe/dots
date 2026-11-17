@@ -339,10 +339,10 @@ run --hook
 check_no_out "a branch deleted on origin: no stale workbench" "workbench:"
 check "a branch deleted on origin: the stale tracking ref is dropped" test -z "$(git -C "$cwd" for-each-ref refs/remotes/origin/dev)"
 
-mkrepo thecathe wb-offline
-other_wb thecathe wb-offline v1
-work thecathe wb-offline
-have_wb thecathe wb-offline
+mkrepo thecathe wb-unreachable
+other_wb thecathe wb-unreachable v1
+work thecathe wb-unreachable
+have_wb thecathe wb-unreachable
 git -C "$cwd" fetch -q origin
 git -C "$cwd" remote set-url origin https://github.com/thecathe/does-not-exist.git
 run --hook
@@ -371,19 +371,21 @@ work thecathe forest
 run --hook
 check "once fixed: plain text again" test "$code" = 0 -a "${out:0:1}" != "{"
 
-# A fetch failure (13) means offline: the workbench fetch is skipped, not tried again.
+# The devlog's git host failing (13) is its own failure: the preamble is still
+# printed, and the project's workbench is still looked after, since its remote
+# is a different one.
 git -C "$devlog" remote set-url origin "$root/gone.git"
-mkrepo thecathe wb-skip
-other_wb thecathe wb-skip v1
-work thecathe wb-skip
-have_wb thecathe wb-skip
+mkrepo thecathe wb-devlog-down
+other_wb thecathe wb-devlog-down v1
+work thecathe wb-devlog-down
+have_wb thecathe wb-devlog-down
 git -C "$cwd" fetch -q origin
-other_wb thecathe wb-skip v2
-before=$(local_ref thecathe wb-skip dev/workbench)
+other_wb thecathe wb-devlog-down v2
 run --hook
-check "offline: exit 0" test "$code" = 0
-check "offline: the sync failure is reported" jq -e '.systemMessage | contains("could not fetch origin")' <<<"$out" >/dev/null
-check "offline: the workbench was not fetched or moved" test "$(local_ref thecathe wb-skip dev/workbench)" = "$before"
+check "the devlog's remote unreachable: exit 0" test "$code" = 0
+check "the devlog's remote unreachable: reported" jq -e '.systemMessage | contains("could not fetch origin")' <<<"$out" >/dev/null
+check "the devlog's remote unreachable: the preamble is still there" jq -e '.hookSpecificOutput.additionalContext | contains("orient: thecathe/wb-devlog-down")' <<<"$out" >/dev/null
+check "the devlog's remote unreachable: the project's workbench was still fast-forwarded" test "$(local_ref thecathe wb-devlog-down dev/workbench)" = "$(remote_ref thecathe wb-devlog-down dev/workbench)"
 git -C "$devlog" remote set-url origin "$root/devlog.git"
 
 # --- usage -------------------------------------------------------------------
