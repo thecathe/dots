@@ -370,4 +370,117 @@ TestCase {
         textItem("Terminal");
         verify(texts().indexOf("VS Code") < 0, JSON.stringify(texts()));
     }
+
+    // The overview: how many repositories fall in each bucket. From `status`: dots has an
+    // unpushed commit, local changes, an unmerged branch and a merged one to delete; forest is
+    // in step with its upstream; thing is mid-rebase and behind.
+    function test_overview_counts_repositories_per_bucket() {
+        const o = plugin.overviewOf(status.repos);
+        compare(o.total, 3);
+        compare(o.upToDate, 1);
+        compare(o.behind, 1);
+        compare(o.ahead, 1);
+        compare(o.merged, 1);
+        compare(o.dirty, 1);
+        compare(o.unmerged, 1);
+        compare(o.noUpstream, 0);
+        compare(o.stuck, 1);
+    }
+
+    function test_overview_up_to_date_means_in_step_with_an_upstream() {
+        const r = JSON.parse(JSON.stringify(status.repos[1]));   // forest: in step
+        compare(plugin.overviewOf([r]).upToDate, 1);
+        r.upstream = null;
+        const o = plugin.overviewOf([r]);
+        compare(o.upToDate, 0, "a repository with no upstream is not in step with anything");
+        compare(o.noUpstream, 1);
+        compare(plugin.overviewOf([]).total, 0);
+    }
+
+    function test_overview_chips_hide_empty_buckets_but_always_say_up_to_date() {
+        compare(plugin.overviewChips.map(c => c.label).join(" | "),
+                "1 up to date | 1 to pull | 1 to push | 1 with merged branches | 1 with changes | 1 with unmerged branches | 1 mid-operation or detached");
+        Proc.statusOut = JSON.stringify({ root: "/g", generated: 1, repos: [status.repos[1]] });
+        plugin.refresh(); wait(30);
+        compare(plugin.overviewChips.map(c => c.label).join(" | "), "1 up to date");
+        Proc.statusOut = JSON.stringify({ root: "/g", generated: 1, repos: [] });
+        plugin.refresh(); wait(30);
+        compare(plugin.overviewChips.map(c => c.label).join(" | "), "0 up to date");
+    }
+
+    function test_overview_chip_colours_follow_the_row_colours() {
+        const by = {};
+        for (const c of plugin.overviewChips) by[c.key] = c.color;
+        verify(Qt.colorEqual(by.behind, Theme.error) && Qt.colorEqual(by.stuck, Theme.error), "behind and mid-operation are the red of a row");
+        verify(Qt.colorEqual(by.ahead, Theme.warning) && Qt.colorEqual(by.dirty, Theme.warning) && Qt.colorEqual(by.unmerged, Theme.warning), "unfinished work is the orange of a row");
+        verify(Qt.colorEqual(by.upToDate, Theme.success));
+    }
+
+    function test_popout_says_the_overview_in_words() {
+        textItem("3 repositories");
+        textItem("1 up to date"); textItem("1 to pull"); textItem("1 to push"); textItem("1 with merged branches");
+        textItem("1 with changes"); textItem("1 with unmerged branches"); textItem("1 mid-operation or detached");
+    }
+
+    // The pill: the icon alone, until the pointer has rested on it for hoverDelay.
+    function pillOf() {
+        const holder = Qt.createQmlObject('import QtQuick; Item { width: 600; height: 40 }', tc);
+        const pill = plugin.horizontalBarPill.createObject(holder);
+        verify(pill, "pill did not instantiate: " + plugin.horizontalBarPill.errorString());
+        return pill;
+    }
+    function pillTexts(pill) { return all(pill, it => it.text !== undefined && it.text !== "" && visibleUp(it)).map(it => it.text); }
+
+    function test_hover_expands_the_pill_after_a_short_rest_and_collapses_on_leaving() {
+        plugin.hoverDelay = 30;
+        const pill = pillOf();
+        wait(10);
+        const closed = pill.implicitWidth;
+        compare(pillTexts(pill).length, 0, "nothing but the icon at rest");
+        plugin.pointerChanged(true);
+        wait(10);
+        compare(plugin.overviewShown, false, "a pointer sweeping past does not open it");
+        wait(150);
+        compare(plugin.overviewShown, true);
+        verify(pill.implicitWidth > closed + 60, "grew from " + closed + " to " + pill.implicitWidth);
+        compare(pillTexts(pill).join(" "), "1 1 1 1 1 1 1", "counts only, in the pill");
+        plugin.pointerChanged(false);
+        wait(150);
+        compare(plugin.overviewShown, false);
+        compare(pill.implicitWidth, closed);
+        pill.parent.destroy();
+    }
+
+    function test_a_pointer_that_leaves_before_the_delay_never_opens_it() {
+        plugin.hoverDelay = 60;
+        plugin.pointerChanged(true);
+        wait(20);
+        plugin.pointerChanged(false);
+        wait(120);
+        compare(plugin.overviewShown, false);
+    }
+
+    function test_hover_checks_again_only_when_the_last_check_is_old() {
+        plugin.hoverDelay = 10;
+        const before = statusCalls();
+        plugin.pointerChanged(true); wait(60);
+        compare(statusCalls(), before, "fresh: nothing to check");
+        plugin.pointerChanged(false);
+        plugin.checkedAt = Date.now() - 10 * 60 * 1000;
+        plugin.pointerChanged(true); wait(60);
+        compare(statusCalls(), before + 1, "stale: checked once");
+        compare(ToastService.errors.length, 0);
+    }
+
+    function test_hover_check_that_fails_is_silent() {
+        plugin.hoverDelay = 10;
+        plugin.checkedAt = 0;
+        Proc.statusOut = "not json";
+        plugin.pointerChanged(true); wait(60);
+        compare(ToastService.errors.length, 0, "a failed check on hover is not worth a toast");
+        compare(plugin.repos.length, 3, "the last good status stays");
+        Proc.statusOut = JSON.stringify(status);
+        plugin.refresh(); wait(30);
+        compare(ToastService.errors.length, 0);
+    }
 }

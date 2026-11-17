@@ -6,8 +6,9 @@ import qs.Services
 import qs.Widgets
 
 // Bar pill + popout listing every git repository under dots.repos.root.
-// Nothing runs while the popout is closed: opening it runs the status command
-// once (`repos --json`, modules/home/repos/repos.sh), whose JSON gives each
+// Nothing runs while the popout is closed and the pointer is elsewhere: opening
+// it, or resting the pointer on the pill (which then shows an overview, see
+// below), runs the status command once (`repos --json`, modules/home/repos/repos.sh), whose JSON gives each
 // repository's branch, how far it is ahead of and behind its upstream, its
 // changed paths, an operation in progress, its local branches (merged into the
 // integration branch or not) and its worktrees. A row opens to those and to
@@ -34,6 +35,14 @@ PluginComponent {
     property string rootDir: pluginData.root || ""
     property bool checking: false
     property bool loaded: false
+    // When the last status arrived (Date.now(), ms); 0 before the first.
+    property double checkedAt: 0
+    // The pill shows its overview while the pointer has rested on it for hoverDelay
+    // ms. Resting there also checks again if the last status is older than freshMs,
+    // so the counts are not the ones from whenever the menu was last opened.
+    property bool overviewShown: false
+    property int hoverDelay: 250
+    property int freshMs: 30000
     // The action under way ("fetch", "fetch:<id>", "delete:<id>:<branch>",
     // "remove:<id>:<path>"), "" when none. One at a time.
     property string busy: ""
@@ -44,7 +53,8 @@ PluginComponent {
 
     readonly property int attention: repos.filter(r => root.needsAttention(r)).length
 
-    function refresh() {
+    // quiet: a check nobody asked for (the pointer on the pill) does not toast a failure.
+    function refresh(quiet) {
         if (statusCommand.length === 0)
             return;
         checking = true;
@@ -52,7 +62,8 @@ PluginComponent {
         Proc.runCommand("dotsRepos.status", statusCommand, (stdout, exitCode) => {
             checking = false;
             if (exitCode !== 0) {
-                ToastService.showError("Repositories: status failed (exit " + exitCode + ")");
+                if (!quiet)
+                    ToastService.showError("Repositories: status failed (exit " + exitCode + ")");
                 return;
             }
             try {
@@ -61,8 +72,10 @@ PluginComponent {
                 if (data.root)
                     rootDir = data.root;
                 loaded = true;
+                checkedAt = Date.now();
             } catch (e) {
-                ToastService.showError("Repositories: unreadable status");
+                if (!quiet)
+                    ToastService.showError("Repositories: unreadable status");
             }
         }, 0, 60000);
     }
@@ -189,6 +202,116 @@ PluginComponent {
             return Theme.warning;
         return Theme.surfaceVariantText;
     }
+    // The overview: how many repositories fall in each bucket. One repository can be
+    // in several (ahead and with changes); "up to date" is in step with an upstream.
+    // Pull and push are counted as the rows show them: the checked-out branch against
+    // its upstream, as of the last fetch of each repository. "merged" counts the
+    // repositories that have a merged branch the menu would offer to delete.
+    function overviewOf(list) {
+        const o = { total: list.length, upToDate: 0, behind: 0, ahead: 0, merged: 0, dirty: 0, unmerged: 0, noUpstream: 0, stuck: 0 };
+        for (const r of list) {
+            if (r.upstream === null || r.upstream === undefined)
+                o.noUpstream++;
+            else if ((r.ahead || 0) === 0 && (r.behind || 0) === 0)
+                o.upToDate++;
+            if ((r.behind || 0) > 0)
+                o.behind++;
+            if ((r.ahead || 0) > 0)
+                o.ahead++;
+            if ((r.branches || []).some(b => b.merged && !b.head && !b.integration))
+                o.merged++;
+            if ((r.dirty || 0) > 0)
+                o.dirty++;
+            if ((r.unmerged || 0) > 0)
+                o.unmerged++;
+            if (r.operation || r.detached)
+                o.stuck++;
+        }
+        return o;
+    }
+    readonly property var overview: overviewOf(repos)
+    // The buckets, in the order they are shown; the colours are the rows' (red: needs
+    // attention, orange: unfinished work, grey: nothing to do), green for in step.
+    readonly property var overviewKinds: [
+        { key: "upToDate", icon: "check_circle", phrase: "up to date", color: Theme.success, always: true },
+        { key: "behind", icon: "download", phrase: "to pull", color: Theme.error },
+        { key: "ahead", icon: "upload", phrase: "to push", color: Theme.warning },
+        { key: "merged", icon: "call_merge", phrase: "with merged branches", color: Theme.surfaceVariantText },
+        { key: "dirty", icon: "edit", phrase: "with changes", color: Theme.warning },
+        { key: "unmerged", icon: "fork_right", phrase: "with unmerged branches", color: Theme.warning },
+        { key: "noUpstream", icon: "cloud_off", phrase: "without an upstream", color: Theme.warning },
+        { key: "stuck", icon: "error", phrase: "mid-operation or detached", color: Theme.error }
+    ]
+    // Only the buckets that are not empty, but always "up to date".
+    readonly property var overviewChips: overviewKinds.filter(k => k.always === true || overview[k.key] > 0).map(k => ({
+                key: k.key,
+                icon: k.icon,
+                color: k.color,
+                count: overview[k.key],
+                label: overview[k.key] + " " + k.phrase
+            }))
+
+    // The pointer on the pill: after hoverDelay (so one sweeping past does nothing) the
+    // pill grows to show the overview, and a status older than freshMs is checked again,
+    // quietly, since nobody asked for it. Leaving closes it at once.
+    function pointerChanged(inside) {
+        if (inside) {
+            hoverTimer.restart();
+        } else {
+            hoverTimer.stop();
+            overviewShown = false;
+        }
+    }
+    function hoverRefresh() {
+        if (checking || busy !== "")
+            return;
+        if (loaded && Date.now() - checkedAt < freshMs)
+            return;
+        refresh(true);
+    }
+
+    Timer {
+        id: hoverTimer
+
+        interval: root.hoverDelay
+        onTriggered: {
+            root.overviewShown = true;
+            root.hoverRefresh();
+        }
+    }
+
+    HoverHandler {
+        onHoveredChanged: root.pointerChanged(hovered)
+    }
+
+    // One bucket: its icon and count, or with the words spelled out. The row it sits in
+    // says which (`labelled`): the bar pill has no room for words, the menu has.
+    Component {
+        id: chipDelegate
+
+        Row {
+            required property var modelData
+            readonly property bool labelled: parent && parent.labelled === true
+
+            spacing: 2
+
+            DankIcon {
+                name: parent.modelData.icon
+                size: parent.labelled ? Theme.iconSizeSmall : Theme.barIconSize(root.barThickness, -8)
+                color: parent.modelData.color
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            StyledText {
+                text: parent.labelled ? parent.modelData.label : String(parent.modelData.count)
+                color: parent.modelData.color
+                font.pixelSize: parent.labelled ? Theme.fontSizeSmall : Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
+                wrapMode: Text.NoWrap
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+
     // "2h ago" for an epoch, "never" for null.
     function ago(epoch) {
         if (epoch === null || epoch === undefined)
@@ -213,11 +336,56 @@ PluginComponent {
         return path;
     }
 
+    // The icon, and beside it the overview while the pointer rests on the pill: counts
+    // only, each in the colour the rows use. The pill's width follows this Row's, so it
+    // grows and shrinks with the overview (a vertical bar has no room, so none there).
     horizontalBarPill: Component {
-        DankIcon {
-            name: "account_tree"
-            size: Theme.barIconSize(root.barThickness, -4)
-            color: root.attention > 0 ? Theme.error : Theme.widgetIconColor
+        Row {
+            spacing: Theme.spacingXS
+
+            DankIcon {
+                name: "account_tree"
+                size: Theme.barIconSize(root.barThickness, -4)
+                color: root.attention > 0 ? Theme.error : Theme.widgetIconColor
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Item {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: width > 0
+                clip: true
+                width: root.overviewShown ? overviewRow.implicitWidth : 0
+                height: overviewRow.implicitHeight
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: Theme.shortDuration
+                        easing.type: Easing.OutCubic
+                    }
+                }
+
+                Row {
+                    id: overviewRow
+
+                    property bool labelled: false
+
+                    spacing: Theme.spacingS
+
+                    StyledText {
+                        // Before the first status there is nothing to count.
+                        visible: !root.loaded
+                        text: "…"
+                        color: Theme.surfaceVariantText
+                        font.pixelSize: Theme.barTextSize(root.barThickness, root.barConfig?.fontScale, root.barConfig?.maximizeWidgetText)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Repeater {
+                        model: root.overviewChips
+                        delegate: chipDelegate
+                    }
+                }
+            }
         }
     }
 
@@ -299,6 +467,33 @@ PluginComponent {
 
                     width: parent.width
                     spacing: 2
+
+                    // The overview with its words, in the colours the rows use: what the
+                    // pill's counts mean, and what the colours mean.
+                    Flow {
+                        id: overviewStrip
+
+                        property bool labelled: true
+
+                        visible: root.loaded && root.repos.length > 0
+                        width: parent.width
+                        leftPadding: Theme.spacingM
+                        rightPadding: Theme.spacingM
+                        bottomPadding: Theme.spacingS
+                        spacing: Theme.spacingM
+
+                        StyledText {
+                            text: root.repos.length + (root.repos.length === 1 ? " repository" : " repositories")
+                            color: Theme.surfaceText
+                            font.pixelSize: Theme.fontSizeSmall
+                            wrapMode: Text.NoWrap
+                        }
+
+                        Repeater {
+                            model: root.overviewChips
+                            delegate: chipDelegate
+                        }
+                    }
 
                     StyledText {
                         visible: !root.loaded && root.checking

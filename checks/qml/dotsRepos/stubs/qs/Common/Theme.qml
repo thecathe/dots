@@ -15,9 +15,12 @@ QtObject {
     property color error: "#b3261e"
     property color errorHover: "#1fb3261e"
     property color warning: "#ff9800"
+    property color success: "#4caf50"
+    property int shortDuration: 40
     property color surfaceVariantAlpha: "#33cac4d0"
     property color surfaceText: "#e6e0e9"
     property color surfaceVariantText: "#cac4d0"
     property color widgetIconColor: "#e6e0e9"
     function barIconSize(thickness, offset) { return thickness + offset; }
+    function barTextSize(thickness, scale, maximize) { return 12; }
 }
