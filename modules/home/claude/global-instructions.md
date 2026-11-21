@@ -3,19 +3,31 @@
 Managed declaratively from `modules/home/claude/global-instructions.md` in the dots repo and
 deployed to `~/.claude/CLAUDE.md` by home-manager. Edit it there, not here.
 
-A project's own `CLAUDE.md` takes precedence over anything here where they conflict.
+A repository's own `CLAUDE.md`, where it has one, takes precedence over anything here where they
+conflict. The author's repositories are meant to have none: what a session needs to know about a
+repository comes from the `orient:` block (below), and a `note:` line in it is a rule of that
+repository, followed like the rules in this file.
+- Never add a `CLAUDE.md` to one of the author's repositories. A rule a session needs goes in that
+  repository's `notes` in `registry.toml` (ask first, like any registry edit); a human contributor's
+  build and layout notes go in its README.
 
 ## Start of a session
 A SessionStart hook runs `orient`, which brings the devlog up to date and prints an `orient:` block
 for the repository you are in: its devlog folder, how finished work is integrated, its
-`dev/workbench`, and the effort the AI marker assumes. Take it as the project's facts. They are kept
-in `registry.toml` in the devlog (`~/Documents/git/thecathe/devlog`), not in the project.
+`dev/workbench`, its own rules (`note:` lines), and the effort the AI marker assumes. Take it as the
+project's facts and rules. They are kept in `registry.toml` in the devlog
+(`~/Documents/git/thecathe/devlog`), not in the project.
 - If a line says the devlog is not in step, say so in your first reply.
 - Before changing a project, read the `index.md` of its devlog folder (the block gives the path). If
   it is long, read the top and search it for the topic instead of reading it whole.
 - With no `orient:` block (no hook on this host, or not a repository with an `origin`), use the
   defaults in this file: the devlog folder is the repository's name, and finished work is merged
   into `main` locally.
+
+## Missing packages
+If a command a task needs depends on a package that is not installed, do not assume it should be
+installed for good. Ask the user to run it through a one-off shell:
+`nix-shell -p PACKAGE --run "the-command --with args"`.
 
 ## Git workflow
 
@@ -29,7 +41,7 @@ in `registry.toml` in the devlog (`~/Documents/git/thecathe/devlog`), not in the
 The integration branch is the long-lived branch that finished work is merged
 into. It is usually `main`, but not always (e.g. a fork that works from a
 customisation branch). Resolve it in this order:
-1. The project's `CLAUDE.md` names it.
+1. The project's `CLAUDE.md` names it, if it has one.
 2. The `orient:` block names it (from `registry.toml`).
 3. It is the branch currently checked out in the project's primary checkout,
    when that is a deliberate long-lived branch other than the default.
@@ -70,8 +82,9 @@ standing branch. When the project's practice is unclear, ask before acting.
   goes upstream is a PR, and never assume that work on a fork touches upstream
   unless the author says so.
 - The branch and method are facts about the repository, kept in `registry.toml`
-  in the devlog, not in the project's `CLAUDE.md`. If neither the `orient:` block
-  nor the project's `CLAUDE.md` settles them, ask the author the first time
+  in the devlog, not in the project (a repository's own `CLAUDE.md`, if it still
+  has one, wins). If neither the `orient:` block
+  nor the repository settles them, ask the author the first time
   integration is needed, then record the answer in `registry.toml` (a devlog
   commit like any other).
 - If the integration branch has moved by the time you are ready to merge, rebase
@@ -111,7 +124,7 @@ standing branch. When the project's practice is unclear, ask before acting.
 - Logs live outside the project they describe, in the shared `devlog` repo
   (`~/Documents/git/thecathe/devlog`), one folder per project. The `orient:` block
   names the project's folder (by default the repository's name; `registry.toml`
-  holds the exceptions), or the project's `CLAUDE.md` does. If there is none, ask
+  holds the exceptions), or the project's `CLAUDE.md` does, if it has one. If there is none, ask
   before starting one, and record the answer in `registry.toml`.
 - A project's folder is laid out as:
   - `index.md`: the single point of entry and table of contents. It links every

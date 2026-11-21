@@ -62,6 +62,19 @@ sonnet = "xhigh"
 opus = "medium"
 
 [repos."thecathe/forest"]
+notes = [
+  "Never edit the generated snippet trees by hand.",
+  "Nothing in artifacts/ is committed unless the author asks.",
+]
+# A note on a repository with no devlog folder, with padding that must be tidied.
+[repos."thecathe/noted"]
+devlog = false
+notes = ["  padded    and   spaced  ", "second note"]
+# A note given as a plain string, and one that is not a string at all.
+[repos."thecathe/note-string"]
+notes = "a single note"
+[repos."thecathe/note-number"]
+notes = 5
 [repos."thecathe/hosts"]
 devlog = "dots"
 [repos."thecathe/ocaml-forester"]
@@ -169,6 +182,31 @@ check_no_out "forest: no registry complaint" "registry:"
 check_no_out "forest: no workbench line without a workbench" "workbench:"
 check_no_out "success is silent about the sync" "dlsync:"
 check "forest: stderr is empty" test -z "$err"
+check_out "forest: a note per line" "  note: Never edit the generated snippet trees by hand."
+check_out "forest: the second note" "  note: Nothing in artifacts/ is committed unless the author asks."
+check "forest: the notes come before the effort line, which stays last" test "$(grep -c '^  note: ' <<<"$out")" = 2
+check_no_out "forest: one integration branch, no merge-base rule" "several integration branches"
+
+mkrepo thecathe noted
+work thecathe noted
+run --hook
+check_out "notes: whitespace is collapsed and trimmed" "  note: padded and spaced"
+check_out "notes: all of them" "  note: second note"
+check "notes: with no devlog folder they come last" contains "$(tail -n 1 <<<"$out")" "  note: second note"
+check_no_out "notes: no effort line without a devlog folder" "AI-marker effort"
+
+mkrepo thecathe note-string
+work thecathe note-string
+run --hook
+check_out "notes: a plain string is one note" "  note: a single note"
+
+mkrepo thecathe note-number
+work thecathe note-number
+run --hook
+check_out "notes: a value that is not a string is shown as text, not an error" "  note: 5"
+check_no_out "notes: and the registry is not blamed" "registry:"
+
+work thecathe forest
 
 git -C "$cwd" worktree add -q "$root/wt-forest" -b feat/x
 cwd=$root/wt-forest
@@ -193,6 +231,7 @@ mkrepo thecathe membranes
 work thecathe membranes
 run --hook
 check_out "two integration branches" "integration: main and re-functoring;"
+check_out "two integration branches: topics start from the merge base and go into each" "several integration branches: start a topic branch from \`git merge-base\` of them and merge that same branch into each"
 
 mkrepo thecathe devlog
 work thecathe devlog
