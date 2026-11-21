@@ -2,8 +2,9 @@
 # orient: tell a session where it is. Run by Claude Code's SessionStart hook, it
 # brings the devlog up to date (by calling dlsync), looks at the repository the
 # session started in, and prints a short preamble: the repository's devlog
-# folder, how finished work is integrated, its dev/workbench branch, and the
-# effort the AI marker assumes. A hook's stdout is the session's context, so what
+# folder, how finished work is integrated, its dev/workbench branch, the
+# repository's own rules (the registry's `notes`, printed as `note:` lines, in
+# place of a CLAUDE.md in the repository), and the effort the AI marker assumes. A hook's stdout is the session's context, so what
 # it prints is what a session knows without being told.
 #
 #   orient                    sync, then print the preamble (what you read by hand)
@@ -161,10 +162,11 @@ load_registry() {
         branches: ((field($r; "integration_branch") // "main") | if type == "array" then . else [.] end),
         push: (field($r; "push") // false),
         upstream: field($r; "upstream"),
+        notes: ((field($r; "notes") // []) | if type == "array" then map(tostring) else [tostring] end),
         effort: ($d.effort // {})
       }' <<<"$reg" 2>&1); then
     reg_note="registry.toml has an unexpected shape ($(tail -n 1 <<<"$facts"))"
-    facts=$(jq -cn --arg owner "$r_owner" '{mine: false, devlog: null, branches: ["main"], push: false, upstream: null, effort: {}}')
+    facts=$(jq -cn --arg owner "$r_owner" '{mine: false, devlog: null, branches: ["main"], push: false, upstream: null, notes: [], effort: {}}')
   fi
 }
 fact() { jq -r "$1" <<<"$facts"; }
@@ -219,6 +221,22 @@ integration_section() {
   upstream=$(fact '.upstream // empty')
   [[ -z $upstream ]] ||
     add "  upstream: $upstream (only where a PR would go; work here does not touch it unless the author says so)"
+  # With several long-lived branches, a topic must not make merging them later
+  # conflict: it starts from their merge base and goes into each. This used to be
+  # said by the repository's own CLAUDE.md.
+  if (($(fact '.branches | length') > 1)); then
+    add "  several integration branches: start a topic branch from \`git merge-base\` of them and merge that same branch into each, so merging one into another later does not conflict"
+  fi
+}
+
+# notes_section: the repository's own rules, as the registry words them, one line
+# each (a note is a sentence for a session, not a fact orient can check). They are
+# what a project's CLAUDE.md used to carry.
+notes_section() {
+  local n
+  while IFS= read -r n; do
+    [[ -z $n ]] || add "  note: $n"
+  done < <(fact '.notes[] | gsub("\\s+"; " ") | sub("^ "; "") | sub(" $"; "")')
 }
 
 # workbench_section: fetch dev/workbench, fast-forward the local branch when only
@@ -364,6 +382,7 @@ if find_repo; then
   devlog_section
   integration_section
   workbench_section
+  notes_section
   effort_section
 fi
 
