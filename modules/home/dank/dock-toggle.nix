@@ -17,7 +17,7 @@
   # the live settings.json to 0 bytes. Exits 0 either way: this is dms's
   # ExecStartPre, where a failure would stop the shell from starting.
   dankResetDockScript = pkgs.writeShellScript "dank-reset-dock" ''
-    settingsFile="$HOME/dots/modules/home/dank/settings.json"
+    settingsFile="${config.dots.checkout}/modules/home/dank/settings.json"
     if [ -e "$settingsFile" ]; then
       tmp="$(mktemp)"
       trap 'rm -f "$tmp"' EXIT
@@ -29,6 +29,8 @@
     fi
   '';
 in {
+  imports = [../checkout.nix];
+
   # showDock is state, not config: DMS persists it into settings.json with
   # everything else, but dank-dock-toggle flips it ad hoc. Declaring it here
   # has dms.nix's clean filter reset it to true on the way into git, and its

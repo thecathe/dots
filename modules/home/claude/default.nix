@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   ...
@@ -13,6 +14,8 @@
     };
   };
 in {
+  imports = [../checkout.nix];
+
   # ~/.claude/settings.json must be a *single* symlink straight to the mutable
   # local file. home.file (even via mkOutOfStoreSymlink) routes it through the
   # read-only /nix/store/...-home-manager-files, and Claude Code saves settings
@@ -20,7 +23,7 @@ in {
   # (EROFS) and breaks /effort, /model, etc. So link it by hand, after
   # home-manager's own link generation.
   home.activation.claudeCodeSettings = lib.hm.dag.entryAfter ["linkGeneration"] ''
-    target="$HOME/dots/modules/home/claude/settings.local.json"
+    target="${config.dots.checkout}/modules/home/claude/settings.local.json"
     link="$HOME/.claude/settings.json"
     if [ ! -e "$target" ]; then
       run install -Dm644 ${pkgs.writeText "claude-settings-default.json" claudeDefaults} "$target"

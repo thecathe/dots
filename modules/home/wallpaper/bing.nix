@@ -26,7 +26,7 @@
     set -euo pipefail
 
     recents_dir="$HOME/Pictures/BingWallpaper"
-    fav_dir="$HOME/dots/modules/home/wallpaper/favourites"
+    fav_dir="${config.dots.checkout}/modules/home/wallpaper/favourites"
     metadata_file="$HOME/.cache/DankMaterialShell/bingwall/metadata.json"
 
     arg="''${1:-}"
@@ -67,7 +67,7 @@
     fi
 
     cp -n "$target" "$dest"
-    git -C "$HOME/dots" add "$dest"
+    git -C "${config.dots.checkout}" add "$dest"
 
     if [ "$is_today" -eq 1 ]; then
       title="$(${jq} -r '.currentTitle // empty' "$metadata_file")"
@@ -76,7 +76,7 @@
         sidecar="$fav_dir/''${name%.*}.json"
         ${jq} -n --arg title "$title" --arg description "$description" \
           '{title: $title, description: $description}' > "$sidecar"
-        git -C "$HOME/dots" add "$sidecar"
+        git -C "${config.dots.checkout}" add "$sidecar"
       fi
     fi
 
@@ -86,7 +86,7 @@
   binUnpin = pkgs.writeShellScriptBin "bing-wallpaper-unpin" ''
     set -euo pipefail
 
-    fav_dir="$HOME/dots/modules/home/wallpaper/favourites"
+    fav_dir="${config.dots.checkout}/modules/home/wallpaper/favourites"
 
     arg="''${1:-}"
     if [ -z "$arg" ]; then
@@ -115,9 +115,9 @@
     name="$(basename "$target")"
     sidecar="$fav_dir/''${name%.*}.json"
 
-    git -C "$HOME/dots" rm -f -q -- "$target"
+    git -C "${config.dots.checkout}" rm -f -q -- "$target"
     if [ -f "$sidecar" ]; then
-      git -C "$HOME/dots" rm -f -q -- "$sidecar"
+      git -C "${config.dots.checkout}" rm -f -q -- "$sidecar"
     fi
 
     # git rm removes the now-empty containing directory too once the last
@@ -138,7 +138,7 @@
     set -euo pipefail
 
     recents_dir="$HOME/Pictures/BingWallpaper"
-    fav_dir="$HOME/dots/modules/home/wallpaper/favourites"
+    fav_dir="${config.dots.checkout}/modules/home/wallpaper/favourites"
 
     echo "Recent wallpapers ($recents_dir):"
     if [ -d "$recents_dir" ]; then
@@ -172,8 +172,8 @@
   binSkip = pkgs.writeShellScriptBin "bing-wallpaper-skip" ''
     set -euo pipefail
 
-    fav_dir="$HOME/dots/modules/home/wallpaper/favourites"
-    session_file="$HOME/dots/modules/home/dank/session.local.json"
+    fav_dir="${config.dots.checkout}/modules/home/wallpaper/favourites"
+    session_file="${config.dots.checkout}/modules/home/dank/session.local.json"
     state_dir="$HOME/.cache/bing-wallpaper"
     state_file="$state_dir/skip-state.json"
 
@@ -213,7 +213,7 @@
   binResume = pkgs.writeShellScriptBin "bing-wallpaper-resume" ''
     set -euo pipefail
 
-    session_file="$HOME/dots/modules/home/dank/session.local.json"
+    session_file="${config.dots.checkout}/modules/home/dank/session.local.json"
     metadata_file="$HOME/.cache/DankMaterialShell/bingwall/metadata.json"
     state_file="$HOME/.cache/bing-wallpaper/skip-state.json"
 
@@ -320,6 +320,8 @@
     ${dms} ipc call toast info "Backfilled $fetched wallpaper(s), $skipped already present" || true
   '';
 in {
+  imports = [../checkout.nix];
+
   # The plugin re-applies today's image whenever one of its checks (every 3
   # hours, and at dailyRefreshTime) finds nothing new to download, so a
   # wallpaper picked by hand was reverted within hours. The patch removes that

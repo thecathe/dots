@@ -1,9 +1,10 @@
 {
+  config,
   pkgs,
   lib,
   ...
 }: {
-  imports = [./aliases.nix];
+  imports = [./aliases.nix ../../checkout.nix];
   programs.bash.sessionVariables = {KP_EDITOR = "neovide";};
   programs.zsh = {
     enable = true;
@@ -30,7 +31,7 @@
     sessionVariables = {KP_EDITOR = "neovide";};
     initContent = lib.mkMerge [
       (lib.mkOrder 500 ''
-        export PATH="$HOME/dots/bin:$PATH"
+        export PATH="${config.dots.checkout}/bin:$PATH"
       '')
       (lib.mkOrder 1000 ''
         # forward/backward word
