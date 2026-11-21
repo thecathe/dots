@@ -251,6 +251,58 @@ in {
         touch $out
       '';
 
+  # Profiles (modules/nixos/profiles): off by default, on when asked, and a host's
+  # own plain assignment beats every value a profile sets, including the two it
+  # sets above mkDefault (the sysctl and NIX_PATH, which nixpkgs defaults itself).
+  module-sets-profiles = let
+    based = (nixos [dots.nixosModules.default {dots.profile.base.enable = true;}]).config;
+    overridden =
+      (nixos [
+        dots.nixosModules.default
+        {
+          dots.profile.base.enable = true;
+          boot.loader.systemd-boot.configurationLimit = 5;
+          boot.kernel.sysctl."fs.inotify.max_user_watches" = 4096;
+          nix.nixPath = ["nixpkgs=/srv/nixpkgs"];
+          networking.networkmanager.enable = false;
+          environment.systemPackages = [pkgs.hello];
+        }
+      ]).config;
+    user = c: c.users.users.consumer;
+  in
+    assert written "profiles" "base is on in a plain import" (!nixosAlone.config.networking.networkmanager.enable && !(hasPackage "xplr" nixosAlone.config.environment.systemPackages));
+    assert written "profiles" "base does not turn on what it bundles" (based.networking.networkmanager.enable && based.services.pipewire.enable && hasPackage "xplr" based.environment.systemPackages);
+    assert written "profiles" "base does not set up the dots user" ((user based).isNormalUser && lib.elem "wheel" (user based).extraGroups);
+    assert written "profiles" "base's NIX_PATH is not the single pinned nixpkgs: ${toString based.nix.nixPath}" (lib.length based.nix.nixPath == 1 && lib.hasPrefix "nixpkgs=/nix/store/" (lib.head based.nix.nixPath));
+    assert written "profiles" "base's inotify limit is not set" (based.boot.kernel.sysctl."fs.inotify.max_user_watches" == 1048576);
+    assert written "profiles" "a host's own values do not beat base's" (
+      overridden.boot.loader.systemd-boot.configurationLimit
+      == 5
+      && overridden.boot.kernel.sysctl."fs.inotify.max_user_watches" == 4096
+      && overridden.nix.nixPath == ["nixpkgs=/srv/nixpkgs"]
+      && !overridden.networking.networkmanager.enable
+    );
+    assert written "profiles" "a host's own package replaces base's list instead of adding to it" (hasPackage "hello" overridden.environment.systemPackages && hasPackage "xplr" overridden.environment.systemPackages);
+      pkgs.writeText "module-sets-profiles" (builtins.unsafeDiscardStringContext based.system.build.toplevel.drvPath);
+
+  # dots.loginSessions (modules/nixos/login-sessions.nix): nothing at all when empty,
+  # and an entry hands the session to the module instead of `defaultSession`.
+  module-sets-login-sessions = let
+    withSession =
+      (nixos [
+        dots.nixosModules.default
+        {
+          services.displayManager.gdm.enable = true;
+          users.users.consumer.isNormalUser = true;
+          dots.loginSessions.consumer = "niri";
+        }
+      ]).config;
+  in
+    assert written "login-sessions" "the empty default changes the display manager" (nixosAlone.config.services.displayManager.defaultSession == "niri");
+    assert written "login-sessions" "an entry leaves defaultSession set" (withSession.services.displayManager.defaultSession == null);
+    assert written "login-sessions" "an entry does not set the session at the login screen's start" (lib.hasInfix "/bin/set-login-sessions" withSession.systemd.services.display-manager.preStart && lib.hasInfix "consumer=niri" withSession.systemd.services.display-manager.preStart);
+      pkgs.writeText "module-sets-login-sessions" (builtins.unsafeDiscardStringContext withSession.system.build.toplevel.drvPath);
+
   # Options that moved into the `dots.*` namespace keep their old names for a release:
   # a host written before the move still works, and is told, in a build warning, what to
   # rename. Each old name is set to a harmless value and must land on the new one, and
