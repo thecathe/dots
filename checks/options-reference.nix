@@ -1,5 +1,5 @@
 # The generated `dots.*` options reference (lib/options-doc.nix) is complete, honest
-# and current. Three things, each of which fails with a message saying what to do:
+# and publishable. Three things, each of which fails with a message saying what to do:
 #
 #  - Complete: building the reference fails on an option without a description
 #    (nixosOptionsDoc's own `warningsAreErrors`), so building it at all is the check.
@@ -7,9 +7,9 @@
 #    that came from the evaluation the reference was made from (the placeholder user
 #    `consumer`, a store path). Such a default means the option needs a `defaultText`;
 #    without one the page would show one machine's value as if it were everyone's.
-#  - Current: the pages committed under docs/ are what the modules generate now. This
-#    is what makes committing generated files safe: a change to an option that does not
-#    regenerate them cannot get through `nix flake check`.
+#  - Publishable: the two pages the GitHub Action publishes
+#    (.github/workflows/options-reference.yml) exist and are not empty, so a change that
+#    broke them fails here, before a merge, and not in the Action after a push.
 {
   inputs,
   optionsDoc,
@@ -18,7 +18,7 @@
 in {
   options-reference =
     pkgs.runCommand "options-reference" {
-      nativeBuildInputs = [pkgs.jq pkgs.diffutils];
+      nativeBuildInputs = [pkgs.jq];
     } ''
       ref=${optionsDoc.reference}
       failed=0
@@ -52,10 +52,8 @@ in {
       done
 
       for page in options-home.md options-nixos.md; do
-        if ! diff -u ${inputs.self}/docs/$page $ref/$page > diff.txt; then
-          echo "options-reference: docs/$page is not what the modules generate now:" >&2
-          head -n 40 diff.txt >&2
-          echo "Regenerate it with: nix run .#update-options-reference" >&2
+        if ! [ -s "$ref/$page" ]; then
+          echo "options-reference: $page is missing or empty, so the Action would publish nothing for it" >&2
           failed=1
         fi
       done

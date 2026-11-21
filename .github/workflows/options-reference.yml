@@ -1,0 +1,45 @@
+# Builds the generated reference for the `dots.*` options (`nix build .#options-reference`,
+# lib/options-doc.nix) on every push to `main` and publishes the two Markdown pages to the
+# `options-reference` branch, where GitHub renders them in the browser. Nothing generated is
+# committed to `main`. The README links to the pages on that branch.
+#
+# The publishing step is .github/scripts/publish-options-reference.sh: it writes an orphan
+# branch holding only the pages and a README, and pushes only when they changed.
+name: options-reference
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# The default token is read-only here; this job writes one branch.
+permissions:
+  contents: write
+
+# A newer push makes an older run's pages out of date, so let it replace the older run.
+concurrency:
+  group: options-reference
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    # Forks have neither the token nor a reason to publish.
+    if: github.repository == 'thecathe/dots'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+
+      - name: Build the pages
+        run: nix build .#options-reference --print-build-logs --out-link result
+
+      - name: Publish them to the options-reference branch
+        env:
+          PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          .github/scripts/publish-options-reference.sh \
+            result \
+            "https://github.com/${GITHUB_REPOSITORY}.git" \
+            options-reference \
+            "${GITHUB_SHA}"
