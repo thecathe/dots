@@ -23,10 +23,11 @@
 ## structure
 
 - `./bin/` -> scripts
-- `./lib/` -> `mkNixos` / `mkHome`, the host constructors (exported as `lib`)
+- `./lib/` -> `mkNixos` / `mkHome`, the host constructors (exported as `lib`), and `options-doc.nix`, the options reference generator
 - `./modules/home/` -> home-manager modules (exported as `homeModules.default`)
 - `./modules/nixos/` -> NixOS modules (exported as `nixosModules.default`)
 - `./modules/shared/` -> lists both sides use (fonts, the unfree allow-list)
+- `./docs/` -> the generated options reference (see below)
 - `./checks/` -> stand-ins for the flakes that consume dots (`nix flake check`)
 - `./templates/` -> project templates, `nix flake init -t`
 
@@ -58,6 +59,18 @@ still evaluates.
 
 To change dots without breaking a machine, test the change against every host before merging (see the
 `check` script in the hosts repo).
+
+## options
+
+Everything dots lets a host set is under `dots.*`, and every option has a description. The generated reference is
+[docs/options-home.md](docs/options-home.md) (for `homeModules.default`) and
+[docs/options-nixos.md](docs/options-nixos.md) (for `nixosModules.default`): a table of the `dots.<area>.enable`
+switches and what each set leaves them at, then every option with its type, default, example and the file that
+declares it. The pages are generated, so change an option's `description` in its module and run
+`nix run .#update-options-reference` to rewrite them (`nix build .#options-reference` makes the same pages plus
+`options-*.json` for tools). The `options-reference` check of `nix flake check` fails when a page is stale, when an
+option has no description, and when a default shows a value from the evaluation (the placeholder user, a store path)
+because it lacks a `defaultText`.
 
 ## formatting
 
