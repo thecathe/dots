@@ -7,7 +7,7 @@
   # Keys in settings.json that are state, not config (DMS persists them into
   # the same file as everything else, but they churn independently of any
   # rebuild - e.g. showDock is flipped ad hoc by dank-dock-toggle). Declared
-  # through options.dank.settingsState below by whichever module owns the key
+  # through options.dots.dank.settingsState below by whichever module owns the key
   # (today only dock-toggle.nix). Consulted by both dankSettingsCleanFilter
   # (resets them to these defaults on the way into git) and
   # dankMaterialShellSettingsOverlay (seeds a host's real value back in if it's
@@ -27,16 +27,16 @@
   # (Except desktop widget positions: they moved in the same update, but not
   # through SESSION_MOVED_KEYS, so that list missed them. They start empty in
   # a fresh session; see dankWidgetPositions below.)
-  dankSettingsStateDefaults = config.dank.settingsState;
+  dankSettingsStateDefaults = config.dots.dank.settingsState;
   dankSettingsStateKeys = lib.attrNames dankSettingsStateDefaults;
 
   # Whole keys that belong to the host, not to the shared file (see
-  # options.dank.settingsOverlayKeys). Their canonical default is "absent":
+  # options.dots.dank.settingsOverlayKeys). Their canonical default is "absent":
   # DMS omits a key from the file while it is at its own default, so absent is
   # what an unconfigured DMS writes, and what the shared file therefore holds.
-  dankSettingsOverlayKeys = config.dank.settingsOverlayKeys;
+  dankSettingsOverlayKeys = config.dots.dank.settingsOverlayKeys;
 
-  # Keys of dank.settingsOverlay with a dedicated stage of their own in the
+  # Keys of dots.dank.settingsOverlay with a dedicated stage of their own in the
   # clean filter and the seed (they merge per entry, by id), rather than going
   # through the generic whole-key list above.
   dankSettingsOverlayStructuredKeys = ["desktopWidgetInstances" "barConfigs"];
@@ -117,7 +117,7 @@
   # Seeds this host's real values (customThemeFile, dankSettingsStateKeys,
   # dankSettingsOverlayKeys, desktopWidgetInstances positions/displayPreferences,
   # barConfigs screenPreferences) into the live settings.json from the tracked host
-  # overlay - see options.dank.settingsOverlay's
+  # overlay - see options.dots.dank.settingsOverlay's
   # description below for the exact merge semantics per field. Shared between
   # home.activation.dankMaterialShellSettingsOverlay (runs at rebuild time) and
   # the dank-settings-repair systemd path unit below (runs reactively, the
@@ -138,7 +138,7 @@
   # then replaced the live file, truncating it to 0 bytes.
   dankSettingsOverlayScript = let
     overlay =
-      config.dank.settingsOverlay
+      config.dots.dank.settingsOverlay
       // {
         # Written into DMS's settings by stylix's DMS target; without stylix there is
         # no custom theme, which is also the canonical default (the clean filter's
@@ -203,12 +203,12 @@
   # (dankSettingsOverlayScript above still writes them into settings.json, where
   # that migration would find them) reach DMS only through the command below.
   #
-  # The record is dank.settingsOverlay.desktopWidgetInstances.<id>.positions as
+  # The record is dots.dank.settingsOverlay.desktopWidgetInstances.<id>.positions as
   # {<id>: {<screen>: {x, y, width, height}}}; empty, so every mode a no-op, on a
   # host whose overlay records none.
   dankWidgetPositionsRecord = pkgs.writeText "dank-widget-positions.json" (builtins.toJSON (
     lib.filterAttrs (_: positions: positions != {}) (
-      lib.mapAttrs (_: instance: instance.positions or {}) (config.dank.settingsOverlay.desktopWidgetInstances or {})
+      lib.mapAttrs (_: instance: instance.positions or {}) (config.dots.dank.settingsOverlay.desktopWidgetInstances or {})
     )
   ));
 
@@ -413,7 +413,7 @@
 in {
   imports = [../checkout.nix];
 
-  options.dank.settingsState = lib.mkOption {
+  options.dots.dank.settingsState = lib.mkOption {
     type = lib.types.attrsOf lib.types.anything;
     default = {};
     example = {showDock = true;};
@@ -424,11 +424,11 @@ in {
       when the live file is still at it (see dankSettingsOverlayScript). A
       fact about DMS's own schema, not a per-host fact: declared by the module
       that owns the key (dock-toggle.nix declares showDock), where the host's
-      value, if any, then goes in dank.settingsOverlay.
+      value, if any, then goes in dots.dank.settingsOverlay.
     '';
   };
 
-  options.dank.settingsOverlayKeys = lib.mkOption {
+  options.dots.dank.settingsOverlayKeys = lib.mkOption {
     type = lib.types.listOf lib.types.str;
     default = [];
     example = ["controlCenterWidgets"];
@@ -437,29 +437,29 @@ in {
       to the shared file. Adding a key here is all it takes to make it
       host-specific: the clean filter deletes it on the way into git (so the
       shared file never carries it), and the overlay seeds the host's value
-      from dank.settingsOverlay.<key> when the live file has none. Absent is
+      from dots.dank.settingsOverlay.<key> when the live file has none. Absent is
       the canonical default because DMS omits a key from the file while it is
       at its own default. Like everything in the overlay, a live DMS GUI change
       wins: the key stays as DMS wrote it until the host's own copy in
-      dank.settingsOverlay is updated by hand. (So resetting the key to DMS's
+      dots.dank.settingsOverlay is updated by hand. (So resetting the key to DMS's
       default in the GUI removes it, and the host's value comes back.)
 
       Only for keys that are replaced as a whole. Keys merged per entry
-      (desktopWidgetInstances, barConfigs) and state keys (dank.settingsState)
+      (desktopWidgetInstances, barConfigs) and state keys (dots.dank.settingsState)
       have their own handling. A definition here is a normal one, so a host
       appends with a plain assignment; dms.nix sets the base list.
     '';
   };
 
-  options.dank.settingsOverlay = lib.mkOption {
+  options.dots.dank.settingsOverlay = lib.mkOption {
     type = lib.types.attrsOf lib.types.anything;
     default = {};
     description = ''
       Host-specific values seeded into settings.json on every activation.
       customThemeFile is always overwritten (a purely computed Nix store
       path, nothing of the user's to preserve). Everything else - showDock
-      (a dank.settingsState key, declared by dock-toggle.nix), every key
-      named in dank.settingsOverlayKeys (whole values, e.g.
+      (a dots.dank.settingsState key, declared by dock-toggle.nix), every key
+      named in dots.dank.settingsOverlayKeys (whole values, e.g.
       controlCenterWidgets), desktopWidgetInstances
       position/displayPreferences data (keyed by widget id), and barConfigs
       screenPreferences (keyed by bar id, e.g. [{id: "default",
@@ -508,7 +508,7 @@ in {
     # Whole settings.json keys that are host-specific (options.dank.
     # settingsOverlayKeys): to make another one so, add its name here and put
     # the value in the host's dank-monitor.json under the same key.
-    dank.settingsOverlayKeys = [
+    dots.dank.settingsOverlayKeys = [
       # The control centre's tiles, their order and widths: depends on the
       # hardware (a battery tile on a laptop, disk usage on the desktop).
       "controlCenterWidgets"
@@ -519,20 +519,20 @@ in {
     # controlCenterWidgets was, for weeks, before it was listed above).
     assertions = let
       handled = dankSettingsOverlayStructuredKeys ++ dankSettingsStateKeys ++ dankSettingsOverlayKeys;
-      stray = lib.subtractLists handled (lib.attrNames config.dank.settingsOverlay);
+      stray = lib.subtractLists handled (lib.attrNames config.dots.dank.settingsOverlay);
       both = lib.intersectLists dankSettingsStateKeys dankSettingsOverlayKeys;
     in [
       {
         assertion = stray == [];
         message = ''
-          dank.settingsOverlay has keys nothing reads: ${lib.concatStringsSep ", " stray}.
-          Add a whole-value key to dank.settingsOverlayKeys (dms.nix), or remove it from the host's dank-monitor.json.
+          dots.dank.settingsOverlay has keys nothing reads: ${lib.concatStringsSep ", " stray}.
+          Add a whole-value key to dots.dank.settingsOverlayKeys (dms.nix), or remove it from the host's dank-monitor.json.
           (customThemeFile is always computed from the theme, so a host cannot set it.)
         '';
       }
       {
         assertion = both == [];
-        message = "dank.settingsState and dank.settingsOverlayKeys both list: ${lib.concatStringsSep ", " both}. A key is one or the other.";
+        message = "dots.dank.settingsState and dots.dank.settingsOverlayKeys both list: ${lib.concatStringsSep ", " both}. A key is one or the other.";
       }
     ];
 
@@ -755,7 +755,7 @@ in {
     # time - the only reason this is needed at all is that the clean filter
     # above means a fresh clone/checkout starts from canonical defaults
     # (empty positions, no displayPreferences, etc), so something has to
-    # repopulate real per-host data. See dank.settingsOverlay's description
+    # repopulate real per-host data. See dots.dank.settingsOverlay's description
     # above for the full rationale, and dankSettingsOverlayScript's comment
     # for why this same repair also runs reactively via a path unit, not just
     # here at rebuild time.

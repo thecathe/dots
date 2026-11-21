@@ -21,11 +21,18 @@
   pkgs,
   ...
 }: let
-  cfg = config.programs.vscode.profileUiState;
+  cfg = config.dots.vscode.profileUiState;
   profileNames =
     builtins.filter (n: n != "default") (builtins.attrNames config.programs.vscode.profiles);
 in {
-  options.programs.vscode.profileUiState = {
+  imports = [
+    # These options used to be `programs.vscode.profileUiState.*`; the old names keep working, with a warning.
+    (lib.mkRenamedOptionModule ["programs" "vscode" "profileUiState" "enable"] ["dots" "vscode" "profileUiState" "enable"])
+    (lib.mkRenamedOptionModule ["programs" "vscode" "profileUiState" "seed"] ["dots" "vscode" "profileUiState" "seed"])
+    (lib.mkRenamedOptionModule ["programs" "vscode" "profileUiState" "filesContainer"] ["dots" "vscode" "profileUiState" "filesContainer"])
+  ];
+
+  options.dots.vscode.profileUiState = {
     enable = lib.mkOption {
       type = lib.types.bool;
       default = true;
