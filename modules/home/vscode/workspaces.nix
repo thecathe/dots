@@ -6,7 +6,7 @@
 #
 # This module holds only the mechanism. The workspace files and manifest live
 # in a separate private repo (checked out at ~/workspaces, see
-# programs.vscode.workspaces.dir) and are read at runtime, never at evaluation,
+# dots.vscode.workspaces.dir) and are read at runtime, never at evaluation,
 # so this evaluates the same whether or not that repo exists. With `dir` null
 # the module does nothing.
 {
@@ -15,7 +15,7 @@
   pkgs,
   ...
 }: let
-  cfg = config.programs.vscode.workspaces;
+  cfg = config.dots.vscode.workspaces;
 
   codeWorkspace = pkgs.writeShellApplication {
     name = "code-workspace";
@@ -24,7 +24,12 @@
     text = builtins.readFile ./code-workspace.sh;
   };
 in {
-  options.programs.vscode.workspaces.dir = lib.mkOption {
+  imports = [
+    # This option used to be `programs.vscode.workspaces.dir`; a host written before it moved keeps working, with a warning.
+    (lib.mkRenamedOptionModule ["programs" "vscode" "workspaces" "dir"] ["dots" "vscode" "workspaces" "dir"])
+  ];
+
+  options.dots.vscode.workspaces.dir = lib.mkOption {
     type = lib.types.nullOr lib.types.str;
     default = null;
     example = "/home/me/workspaces/vscode";

@@ -190,4 +190,71 @@ in {
         homeDrv [dots.homeModules.default {dots = off homeAreas;}]
         + (nixos [dots.nixosModules.default {dots = off nixosAreas;}]).config.system.build.toplevel.drvPath
       ));
+
+  # Options that moved into the `dots.*` namespace keep their old names for a release:
+  # a host written before the move still works, and is told, in a build warning, what to
+  # rename. Each old name is set to a harmless value and must land on the new one, and
+  # must produce a warning that names both. Setting the new names produces none.
+  module-sets-renames = let
+    renamed = [
+      {
+        old = ["dank" "settingsState"];
+        value = {testState = true;};
+      }
+      {
+        old = ["dank" "settingsOverlayKeys"];
+        value = ["testOverlayKey"];
+      }
+      {
+        old = ["dank" "settingsOverlay"];
+        value = {controlCenterWidgets = ["x"];};
+      }
+      {
+        old = ["dank" "curatedMenu" "entries"];
+        value = [];
+      }
+      {
+        old = ["programs" "vscode" "workspaces" "dir"];
+        value = "/srv/workspaces";
+      }
+      {
+        old = ["programs" "vscode" "profileUiState" "enable"];
+        value = true;
+      }
+      {
+        old = ["programs" "vscode" "profileUiState" "seed"];
+        value = true;
+      }
+      {
+        old = ["programs" "vscode" "profileUiState" "filesContainer"];
+        value = "workbench.views.service.sidebar.4337fe0b-3e0d-40ce-9701-c62f345cfd7a"; # the value dots sets itself: equal definitions merge
+      }
+    ];
+    # The new path: `dank.*` -> `dots.dank.*`, `programs.vscode.*` -> `dots.vscode.*`.
+    newOf = old:
+      if lib.take 2 old == ["programs" "vscode"]
+      then ["dots" "vscode"] ++ lib.drop 2 old
+      else ["dots"] ++ old;
+    dotted = lib.concatStringsSep ".";
+    configOf = r: home [dots.homeModules.default (lib.setAttrByPath r.old r.value)];
+    configNew = r: home [dots.homeModules.default (lib.setAttrByPath (newOf r.old) r.value)];
+    mentions = r: c: lib.any (w: lib.hasInfix "`${dotted r.old}'" w && lib.hasInfix "`${dotted (newOf r.old)}'" w) c.warnings;
+    silent = c: !(lib.any (w: lib.hasInfix "has been renamed" w) c.warnings);
+    # Some of these merge with values dots sets itself, so a set value must be contained in the result, not equal to it.
+    landed = r: let
+      got = lib.attrByPath (newOf r.old) null (configOf r);
+    in
+      if builtins.isAttrs r.value
+      then lib.all (k: got ? ${k}) (lib.attrNames r.value)
+      else if builtins.isList r.value
+      then lib.all (x: lib.elem x got) r.value
+      else got == r.value;
+    notLanding = lib.filter (r: !(landed r)) renamed;
+    notWarning = lib.filter (r: !(mentions r (configOf r))) renamed;
+    newWarns = lib.filter (r: !(silent (configNew r))) renamed;
+  in
+    assert written "renames" "these old names do not reach the new option: ${toString (map (r: dotted r.old) notLanding)}" (notLanding == []);
+    assert written "renames" "these old names do not warn, or the warning lacks one of the two names: ${toString (map (r: dotted r.old) notWarning)}" (notWarning == []);
+    assert written "renames" "setting the new name still warns for: ${toString (map (r: dotted r.old) newWarns)}" (newWarns == []);
+      pkgs.writeText "module-sets-renames-evaluate" "ok";
 }

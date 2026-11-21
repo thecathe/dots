@@ -155,6 +155,6 @@ in {
 
     # UI layout persistence for the profiles above (globalStorage dirs + seeding
     # from the default profile). Standalone so other configs can import it too.
-    programs.vscode.profileUiState.filesContainer = "workbench.views.service.sidebar.4337fe0b-3e0d-40ce-9701-c62f345cfd7a";
+    dots.vscode.profileUiState.filesContainer = "workbench.views.service.sidebar.4337fe0b-3e0d-40ce-9701-c62f345cfd7a";
   };
 }

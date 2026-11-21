@@ -19,7 +19,7 @@ DMS loads the plugin from ~/.config/DankMaterialShell/plugins/curatedMenu
                      |                                        (this folder, installed by curated-menu.nix)
 CuratedMenu.qml reads its entries from plugin_settings.json (pluginData.entries)
                      ^
-modules/home/dank/curated-menu.nix: option dank.curatedMenu.entries -> plugin settings
+modules/home/dank/curated-menu.nix: option dots.dank.curatedMenu.entries -> plugin settings
 ```
 
 | File | What it is |
@@ -112,7 +112,7 @@ The defaults are an ordinary definition, so another definition, for example in a
 repo, **adds** to them:
 
 ```nix
-dank.curatedMenu.entries = lib.mkAfter [
+dots.dank.curatedMenu.entries = lib.mkAfter [
   { key = "g"; label = "Game mode"; icon = "sports_esports"; command = [ ... ]; }
 ];
 ```

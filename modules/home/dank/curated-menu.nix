@@ -4,7 +4,7 @@
   pkgs,
   ...
 }: let
-  cfg = config.dank.curatedMenu;
+  cfg = config.dots.dank.curatedMenu;
   dms = "${config.programs.dank-material-shell.package}/bin/dms";
 
   # Mounts every unmounted filesystem on a hotplug drive, or unmounts and powers
@@ -153,7 +153,7 @@
   clean = e:
     lib.filterAttrs (_: v: v != null && v != []) (e // lib.optionalAttrs (e ? entries) {entries = map clean e.entries;});
 in {
-  options.dank.curatedMenu.entries = lib.mkOption {
+  options.dots.dank.curatedMenu.entries = lib.mkOption {
     type = lib.types.listOf entry;
     description = ''
       Entries of the curated menu (a DMS daemon plugin, opened with
@@ -167,7 +167,7 @@ in {
   };
 
   config = lib.mkIf config.dots.dank.enable {
-    dank.curatedMenu.entries = [
+    dots.dank.curatedMenu.entries = [
       {
         key = "c";
         label = "Colour picker";
@@ -216,15 +216,15 @@ in {
     assertions = [
       {
         assertion = badKeys == [];
-        message = "dank.curatedMenu: every key must be one character other than j/k (bad: ${toString badKeys})";
+        message = "dots.dank.curatedMenu: every key must be one character other than j/k (bad: ${toString badKeys})";
       }
       {
         assertion = dupLevels == [];
-        message = "dank.curatedMenu: keys must be unique within each menu level";
+        message = "dots.dank.curatedMenu: keys must be unique within each menu level";
       }
       {
         assertion = badEntries == [];
-        message = "dank.curatedMenu: each entry needs exactly one of command, entries or generator (submenu entries: command) (bad: ${toString (map (e: e.label) badEntries)})";
+        message = "dots.dank.curatedMenu: each entry needs exactly one of command, entries or generator (submenu entries: command) (bad: ${toString (map (e: e.label) badEntries)})";
       }
     ];
 

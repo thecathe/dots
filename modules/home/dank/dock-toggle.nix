@@ -7,7 +7,7 @@
   # Forces the dock visible before every DMS session start (login, reboot,
   # and any restartIfChanged-triggered restart from a rebuild) - wired below
   # via systemd.user.services.dms.Service.ExecStartPre. Deliberately NOT
-  # handled via dank.settingsOverlay seeding (unlike desktopWidgetInstances/
+  # handled via dots.dank.settingsOverlay seeding (unlike desktopWidgetInstances/
   # barConfigs data in dms.nix): showDock isn't a host fact to seed a default
   # for, it's a "start every session the same way" preference, hidden only
   # ad hoc mid-session via dank-dock-toggle.
@@ -35,10 +35,10 @@ in {
   # showDock is state, not config: DMS persists it into settings.json with
   # everything else, but dank-dock-toggle flips it ad hoc. Declaring it here
   # has dms.nix's clean filter reset it to true on the way into git, and its
-  # overlay seed put a host's real value back (see options.dank.settingsState).
+  # overlay seed put a host's real value back (see options.dots.dank.settingsState).
 
   config = lib.mkIf config.dots.dank.enable {
-    dank.settingsState.showDock = true;
+    dots.dank.settingsState.showDock = true;
 
     # dank-material-shell's own home-manager module (inputs.dms) defines the
     # "dms" systemd user service that actually launches the shell. Adding to
