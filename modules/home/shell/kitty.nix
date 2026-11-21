@@ -6,6 +6,8 @@
   # stylix's monospace font, or null where this module is used without stylix.
   monoFont = lib.attrByPath ["stylix" "fonts" "monospace" "name"] null config;
 in {
+  imports = [../checkout.nix];
+
   # kitty runs draw_title() from this file for `{custom}` in tab_title_template. It is loaded from kitty's
   # config directory, so it cannot live next to the config in the store.
   xdg.configFile."kitty/tab_bar.py".source = ./kitty-tab-bar.py;
@@ -45,7 +47,7 @@ in {
       "alt+g>shift+o" = "detach_tab ask"; # into another OS window
 
       "ctrl+shift+d" = ''
-        launch --type=overlay --title='nvim dots' zsh -c 'tmux attach -t dots:0.0 2>/dev/null || tmux new-session -s dots -c ~/dots nvim'
+        launch --type=overlay --title='nvim dots' zsh -c 'tmux attach -t dots:0.0 2>/dev/null || tmux new-session -s dots -c ${config.dots.checkout} nvim'
       '';
       # launch --type=overlay --title='nvim dots' zsh -c 'tmux attach -t dots:0.0 2>/dev/null || (tmux new-session -d -s dots -c ~/dots nvim && tmux split-window -v -t dots:0 -c ~/dots && tmux resize-pane -t dots:0.1 -y 2 && tmux attach -t dots)'
 

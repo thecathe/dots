@@ -140,12 +140,15 @@
     overlay =
       config.dank.settingsOverlay
       // {
-        customThemeFile = "${config.programs.dank-material-shell.settings.customThemeFile}";
+        # Written into DMS's settings by stylix's DMS target; without stylix there is
+        # no custom theme, which is also the canonical default (the clean filter's
+        # `.customThemeFile = ""`).
+        customThemeFile = "${config.programs.dank-material-shell.settings.customThemeFile or ""}";
       };
     overlayFile = pkgs.writeText "dank-settings-overlay.json" (builtins.toJSON overlay);
   in
     pkgs.writeShellScript "dank-settings-overlay-seed" ''
-      settingsFile="$HOME/dots/modules/home/dank/settings.json"
+      settingsFile="${config.dots.checkout}/modules/home/dank/settings.json"
       if [ -e "$settingsFile" ]; then
         tmpFile="$(mktemp)"
         trap 'rm -f "$tmpFile"' EXIT
@@ -251,8 +254,8 @@
     name = "dank-widget-positions";
     runtimeInputs = [pkgs.coreutils pkgs.diffutils pkgs.jq pkgs.util-linux];
     text = ''
-      session="$HOME/dots/modules/home/dank/session.local.json"
-      settings="$HOME/dots/modules/home/dank/settings.json"
+      session="${config.dots.checkout}/modules/home/dank/session.local.json"
+      settings="${config.dots.checkout}/modules/home/dank/settings.json"
       record="${dankWidgetPositionsRecord}"
       tmp=""
       trap 'rm -f "$tmp"' EXIT
@@ -408,6 +411,8 @@
     '';
   };
 in {
+  imports = [../checkout.nix];
+
   options.dank.settingsState = lib.mkOption {
     type = lib.types.attrsOf lib.types.anything;
     default = {};
@@ -717,20 +722,20 @@ in {
     # single source of truth. Re-run stylix's dank-material-shell target and copy any
     # font/transparency values you want to keep back into settings.json if you change them.
     xdg.configFile."DankMaterialShell/settings.json".source = lib.mkForce (
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dots/modules/home/dank/settings.json"
+      config.lib.file.mkOutOfStoreSymlink "${config.dots.checkout}/modules/home/dank/settings.json"
     );
 
     # session.json churns on almost every UI interaction, so the live file is gitignored
     # (modules/home/dank/session.local.json) and only seeded once from the tracked
     # modules/home/dank/session.json default, mirroring modules/home/claude/default.nix.
     home.activation.dankMaterialShellSession = lib.hm.dag.entryAfter ["writeBoundary"] ''
-      target="$HOME/dots/modules/home/dank/session.local.json"
+      target="${config.dots.checkout}/modules/home/dank/session.local.json"
       if [ ! -e "$target" ]; then
-        install -Dm644 "$HOME/dots/modules/home/dank/session.json" "$target"
+        install -Dm644 "${config.dots.checkout}/modules/home/dank/session.json" "$target"
       fi
     '';
     xdg.stateFile."DankMaterialShell/session.json".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dots/modules/home/dank/session.local.json";
+      config.lib.file.mkOutOfStoreSymlink "${config.dots.checkout}/modules/home/dank/session.local.json";
 
     # DMS reads desktop widget positions only from that session file, and a
     # fresh one has none. Fill in the positions the host records
@@ -767,7 +772,7 @@ in {
     # any, produces content that's a no-op patch of itself on the next run).
     systemd.user.paths.dank-settings-repair = {
       Unit.Description = "Watch DankMaterialShell settings.json for host-data resets";
-      Path.PathModified = ["%h/dots/modules/home/dank/settings.json"];
+      Path.PathModified = ["${config.dots.checkout}/modules/home/dank/settings.json"];
       Install.WantedBy = ["default.target"];
     };
     systemd.user.services.dank-settings-repair = {

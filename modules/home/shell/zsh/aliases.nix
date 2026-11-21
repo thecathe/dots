@@ -3,8 +3,10 @@
   lib,
   ...
 }: let
-  aliasDir = "${config.home.homeDirectory}/dots/modules/home/shell/zsh";
+  aliasDir = "${config.dots.checkout}/modules/home/shell/zsh";
 in {
+  imports = [../../checkout.nix];
+
   programs.zsh.initContent = lib.mkOrder 1200 ''
     ## ensure files exist
     for f in aliases.dots.zsh aliases.local.zsh dirs.dots.zsh dirs.local.zsh; do
