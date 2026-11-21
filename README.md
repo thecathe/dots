@@ -48,11 +48,14 @@ theme is skipped with a build warning. `dots.checkout` (default `~/dots`) says w
 lives, which the modules that write into it (DMS settings, Claude settings, wallpaper favourites) read.
 
 Every area of a set has a `dots.<area>.enable` switch, so a machine leaves out what it does not want
-without `mkForce`: for example `dots.dank.enable = false;` on a laptop without the DMS shell, or
-`dots.obsidian.enable = false;`. They are on by default. The areas that were already opt-in (`dots.vscode`,
-`dictation`, `flameshot`, `globalprotect`, `repos`, and on NixOS `docker`, `samba`, `torrent`, `waydroid`,
-`immich`, `gpuScreenRecorder`) are off by default, as before (`homeModules.default` turns `vscode` on), and
-`devlog` is gated by its clone directory.
+without `mkForce`: for example `dots.dank.enable = false;` on a laptop without the DMS shell. Most areas are on
+by default. Those that are personal to the author's setup, or reach beyond the machine, are off by default and a
+host turns them on: `dots.claude` (home and NixOS), `dots.obsidian`, and on NixOS `dots.media` and
+`dots.tailscale`, besides the ones that were always opt-in (`dots.vscode` (`homeModules.default` turns it on),
+`dictation`, `globalprotect`, `repos`, and on NixOS `docker`, `samba`, `torrent`, `waydroid`, `immich`,
+`gpuScreenRecorder`). `dots.flameshot` is on by default (a host with more than one output also needs
+`dots.flameshot.wlrScreenshotPortal`, see its description). `devlog` is gated by its clone directory. The generated
+[options reference](docs/options-home.md) lists every switch and what each set leaves it at.
 An area imported on its own (for example `homeModules.shell`) is on, because importing it is the opt-in.
 `module-sets-gates` proves the switches: each one does something, and a configuration with every switch off
 still evaluates.

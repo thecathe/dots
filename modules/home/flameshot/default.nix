@@ -199,7 +199,7 @@
   '';
 in {
   options.dots.flameshot = {
-    enable = lib.mkEnableOption "Flameshot, the screenshot tool on Print (select, draw on it, pin it)";
+    enable = lib.mkEnableOption "Flameshot, the screenshot tool on Print (select, draw on it, pin it)" // {default = true;};
 
     package = lib.mkPackageOption pkgs "flameshot" {};
 

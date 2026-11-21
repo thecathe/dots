@@ -13,11 +13,11 @@ change the option's `description` (or its type, default or example) in the modul
 
 | Switch | With the set | What it adds |
 | --- | --- | --- |
-| [`dots.claude.enable`](#dotsclaudeenable) | on | Whether to enable Claude Code: its settings, hooks and the global instructions. |
+| [`dots.claude.enable`](#dotsclaudeenable) | off | Whether to enable Claude Code: its settings, hooks and the global instructions. |
 | [`dots.dank.enable`](#dotsdankenable) | on | Whether to enable DankMaterialShell with its menus and settings handling. |
 | [`dots.dictation.enable`](#dotsdictationenable) | off | Whether to enable offline voice dictation (voxtype with a Parakeet model). |
 | [`dots.firefox.enable`](#dotsfirefoxenable) | on | Whether to enable Firefox policies and profiles. |
-| [`dots.flameshot.enable`](#dotsflameshotenable) | off | Whether to enable Flameshot, the screenshot tool on Print (select, draw on it, pin it). |
+| [`dots.flameshot.enable`](#dotsflameshotenable) | on | Whether to enable Flameshot, the screenshot tool on Print (select, draw on it, pin it). |
 | [`dots.git.enable`](#dotsgitenable) | on | Whether to enable the git configuration. |
 | [`dots.globalprotect.enable`](#dotsglobalprotectenable) | off | Whether to enable the globalprotect command (GlobalProtect VPN through gpclient). |
 | [`dots.latex.enable`](#dotslatexenable) | on | Whether to enable the LaTeX tools (tectonic and a small texlive). |
@@ -26,7 +26,7 @@ change the option's `description` (or its type, default or example) in the modul
 | [`dots.niri.enable`](#dotsnirienable) | on | Whether to enable the niri window manager configuration. |
 | [`dots.nixYourShell.enable`](#dotsnixyourshellenable) | on | Whether to enable nix-your-shell, which keeps zsh inside nix-shell and nix develop. |
 | [`dots.nvim.enable`](#dotsnvimenable) | on | Whether to enable Neovim and its language setups. |
-| [`dots.obsidian.enable`](#dotsobsidianenable) | on | Whether to enable Obsidian. |
+| [`dots.obsidian.enable`](#dotsobsidianenable) | off | Whether to enable Obsidian. |
 | [`dots.opam.enable`](#dotsopamenable) | on | Whether to enable the opam global switch and the OCaml build tools. |
 | [`dots.packages.enable`](#dotspackagesenable) | on | Whether to enable dots' general-purpose package list (the tools in home.packages below). |
 | [`dots.repos.enable`](#dotsreposenable) | off | Whether to enable the repos CLI and, with DMS, the repositories bar menu. |
@@ -118,7 +118,7 @@ boolean
 *Default:*
 
 ```nix
-true
+false
 ```
 
 
@@ -881,7 +881,7 @@ boolean
 *Default:*
 
 ```nix
-false
+true
 ```
 
 
@@ -1658,7 +1658,7 @@ boolean
 *Default:*
 
 ```nix
-true
+false
 ```
 
 

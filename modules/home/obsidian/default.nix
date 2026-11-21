@@ -3,7 +3,7 @@
   lib,
   ...
 }: {
-  options.dots.obsidian.enable = lib.mkEnableOption "Obsidian" // {default = true;};
+  options.dots.obsidian.enable = lib.mkEnableOption "Obsidian";
 
   config = lib.mkIf config.dots.obsidian.enable {
     programs.obsidian = {

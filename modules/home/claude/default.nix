@@ -22,7 +22,7 @@ in {
   # via a temp file next to the first symlink it resolves, which fails there
   # (EROFS) and breaks /effort, /model, etc. So link it by hand, after
   # home-manager's own link generation.
-  options.dots.claude.enable = lib.mkEnableOption "Claude Code: its settings, hooks and the global instructions" // {default = true;};
+  options.dots.claude.enable = lib.mkEnableOption "Claude Code: its settings, hooks and the global instructions";
 
   config = lib.mkIf config.dots.claude.enable {
     home.activation.claudeCodeSettings = lib.hm.dag.entryAfter ["linkGeneration"] ''

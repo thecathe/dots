@@ -4,7 +4,7 @@
   pkgs,
   ...
 }: {
-  options.dots.claude.enable = lib.mkEnableOption "Claude Code and its usage monitor, for every user" // {default = true;};
+  options.dots.claude.enable = lib.mkEnableOption "Claude Code and its usage monitor, for every user";
 
   config = lib.mkIf config.dots.claude.enable {
     environment.systemPackages = with pkgs; [
