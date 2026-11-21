@@ -26,6 +26,19 @@ if [ "$#" -ne 4 ]; then
 fi
 pages=$1 remote=$2 branch=$3 sha=$4
 
+# The script works in a temporary directory further down, so a relative PAGES_DIR (the
+# workflow passes `result`, the out-link of `nix build`) or a relative REMOTE path must be
+# made absolute here, before it changes directory. `pwd -P` follows the out-link into the
+# store. (The first run on GitHub failed on exactly this: the pages existed, and `cp` looked
+# for `result/` inside the temporary directory.)
+if ! pages=$(cd "$pages" 2> /dev/null && pwd -P); then
+  echo "publish-options-reference: $1 is not a directory" >&2
+  exit 1
+fi
+if [ -d "$remote" ]; then
+  remote=$(cd "$remote" && pwd -P)
+fi
+
 for f in options-home.md options-nixos.md; do
   if ! [ -s "$pages/$f" ]; then
     echo "publish-options-reference: $pages/$f is missing or empty" >&2
