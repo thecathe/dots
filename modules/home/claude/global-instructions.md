@@ -126,6 +126,11 @@ standing branch. When the project's practice is unclear, ask before acting.
   names the project's folder (by default the repository's name; `registry.toml`
   holds the exceptions), or the project's `CLAUDE.md` does, if it has one. If there is none, ask
   before starting one, and record the answer in `registry.toml`.
+- The devlog is private, but a redacted view of it is published. Before writing or
+  editing any page there, from any project, read `publishing.md` at the devlog's root:
+  it says what to leave out (other people's names, handles and repositories, work
+  logins, addresses, secrets) and how to keep a private detail in a `<!-- private -->`
+  block.
 - A project's folder is laid out as:
   - `index.md`: the single point of entry and table of contents. It links every
     feature entry (title, date, status, one-line summary) and holds one-line
