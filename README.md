@@ -38,6 +38,13 @@ dots defines no machines. A machine is a small flake in its own repo that consum
 the constructors and module sets, and hosts reuse dots' inputs, so there is a single set of version pins.
 Per-host manual setup steps live with the host definitions, not here.
 
+The two module sets are self-contained: they import the upstream modules whose options they set
+(DankMaterialShell and its plugin registry, DankSearch, DankCalendar, and stylix on NixOS), so each works
+in a plain home-manager or NixOS configuration without the constructors (the `module-sets-*` checks prove
+it). The one exception is stylix's home-manager module: on NixOS stylix imports it itself, so
+`homeModules.default` leaves it out, `mkHome` adds it for a standalone configuration, and without it the
+theme is skipped with a build warning.
+
 To change dots without breaking a machine, test the change against every host before merging (see the
 `check` script in the hosts repo).
 

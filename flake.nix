@@ -98,13 +98,36 @@
     # config). Each carries dots' own inputs as the `dotsInputs` module
     # argument, so it doesn't depend on what the importing flake calls its
     # inputs (keyed, so importing several of them is fine).
+    #
+    # `default` and `nixosModules.default` import the upstream modules whose
+    # options dots sets, so they work in a plain home-manager or NixOS
+    # configuration and the constructors add nothing of the kind. They are
+    # keyed, so a host that imports one twice gets it once. They cannot take
+    # these from `dotsInputs`: that is a module argument, which `imports` may
+    # not depend on.
+    #
+    # One exception: stylix's home-manager module. On NixOS, stylix's own NixOS
+    # module imports it into every home-manager user (and copies the system's
+    # theme into it), so importing it here as well would declare its options
+    # twice. `mkHome` adds it for a standalone configuration, and
+    # modules/home/stylix skips the theme, with a warning, where it is absent.
     homeModules = let
       dotsArgs = {
         key = "dots-args";
         _module.args.dotsInputs = inputs;
       };
     in {
-      default = {imports = [dotsArgs ./modules/home];};
+      default = {
+        key = "dots-home";
+        imports = [
+          dotsArgs
+          inputs.dms.homeModules.dank-material-shell
+          inputs.dms-plugin-registry.homeModules.default
+          inputs.danksearch.homeModules.default
+          inputs.dcal.homeModules.default
+          ./modules/home
+        ];
+      };
       vscode = {imports = [dotsArgs ./modules/home/vscode];};
       shell = {imports = [dotsArgs ./modules/home/shell];};
       nvim = {imports = [dotsArgs ./modules/home/nvim];};
@@ -113,7 +136,15 @@
       # Needs nothing from dots' inputs, hence no dotsArgs.
       globalprotect = {imports = [./modules/home/globalprotect];};
     };
-    nixosModules.default = ./modules/nixos;
+    nixosModules.default = {
+      key = "dots-nixos";
+      imports = [
+        inputs.stylix.nixosModules.stylix
+        inputs.dms.nixosModules.dank-material-shell
+        inputs.dms-plugin-registry.nixosModules.default
+        ./modules/nixos
+      ];
+    };
 
     # `nix fmt` formats the repo with alejandra.
     formatter.x86_64-linux = alejandra;
@@ -123,6 +154,7 @@
     # .nix file is not alejandra-formatted (fix with `nix fmt`).
     checks.x86_64-linux =
       import ./checks/consumer.nix {inherit inputs;}
+      // import ./checks/module-sets.nix {inherit inputs;}
       // import ./checks/templates.nix {inherit inputs;}
       // import ./checks/dlsync.nix {inherit inputs;}
       // import ./checks/orient.nix {inherit inputs;}

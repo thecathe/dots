@@ -140,7 +140,10 @@
     overlay =
       config.dank.settingsOverlay
       // {
-        customThemeFile = "${config.programs.dank-material-shell.settings.customThemeFile}";
+        # Written into DMS's settings by stylix's DMS target; without stylix there is
+        # no custom theme, which is also the canonical default (the clean filter's
+        # `.customThemeFile = ""`).
+        customThemeFile = "${config.programs.dank-material-shell.settings.customThemeFile or ""}";
       };
     overlayFile = pkgs.writeText "dank-settings-overlay.json" (builtins.toJSON overlay);
   in
