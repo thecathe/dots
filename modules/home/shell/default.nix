@@ -1,4 +1,4 @@
-{...}: {
+{lib, ...}: {
   imports = [
     ./zsh
     ./direnv.nix
@@ -7,4 +7,5 @@
     ./kitty.nix
     ./zoxide.nix
   ];
+  options.dots.shell.enable = lib.mkEnableOption "the shell setup (zsh, kitty, tmux, starship, zoxide, direnv)" // {default = true;};
 }

@@ -9,7 +9,9 @@
   # runs, so `homeModules.default` does not import it (flake.nix says why). When
   # it is absent the theming is skipped and the build says so, instead of failing
   # on options that do not exist.
-  config = lib.mkMerge [
+  options.dots.stylix.enable = lib.mkEnableOption "stylix theming (colours, fonts and the per-application targets)" // {default = true;};
+
+  config = lib.mkIf config.dots.stylix.enable (lib.mkMerge [
     {
       warnings = lib.optional (!(options ? stylix)) ''
         dots: stylix's home-manager module is not imported, so the theme is skipped.
@@ -75,5 +77,5 @@
         };
       };
     })
-  ];
+  ]);
 }

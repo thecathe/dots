@@ -309,11 +309,14 @@
   # the widget in a bar, or the plugin would be installed and never drawn.
   dictationWidgetConsumer = let
     lib = inputs.nixpkgs.lib;
+    # Also the DMS area's own switch, which modules/home/dank/default.nix declares and
+    # this file, imported alone, does not.
     dmsStub = {lib, ...}: {
       options.programs.dank-material-shell.plugins = lib.mkOption {
         type = lib.types.attrsOf lib.types.anything;
         default = {};
       };
+      options.dots.dank.enable = lib.mkEnableOption "DMS" // {default = true;};
     };
     widgetModule = "${dots}/modules/home/dank/dictation-status.nix";
     modulesOn = [dictationModule widgetModule dmsStub {dots.dictation.enable = true;}];

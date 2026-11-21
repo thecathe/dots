@@ -46,6 +46,16 @@ it). The one exception is stylix's home-manager module: on NixOS stylix imports 
 theme is skipped with a build warning. `dots.checkout` (default `~/dots`) says where the mutable working copy
 lives, which the modules that write into it (DMS settings, Claude settings, wallpaper favourites) read.
 
+Every area of a set has a `dots.<area>.enable` switch, so a machine leaves out what it does not want
+without `mkForce`: for example `dots.dank.enable = false;` on a laptop without the DMS shell, or
+`dots.obsidian.enable = false;`. They are on by default. The areas that were already opt-in (`dots.vscode`,
+`dictation`, `flameshot`, `globalprotect`, `repos`, and on NixOS `docker`, `samba`, `torrent`, `waydroid`,
+`immich`, `gpuScreenRecorder`) are off by default, as before (`homeModules.default` turns `vscode` on), and
+`devlog` is gated by its clone directory.
+An area imported on its own (for example `homeModules.shell`) is on, because importing it is the opt-in.
+`module-sets-gates` proves the switches: each one does something, and a configuration with every switch off
+still evaluates.
+
 To change dots without breaking a machine, test the change against every host before merging (see the
 `check` script in the hosts repo).
 

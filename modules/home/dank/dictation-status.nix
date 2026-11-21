@@ -21,7 +21,7 @@
   # default (60) applies when no host sets audio.max_duration_secs.
   maxDurationSecs = lib.attrByPath ["audio" "max_duration_secs"] 60 cfg.settings;
 in {
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf (cfg.enable && config.dots.dank.enable) {
     programs.dank-material-shell.plugins.dictationStatus = {
       enable = true;
       src = ./plugins/dictationStatus;

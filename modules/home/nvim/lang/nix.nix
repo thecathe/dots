@@ -19,10 +19,13 @@
 in {
   # dots.nixd is declared here too so this works when imported on its own.
   imports = [../../nixd.nix];
-  xdg.configFile."nvim/lua/lang/nix.lua".text =
-    builtins.replaceStrings
-    ["@@NIXPKGS_EXPR@@" "@@OPTIONS@@"]
-    [nixpkgsExpr (lib.generators.toLua {} hostOptions)]
-    (builtins.readFile ./nix.lua);
-  programs.neovim.initLua = lib.mkAfter "require('lang.nix')";
+
+  config = lib.mkIf config.dots.nvim.enable {
+    xdg.configFile."nvim/lua/lang/nix.lua".text =
+      builtins.replaceStrings
+      ["@@NIXPKGS_EXPR@@" "@@OPTIONS@@"]
+      [nixpkgsExpr (lib.generators.toLua {} hostOptions)]
+      (builtins.readFile ./nix.lua);
+    programs.neovim.initLua = lib.mkAfter "require('lang.nix')";
+  };
 }

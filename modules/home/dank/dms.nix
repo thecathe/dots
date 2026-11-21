@@ -504,7 +504,7 @@ in {
     '';
   };
 
-  config = {
+  config = lib.mkIf config.dots.dank.enable {
     # Whole settings.json keys that are host-specific (options.dank.
     # settingsOverlayKeys): to make another one so, add its name here and put
     # the value in the host's dank-monitor.json under the same key.

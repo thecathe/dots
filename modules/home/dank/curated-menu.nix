@@ -166,7 +166,7 @@ in {
     '';
   };
 
-  config = {
+  config = lib.mkIf config.dots.dank.enable {
     dank.curatedMenu.entries = [
       {
         key = "c";

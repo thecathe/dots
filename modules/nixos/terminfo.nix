@@ -3,6 +3,15 @@
 # talking to. The per-user copy in ~/.terminfo (modules/home/terminfo.nix) cannot
 # reach root's own home; this lands in /run/current-system/sw/share/terminfo,
 # which NixOS puts on everyone's TERMINFO_DIRS.
-{pkgs, ...}: {
-  environment.systemPackages = [pkgs.kitty.terminfo];
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: {
+  options.dots.terminfo.enable = lib.mkEnableOption "kitty's terminfo for every user, root included" // {default = true;};
+
+  config = lib.mkIf config.dots.terminfo.enable {
+    environment.systemPackages = [pkgs.kitty.terminfo];
+  };
 }
