@@ -98,7 +98,7 @@
     claude = c: c.programs.claude-code.enable;
     obsidian = c: c.programs.obsidian.enable;
   };
-  homeOptIn = ["vscode" "dictation" "globalprotect" "repos"];
+  homeOptIn = ["vscode" "dictation" "globalprotect" "repos" "rebuild"];
 
   nixosAreas = {
     direnv = c: c.programs.direnv.enable;
@@ -216,6 +216,40 @@ in {
         + (nixos [dots.nixosModules.default {dots = off nixosAreas;}]).config.system.build.toplevel.drvPath
         + (nixos [dots.nixosModules.default {dots = on nixosOffByDefault;}]).config.system.build.toplevel.drvPath
       ));
+
+  # dots.rebuild, the opt-in `rebuild` aliases: off, they are absent; on, `rebuild`
+  # snapshots the configured dots checkout before it builds (never inline, see the
+  # module), overrides the named input with it and any localInputs, and both
+  # aliases start in the hosts checkout. The tool `check` is built here too, so
+  # shellcheck runs over it and the snapshot script on every `nix flake check`.
+  module-sets-rebuild = let
+    aliases =
+      (home [
+        dots.homeModules.default
+        {
+          dots.rebuild = {
+            enable = true;
+            flake = "/srv/my hosts";
+            dots = "/srv/dots";
+            input = "cathe-dots";
+            switch = "home-manager";
+            target = "consumer@box";
+            localInputs.extra = "path:/srv/extra";
+          };
+        }
+      ]).programs.zsh.shellAliases;
+    rebuild = aliases.rebuild or "";
+    pinned = aliases.rebuild-pinned or "";
+  in
+    assert written "rebuild" "the aliases exist with dots.rebuild off" (!(alone.programs.zsh.shellAliases ? rebuild));
+    assert written "rebuild" "rebuild does not snapshot the configured checkout first: ${rebuild}" (lib.hasInfix "dots_ref=$(dots-snapshot /srv/dots) && " rebuild);
+    assert written "rebuild" "rebuild does not override the named input and the local ones: ${rebuild}" (lib.hasInfix ''--override-input cathe-dots "$dots_ref"'' rebuild && lib.hasInfix "--override-input extra path:/srv/extra" rebuild);
+    assert written "rebuild" "the aliases do not start in the hosts checkout: ${pinned}" (lib.hasInfix "cd '/srv/my hosts' && " rebuild && lib.hasInfix "cd '/srv/my hosts' && " pinned);
+    assert written "rebuild" "rebuild-pinned overrides an input: ${pinned}" (!(lib.hasInfix "--override-input" pinned) && lib.hasInfix "home-manager switch --flake .#consumer@box)" pinned);
+      pkgs.runCommand "module-sets-rebuild" {} ''
+        test -x ${import ../tools/check/package.nix {inherit pkgs;}}/bin/check
+        touch $out
+      '';
 
   # Options that moved into the `dots.*` namespace keep their old names for a release:
   # a host written before the move still works, and is told, in a build warning, what to

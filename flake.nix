@@ -85,6 +85,7 @@
     hostLib = import ./lib/hosts.nix {inherit inputs;};
     alejandra = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
     optionsDoc = import ./lib/options-doc.nix {inherit inputs;};
+    checkTool = import ./tools/check/package.nix {pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;};
   in {
     # Constructors for the wiring every host shares; a host supplies only what
     # is specific to it. See lib/hosts.nix.
@@ -153,7 +154,17 @@
     # The generated reference for the `dots.*` options (lib/options-doc.nix). The
     # GitHub Action in .github/workflows builds it on every push to `main` and
     # publishes the pages to the `options-reference` branch.
-    packages.x86_64-linux.options-reference = optionsDoc.reference;
+    packages.x86_64-linux = {
+      options-reference = optionsDoc.reference;
+      # Evaluates every machine of a flake that consumes dots, against a local dots
+      # if given (tools/check/check.sh): `nix run github:thecathe/dots#check -- --help`.
+      check = checkTool;
+    };
+    apps.x86_64-linux.check = {
+      type = "app";
+      program = "${checkTool}/bin/check";
+      meta.description = "Evaluate every machine of a flake that consumes dots, optionally against a local dots";
+    };
 
     # dots cannot see what depends on it. These stand in for consumers; the real
     # test of the hosts is `check` in the hosts repo. `formatting` fails if any

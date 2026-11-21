@@ -29,6 +29,7 @@
 - `./modules/shared/` -> lists both sides use (fonts, the unfree allow-list)
 - `./.github/` -> the Action that publishes the options reference (workflow and script)
 - `./checks/` -> stand-ins for the flakes that consume dots (`nix flake check`)
+- `./tools/` -> `check`, run by the flakes that consume dots (`nix run github:thecathe/dots#check`)
 - `./templates/` -> project templates, `nix flake init -t`
 
 ## hosts
@@ -52,7 +53,7 @@ without `mkForce`: for example `dots.dank.enable = false;` on a laptop without t
 by default. Those that are personal to the author's setup, or reach beyond the machine, are off by default and a
 host turns them on: `dots.claude` (home and NixOS), `dots.obsidian`, and on NixOS `dots.media` and
 `dots.tailscale`, besides the ones that were always opt-in (`dots.vscode` (`homeModules.default` turns it on),
-`dictation`, `globalprotect`, `repos`, and on NixOS `docker`, `samba`, `torrent`, `waydroid`, `immich`,
+`dictation`, `globalprotect`, `repos`, `rebuild`, and on NixOS `docker`, `samba`, `torrent`, `waydroid`, `immich`,
 `gpuScreenRecorder`). `dots.flameshot` is on by default (a host with more than one output also needs
 `dots.flameshot.wlrScreenshotPortal`, see its description). `devlog` is gated by its clone directory. The generated
 [options reference](https://github.com/thecathe/dots/blob/options-reference/options-home.md) lists every switch and what each set leaves it at.
@@ -60,8 +61,14 @@ An area imported on its own (for example `homeModules.shell`) is on, because imp
 `module-sets-gates` proves the switches: each one does something, and a configuration with every switch off
 still evaluates.
 
-To change dots without breaking a machine, test the change against every host before merging (see the
-`check` script in the hosts repo).
+To change dots without breaking a machine, test the change against every machine before merging. `check`
+(`tools/check`) does it for any flake that consumes dots: run in that flake, `nix run github:thecathe/dots#check --
+~/dots` evaluates each of its `nixosConfigurations` and `homeConfigurations` against a local dots checkout,
+`--baseline` says which changed against the dots it has locked and `--diff` names the derivations that differ
+(`--input NAME` if its dots input has another name; `--help` for the rest). A flake can re-export it as
+`apps.x86_64-linux.check = dots.apps.x86_64-linux.check;`, as the author's hosts repo does. `dots.rebuild` gives
+such a machine `rebuild` (build with the local dots checkout) and `rebuild-pinned` (build with the lock file); see
+its options.
 
 ## options
 
