@@ -22,5 +22,7 @@
     ./tailscale.nix
     ./stylix.nix
     ./niri.nix
+    ./login-sessions.nix
+    ./profiles
   ];
 }

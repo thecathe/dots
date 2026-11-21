@@ -61,6 +61,13 @@ An area imported on its own (for example `homeModules.shell`) is on, because imp
 `module-sets-gates` proves the switches: each one does something, and a configuration with every switch off
 still evaluates.
 
+Profiles bundle settings that are not areas of their own, behind `dots.profile.<name>.enable` (off by default;
+`modules/nixos/profiles`). `dots.profile.base` is what any NixOS machine here has: nix housekeeping, systemd-boot,
+the dots user's account, NetworkManager, PipeWire, printing and a list of everyday tools. A single value a profile
+sets is a `mkDefault`, so a host's own assignment wins; a list (packages, groups) adds to the host's instead.
+Timezone, locale and keyboard stay with the host. `dots.loginSessions` (NixOS) says which session GDM starts for
+each account, for a machine where two accounts want different ones; see its description.
+
 To change dots without breaking a machine, test the change against every machine before merging. `check`
 (`tools/check`) does it for any flake that consumes dots: run in that flake, `nix run github:thecathe/dots#check --
 ~/dots` evaluates each of its `nixosConfigurations` and `homeConfigurations` against a local dots checkout,
