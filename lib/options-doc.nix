@@ -1,0 +1,201 @@
+# The generated reference for every `dots.*` option, one page per module set.
+#
+# Each set is evaluated the way a plain consumer imports it (a bare
+# `homeManagerConfiguration` with `homeModules.default`, a bare `nixosSystem` with
+# `nixosModules.default`, none of the constructors in hosts.nix), the options are
+# filtered to `dots.*`, and `nixosOptionsDoc` renders them. Both pages are about
+# the options the set declares, not the ones a host sets, so nothing here depends
+# on a host.
+#
+# `nixosOptionsDoc` is run with `warningsAreErrors` (its default), so an option
+# without a description fails the build: that is the check that the reference is
+# complete, and it is why a new option cannot be added undocumented.
+#
+# The pages are committed under docs/ (a reader on GitHub, or a session grepping
+# the checkout, should not have to build anything), and the `options-reference`
+# check fails when they are stale; `nix run .#update-options-reference` rewrites them.
+{
+  inputs,
+  system ? "x86_64-linux",
+}: let
+  lib = inputs.nixpkgs.lib;
+  dots = inputs.self;
+
+  # No overlays: the options must not depend on what a constructor adds to pkgs.
+  pkgs = import inputs.nixpkgs {
+    inherit system;
+    config.allowUnfree = true;
+  };
+
+  homeEval = inputs.home-manager.lib.homeManagerConfiguration {
+    inherit pkgs;
+    modules = [
+      {
+        home.username = "consumer";
+        home.homeDirectory = "/home/consumer";
+        home.stateVersion = "25.11";
+      }
+      dots.homeModules.default
+    ];
+  };
+
+  nixosEval = lib.nixosSystem {
+    inherit system;
+    modules = [
+      {
+        dots.user.name = "consumer";
+        nixpkgs.config.allowUnfree = true;
+        system.stateVersion = "25.11";
+        fileSystems."/" = {
+          device = "/dev/disk/by-label/nixos";
+          fsType = "ext4";
+        };
+        boot.loader.grub.enable = false;
+      }
+      dots.nixosModules.default
+    ];
+  };
+
+  # Where a declaring file is shown and linked: the file's path in the repository
+  # (not the store path it was evaluated from, which differs on every commit and
+  # on every machine), on the integration branch. A module imported as a directory
+  # is declared by the directory; the file is its default.nix.
+  root = "${toString dots}/";
+  repo = "https://github.com/thecathe/dots/blob/main/";
+  declaredAt = path: let
+    s = toString path;
+    rel = lib.removePrefix root s;
+    file =
+      if lib.hasSuffix ".nix" rel
+      then rel
+      else "${rel}/default.nix";
+  in
+    if lib.hasPrefix root s
+    then {
+      name = file;
+      url = repo + file;
+    }
+    else s;
+
+  # Only what dots declares. Everything else in the evaluation (home-manager's and
+  # NixOS's own options, DMS's, stylix's) is documented upstream.
+  onlyDots = opt:
+    opt
+    // {
+      visible = opt.visible && lib.hasPrefix "dots." opt.name;
+      declarations = map declaredAt opt.declarations;
+    };
+
+  render = eval:
+    pkgs.nixosOptionsDoc {
+      inherit (eval) options;
+      transformOptions = onlyDots;
+    };
+
+  # The `dots.<area>.enable` switches, with what the set itself turns on (not the
+  # option's own default: `homeModules.default` switches VS Code on although
+  # `dots.vscode.enable` defaults to off). Each links to its section by the
+  # anchor GitHub makes from the heading.
+  firstSentence = text: let
+    paragraph = lib.head (lib.splitString "\n\n" (lib.trim text));
+    sentence = lib.head (builtins.filter builtins.isString (builtins.split "\\.[ \n]" paragraph));
+  in
+    lib.replaceStrings ["\n" "|"] [" " "\\|"] (lib.removeSuffix "." sentence + ".");
+  switchTable = eval: doc: let
+    areas = lib.filter (a: builtins.isAttrs eval.options.dots.${a} && (eval.options.dots.${a}.enable._type or "") == "option") (lib.attrNames eval.options.dots);
+    row = a: let
+      name = "dots.${a}.enable";
+      anchor = lib.toLower (lib.replaceStrings ["."] [""] name);
+    in "| [`${name}`](#${anchor}) | ${
+      if eval.config.dots.${a}.enable
+      then "on"
+      else "off"
+    } | ${firstSentence doc.optionsNix.${name}.description} |";
+  in
+    lib.concatStringsSep "\n" (
+      [
+        "| Switch | With the set | What it adds |"
+        "| --- | --- | --- |"
+      ]
+      ++ map row areas
+    );
+
+  page = {
+    file,
+    eval,
+    doc,
+    intro,
+  }:
+    pkgs.concatText file [
+      (pkgs.writeText "${file}-header" ''
+        # ${intro.title}
+
+        ${intro.text}
+
+        Generated from the modules' option declarations by `nix run .#update-options-reference`, and
+        kept in step by the `options-reference` check of `nix flake check`: to change anything here,
+        change the option's `description` (or its type, default or example) in the module named under
+        "Declared by". ${intro.other}
+
+        **Switches.** Every area has a `dots.<area>.enable`. "With the set" is what
+        `${intro.set}` itself leaves each one at, so an area is left out with
+        `dots.<area>.enable = false;` and no `mkForce`.
+
+        ${switchTable eval doc}
+
+        **Every option**, in alphabetical order:
+
+      '')
+      doc.optionsCommonMark
+    ];
+
+  home = render homeEval;
+  nixos = render nixosEval;
+
+  homePage = page {
+    file = "options-home.md";
+    eval = homeEval;
+    doc = home;
+    intro = {
+      title = "dots options: home-manager";
+      text = "The `dots.*` options of `dots.homeModules.default`, the home-manager module set. The single-area modules (`homeModules.shell`, `vscode`, `nvim`, `flameshot`, `globalprotect`) declare a subset of them.";
+      set = "homeModules.default";
+      other = "The NixOS side is in [options-nixos.md](options-nixos.md).";
+    };
+  };
+  nixosPage = page {
+    file = "options-nixos.md";
+    eval = nixosEval;
+    doc = nixos;
+    intro = {
+      title = "dots options: NixOS";
+      text = "The `dots.*` options of `dots.nixosModules.default`, the NixOS module set.";
+      set = "nixosModules.default";
+      other = "The home-manager side is in [options-home.md](options-home.md).";
+    };
+  };
+
+  # The committed pages and the machine-readable options in one directory.
+  reference = pkgs.runCommand "dots-options-reference" {} ''
+    mkdir -p $out
+    cp ${homePage} $out/options-home.md
+    cp ${nixosPage} $out/options-nixos.md
+    cp ${home.optionsJSON}/share/doc/nixos/options.json $out/options-home.json
+    cp ${nixos.optionsJSON}/share/doc/nixos/options.json $out/options-nixos.json
+  '';
+
+  # `nix run .#update-options-reference` writes the two pages into the checkout it is
+  # run in.
+  update = pkgs.writeShellApplication {
+    name = "update-options-reference";
+    runtimeInputs = [pkgs.git pkgs.coreutils];
+    text = ''
+      top=$(git rev-parse --show-toplevel)
+      mkdir -p "$top/docs"
+      install -m 644 ${reference}/options-home.md ${reference}/options-nixos.md "$top/docs/"
+      echo "wrote docs/options-home.md and docs/options-nixos.md in $top"
+    '';
+  };
+in {
+  inherit home nixos reference update;
+}

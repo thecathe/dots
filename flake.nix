@@ -84,6 +84,7 @@
   outputs = {...} @ inputs: let
     hostLib = import ./lib/hosts.nix {inherit inputs;};
     alejandra = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
+    optionsDoc = import ./lib/options-doc.nix {inherit inputs;};
   in {
     # Constructors for the wiring every host shares; a host supplies only what
     # is specific to it. See lib/hosts.nix.
@@ -149,6 +150,16 @@
     # `nix fmt` formats the repo with alejandra.
     formatter.x86_64-linux = alejandra;
 
+    # The generated reference for the `dots.*` options (lib/options-doc.nix): the
+    # pages in docs/ are what `nix build .#options-reference` makes, and
+    # `nix run .#update-options-reference` rewrites them.
+    packages.x86_64-linux.options-reference = optionsDoc.reference;
+    apps.x86_64-linux.update-options-reference = {
+      type = "app";
+      program = "${optionsDoc.update}/bin/update-options-reference";
+      meta.description = "Rewrite docs/options-*.md from the modules' option declarations";
+    };
+
     # dots cannot see what depends on it. These stand in for consumers; the real
     # test of the hosts is `check` in the hosts repo. `formatting` fails if any
     # .nix file is not alejandra-formatted (fix with `nix fmt`).
@@ -159,6 +170,7 @@
       // import ./checks/dlsync.nix {inherit inputs;}
       // import ./checks/orient.nix {inherit inputs;}
       // import ./checks/repos.nix {inherit inputs;}
+      // import ./checks/options-reference.nix {inherit inputs optionsDoc;}
       // {
         formatting = inputs.nixpkgs.legacyPackages.x86_64-linux.runCommand "formatting" {} ''
           ${alejandra}/bin/alejandra --check --quiet ${inputs.self} && touch $out
