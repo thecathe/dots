@@ -12,7 +12,7 @@
   pkgs,
   ...
 }: {
-  options.dots.tailscale.enable = lib.mkEnableOption "Tailscale, with the per-user tools" // {default = true;};
+  options.dots.tailscale.enable = lib.mkEnableOption "Tailscale, with the per-user tools";
 
   config = lib.mkIf config.dots.tailscale.enable {
     services.tailscale = {

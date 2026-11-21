@@ -219,7 +219,7 @@
   # the clipboard with it when it exits), write the config with the tray icon off,
   # and add one niri file: Flameshot on Print, niri's own selector on Shift+Print,
   # and a rule that floats pins (title fixed in Flameshot's source). A host can
-  # move the keys and replace any default; disabled, the module adds nothing.
+  # move the keys and replace any default; disabled (it is on by default), the module adds nothing.
   flameshotModule = "${dots}/modules/home/flameshot";
   flameshotConsumer = let
     lib = inputs.nixpkgs.lib;
@@ -236,7 +236,9 @@
           };
         }
       ]).config;
-    off = (consumerConfig [flameshotModule]).config;
+    off = (consumerConfig [flameshotModule {dots.flameshot.enable = false;}]).config;
+    # The default is on: importing the module is enough (a host that does not want it says so).
+    byDefault = (consumerConfig [flameshotModule]).config;
     # Two outputs: the wlr Screenshot portal and the per-output wrapper on Print.
     multiModules = [
       flameshotModule
@@ -264,6 +266,8 @@
   in
     assert lib.assertMsg (lib.hasSuffix "/bin/flameshot" (lib.head (lib.toList on.systemd.user.services.flameshot.Service.ExecStart)))
     "consumer-flameshot: the unit does not run the flameshot daemon";
+    assert lib.assertMsg (byDefault.systemd.user.services ? flameshot && byDefault.dots.flameshot.enable)
+    "consumer-flameshot: importing the module alone does not turn Flameshot on (the default is on)";
     assert lib.assertMsg (lib.hasInfix "disabledTrayIcon=true" (iniFile on) && lib.hasInfix "showStartupLaunchMessage=false" (iniFile on) && lib.hasInfix "showAbortNotification=false" (iniFile on))
     "consumer-flameshot: the daemon would show a tray icon, or a startup or abort notification";
     assert lib.assertMsg (lib.hasInfix "Screenshots" (iniFile on) && lib.hasInfix "saveAfterCopy=true" (iniFile on))

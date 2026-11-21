@@ -63,12 +63,15 @@
     lib.assertMsg assertion "module-sets-${name}: ${text}";
 
   # ---- the switches ------------------------------------------------------------
-  # Every area of a set has a `dots.<area>.enable`, on by default. For each: what
-  # is true of a configuration when the area is on and false when it is off. Cheap
-  # to read (no derivation is evaluated), and each one is something a host would
-  # notice. The areas that were already opt-in (their switch is off by default,
-  # and they have their own checks) are named so that a new switch has to be
-  # added to one list or the other. (devlog has no switch: a clone directory gates it.)
+  # Every area of a set has a `dots.<area>.enable`. For each: what is true of a
+  # configuration when the area is on and false when it is off. Cheap to read (no
+  # derivation is evaluated), and each one is something a host would notice. Three
+  # lists, so that a new switch has to be added to one of them:
+  #  - the Areas: on by default, and turning one off removes what it adds;
+  #  - the OffByDefault areas (personal, or reaching beyond the machine): off in a
+  #    plain import, and turning one on adds what it adds;
+  #  - the OptIn areas, off by default as well, which have checks of their own.
+  # (devlog has no switch: a clone directory gates it.)
   hasPackage = name: pkgsList: lib.any (p: lib.getName p == name) pkgsList;
   homeAreas = {
     dank = c: c.programs.dank-material-shell.enable;
@@ -76,12 +79,11 @@
     git = c: c.programs.git.enable;
     navi = c: c.programs.navi.enable;
     nvim = c: c.programs.neovim.enable;
-    obsidian = c: c.programs.obsidian.enable;
     shell = c: c.programs.zsh.enable;
     zathura = c: c.programs.zathura.enable;
     nixYourShell = c: c.programs.nix-your-shell.enable;
     niri = c: c.wayland.windowManager.niri.enable;
-    claude = c: c.programs.claude-code.enable;
+    flameshot = c: c.systemd.user.services ? flameshot;
     opam = c: c.home.activation ? opamGlobalSwitch;
     # stylix is not imported into a plain configuration, so what the switch changes
     # there is the warning that the theme is skipped.
@@ -92,10 +94,13 @@
     wallpaper = c: hasPackage "bing-wallpaper-pin" c.home.packages;
     packages = c: hasPackage "wget" c.home.packages;
   };
-  homeOptIn = ["vscode" "dictation" "flameshot" "globalprotect" "repos"];
+  homeOffByDefault = {
+    claude = c: c.programs.claude-code.enable;
+    obsidian = c: c.programs.obsidian.enable;
+  };
+  homeOptIn = ["vscode" "dictation" "globalprotect" "repos"];
 
   nixosAreas = {
-    claude = c: hasPackage "claude-code" c.environment.systemPackages;
     direnv = c: c.programs.direnv.enable;
     firefox = c: c.programs.firefox.enable;
     # stylix adds fonts of its own, so look for one only dots' list has.
@@ -105,11 +110,14 @@
     nixLd = c: c.programs.nix-ld.enable;
     niri = c: c.programs.niri.enable;
     stylix = c: c.stylix.enable;
-    tailscale = c: c.services.tailscale.enable;
     terminfo = c: lib.any (p: lib.hasInfix "-kitty-" (toString p) && lib.hasSuffix "-terminfo" (toString p)) c.environment.systemPackages;
     vscode = c: hasPackage "vscode" c.environment.systemPackages;
     zsh = c: c.programs.zsh.enable;
+  };
+  nixosOffByDefault = {
+    claude = c: hasPackage "claude-code" c.environment.systemPackages;
     media = c: hasPackage "strawberry" c.environment.systemPackages;
+    tailscale = c: c.services.tailscale.enable;
   };
   nixosOptIn = ["docker" "gpuScreenRecorder" "immich" "samba" "torrent" "waydroid"];
 
@@ -143,7 +151,14 @@ in {
   # default location (or a bare $HOME/dots) written out by hand. Scripts are read
   # back from the store (a few bytes each), so what is checked is what would run.
   module-sets-checkout = let
-    moved = home [dots.homeModules.default {dots.checkout = "/srv/dots";}];
+    # Claude is off by default but writes into the checkout, so this turns it on to cover it.
+    moved = home [
+      dots.homeModules.default
+      {
+        dots.checkout = "/srv/dots";
+        dots.claude.enable = true;
+      }
+    ];
     stale = text: lib.hasInfix "/home/consumer/dots" text || lib.hasInfix "$HOME/dots" text || lib.hasInfix "%h/dots" text || lib.hasInfix "~/dots" text;
     script = drv: builtins.readFile (toString drv);
     execStart = svc: lib.head (lib.toList svc.Service.ExecStart);
@@ -178,17 +193,28 @@ in {
     sortNames = names: lib.sort lib.lessThan names;
     homeOff = a: home [dots.homeModules.default {dots.${a}.enable = false;}];
     nixosOff = a: (nixos [dots.nixosModules.default {dots.${a}.enable = false;}]).config;
+    homeOn = a: home [dots.homeModules.default {dots.${a}.enable = true;}];
+    nixosOn = a: (nixos [dots.nixosModules.default {dots.${a}.enable = true;}]).config;
+    on = areas: lib.genAttrs (lib.attrNames areas) (_: {enable = true;});
     names = xs: toString xs;
+    homeCovered = sortNames (lib.attrNames homeAreas ++ lib.attrNames homeOffByDefault ++ homeOptIn);
+    nixosCovered = sortNames (lib.attrNames nixosAreas ++ lib.attrNames nixosOffByDefault ++ nixosOptIn);
   in
-    assert written "gates" "the home switches are ${names homeSwitches}, the tests and opt-ins cover ${names (sortNames (lib.attrNames homeAreas ++ homeOptIn))}" (homeSwitches == sortNames (lib.attrNames homeAreas ++ homeOptIn));
-    assert written "gates" "the NixOS switches are ${names nixosSwitches}, the tests and opt-ins cover ${names (sortNames (lib.attrNames nixosAreas ++ nixosOptIn))}" (nixosSwitches == sortNames (lib.attrNames nixosAreas ++ nixosOptIn));
+    assert written "gates" "the home switches are ${names homeSwitches}, the tests and opt-ins cover ${names homeCovered}" (homeSwitches == homeCovered);
+    assert written "gates" "the NixOS switches are ${names nixosSwitches}, the tests and opt-ins cover ${names nixosCovered}" (nixosSwitches == nixosCovered);
     assert written "gates" "these home areas are not on by default: ${names (failing homeAreas (_: alone))}" (failing homeAreas (_: alone) == []);
     assert written "gates" "these NixOS areas are not on by default: ${names (failing nixosAreas (_: nixosAlone.config))}" (failing nixosAreas (_: nixosAlone.config) == []);
+    assert written "gates" "these home areas are on by default, but are meant to be off: ${names (failingOff homeOffByDefault (_: alone))}" (failingOff homeOffByDefault (_: alone) == []);
+    assert written "gates" "these NixOS areas are on by default, but are meant to be off: ${names (failingOff nixosOffByDefault (_: nixosAlone.config))}" (failingOff nixosOffByDefault (_: nixosAlone.config) == []);
     assert written "gates" "turning these home areas off changes nothing: ${names (failingOff homeAreas homeOff)}" (failingOff homeAreas homeOff == []);
     assert written "gates" "turning these NixOS areas off changes nothing: ${names (failingOff nixosAreas nixosOff)}" (failingOff nixosAreas nixosOff == []);
+    assert written "gates" "turning these home areas on changes nothing: ${names (failing homeOffByDefault homeOn)}" (failing homeOffByDefault homeOn == []);
+    assert written "gates" "turning these NixOS areas on changes nothing: ${names (failing nixosOffByDefault nixosOn)}" (failing nixosOffByDefault nixosOn == []);
       pkgs.writeText "module-sets-gates-evaluate" (builtins.unsafeDiscardStringContext (
         homeDrv [dots.homeModules.default {dots = off homeAreas;}]
+        + homeDrv [dots.homeModules.default {dots = on homeOffByDefault;}]
         + (nixos [dots.nixosModules.default {dots = off nixosAreas;}]).config.system.build.toplevel.drvPath
+        + (nixos [dots.nixosModules.default {dots = on nixosOffByDefault;}]).config.system.build.toplevel.drvPath
       ));
 
   # Options that moved into the `dots.*` namespace keep their old names for a release:

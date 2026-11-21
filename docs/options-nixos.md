@@ -13,7 +13,7 @@ change the option's `description` (or its type, default or example) in the modul
 
 | Switch | With the set | What it adds |
 | --- | --- | --- |
-| [`dots.claude.enable`](#dotsclaudeenable) | on | Whether to enable Claude Code and its usage monitor, for every user. |
+| [`dots.claude.enable`](#dotsclaudeenable) | off | Whether to enable Claude Code and its usage monitor, for every user. |
 | [`dots.direnv.enable`](#dotsdirenvenable) | on | Whether to enable direnv with nix-direnv. |
 | [`dots.docker.enable`](#dotsdockerenable) | off | Whether to enable Docker. |
 | [`dots.firefox.enable`](#dotsfirefoxenable) | on | Whether to enable Firefox with dots' policies. |
@@ -21,13 +21,13 @@ change the option's `description` (or its type, default or example) in the modul
 | [`dots.git.enable`](#dotsgitenable) | on | Whether to enable git with LFS and dots' defaults. |
 | [`dots.gpuScreenRecorder.enable`](#dotsgpuscreenrecorderenable) | off | Whether to enable GPU Screen Recorder, a ShadowPlay-style recorder with an instant-replay buffer and an overlay UI, which the niri module binds to Mod+Alt+Z (and Mod+Alt+F6..F12, see modules/home/wm/niri/gsr-binds.kdl). |
 | [`dots.immich.enable`](#dotsimmichenable) | off | Whether to enable Immich, self-hosted photo and video management. |
-| [`dots.media.enable`](#dotsmediaenable) | on | Whether to enable the music player and the thumbnail generators. |
+| [`dots.media.enable`](#dotsmediaenable) | off | Whether to enable the music player and the thumbnail generators. |
 | [`dots.nautilus.enable`](#dotsnautilusenable) | on | Whether to enable the Nautilus file manager and gvfs. |
 | [`dots.niri.enable`](#dotsnirienable) | on | Whether to enable the niri compositor (the system side). |
 | [`dots.nixLd.enable`](#dotsnixldenable) | on | Whether to enable nix-ld, so prebuilt Linux binaries run unmodified. |
 | [`dots.samba.enable`](#dotssambaenable) | off | Whether to enable Samba file sharing, advertised on the local network (wsdd, avahi). |
 | [`dots.stylix.enable`](#dotsstylixenable) | on | Whether to enable stylix theming (the system side). |
-| [`dots.tailscale.enable`](#dotstailscaleenable) | on | Whether to enable Tailscale, with the per-user tools. |
+| [`dots.tailscale.enable`](#dotstailscaleenable) | off | Whether to enable Tailscale, with the per-user tools. |
 | [`dots.terminfo.enable`](#dotsterminfoenable) | on | Whether to enable kitty's terminfo for every user, root included. |
 | [`dots.torrent.enable`](#dotstorrentenable) | off | Whether to enable qBittorrent and Tor Browser. |
 | [`dots.vscode.enable`](#dotsvscodeenable) | on | Whether to enable stock VS Code, system-wide. |
@@ -50,7 +50,7 @@ boolean
 *Default:*
 
 ```nix
-true
+false
 ```
 
 
@@ -382,7 +382,7 @@ boolean
 *Default:*
 
 ```nix
-true
+false
 ```
 
 
@@ -1020,7 +1020,7 @@ boolean
 *Default:*
 
 ```nix
-true
+false
 ```
 
 
