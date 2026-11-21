@@ -106,7 +106,10 @@
       type = lib.types.str;
       description = "Single character that picks this entry. j and k are taken by navigation.";
     };
-    label = lib.mkOption {type = lib.types.str;};
+    label = lib.mkOption {
+      type = lib.types.str;
+      description = "Text shown for this entry in the menu.";
+    };
     icon = lib.mkOption {
       type = lib.types.str;
       default = "chevron_right";
