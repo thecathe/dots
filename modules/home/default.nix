@@ -32,6 +32,7 @@
     ./zathura # epub reader?
     ./navi # cheatsheets, incl. keyboard shortcuts (navi/cheats)
     ./repos # the `repos` CLI; with DMS, the repositories bar menu (dank/repos-menu.nix)
+    ./rebuild # the `rebuild` and `rebuild-pinned` aliases, for a machine built from a hosts flake
   ];
 
   # options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";
@@ -40,7 +41,7 @@
   # area out (a laptop without the desktop shell, say). Most are on by default. Off by
   # default are the areas that are personal or reach beyond the machine (claude,
   # obsidian) and those that were always opt-in (vscode, dictation, globalprotect,
-  # repos), each with its own `enable`; devlog is gated by its clone directory, and
+  # repos, rebuild), each with its own `enable`; devlog is gated by its clone directory, and
   # this set turns vscode on. flameshot is on by default.
   options.dots.packages.enable = lib.mkEnableOption "dots' general-purpose package list (the tools in home.packages below)" // {default = true;};
 
