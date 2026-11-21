@@ -66,30 +66,32 @@
       ++ a.argv
     else a.argv;
 in {
-  assertions = [
-    {
-      assertion = lib.all (n: builtins.match "[A-Za-z0-9_-]+" n != null) (lib.attrNames services);
-      message = "dots.services: names must be letters, digits, _ or - (the services menu reads them back from its status script)";
-    }
-  ];
+  config = lib.mkIf config.dots.dank.enable {
+    assertions = [
+      {
+        assertion = lib.all (n: builtins.match "[A-Za-z0-9_-]+" n != null) (lib.attrNames services);
+        message = "dots.services: names must be letters, digits, _ or - (the services menu reads them back from its status script)";
+      }
+    ];
 
-  programs.dank-material-shell.plugins.dotsServices = {
-    enable = true;
-    src = ./plugins/dotsServices;
-    settings = {
-      services =
-        lib.mapAttrsToList (name: s: {
-          inherit name;
-          inherit (s) label icon up down;
-          actions =
-            map (a: {
-              inherit (a) label icon requiresUp;
-              argv = actionArgv "${s.label}: ${a.label}" a;
-            })
-            s.actions;
-        })
-        services;
-      statusCommand = "${statusScript}";
+    programs.dank-material-shell.plugins.dotsServices = {
+      enable = true;
+      src = ./plugins/dotsServices;
+      settings = {
+        services =
+          lib.mapAttrsToList (name: s: {
+            inherit name;
+            inherit (s) label icon up down;
+            actions =
+              map (a: {
+                inherit (a) label icon requiresUp;
+                argv = actionArgv "${s.label}: ${a.label}" a;
+              })
+              s.actions;
+          })
+          services;
+        statusCommand = "${statusScript}";
+      };
     };
   };
 }

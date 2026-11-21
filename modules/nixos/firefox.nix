@@ -1,21 +1,29 @@
-{...}: {
-  programs.firefox = {
-    enable = true;
+{
+  config,
+  lib,
+  ...
+}: {
+  options.dots.firefox.enable = lib.mkEnableOption "Firefox with dots' policies" // {default = true;};
 
-    policies = {
-      # DisableTelemetry = true;
-      DontCheckDefaultBrowser = true;
-      HardwareAcceleration = true;
-    };
-    preferences = {
-      # see pdf options: https://github.com/mozilla/pdf.js/blob/master/extensions/chromium/options/options.html
-      "pdfjs.defaultZoomValue" = "auto";
-      "pdfjs.sidebarViewOnLoad" = 0; # None
-      "pdfjs.cursorToolOnLoad" = 0; # 1; # Hand tool
-      "pdfjs.textLayerMode" = 1; # Enable text selection
-      "pdfjs.externalLinkTarget" = 2; # New tab
-      "pdfjs.scrollModeOnLoad" = 2; # Wrapped scrolling
-      "pdfjs.spreadModeOnLoad" = 0; # No spreads
+  config = lib.mkIf config.dots.firefox.enable {
+    programs.firefox = {
+      enable = true;
+
+      policies = {
+        # DisableTelemetry = true;
+        DontCheckDefaultBrowser = true;
+        HardwareAcceleration = true;
+      };
+      preferences = {
+        # see pdf options: https://github.com/mozilla/pdf.js/blob/master/extensions/chromium/options/options.html
+        "pdfjs.defaultZoomValue" = "auto";
+        "pdfjs.sidebarViewOnLoad" = 0; # None
+        "pdfjs.cursorToolOnLoad" = 0; # 1; # Hand tool
+        "pdfjs.textLayerMode" = 1; # Enable text selection
+        "pdfjs.externalLinkTarget" = 2; # New tab
+        "pdfjs.scrollModeOnLoad" = 2; # Wrapped scrolling
+        "pdfjs.spreadModeOnLoad" = 0; # No spreads
+      };
     };
   };
 }

@@ -330,37 +330,40 @@ in {
   # link rather than its `src` option leaves the registry's definition alone
   # and needs no flake input here. applyPatches fails the build if a registry
   # bump changes the patched lines, so the patch cannot silently stop applying.
-  xdg.configFile."DankMaterialShell/plugins/wallpaperBing".source = lib.mkIf bingPlugin.enable (lib.mkForce (pkgs.applyPatches {
-    name = "dms-plugin-wallpaperBing-keep-manual-choice";
-    src = bingPlugin.src;
-    patches = [./patches/bing-keep-manual-choice.patch];
-  }));
 
-  home.packages = [
-    pkgs.curl
-    pkgs.inotify-tools
-    binPin
-    binUnpin
-    binList
-    binSkip
-    binResume
-    binGc
-    binBackfill
-  ];
+  config = lib.mkIf config.dots.wallpaper.enable {
+    xdg.configFile."DankMaterialShell/plugins/wallpaperBing".source = lib.mkIf bingPlugin.enable (lib.mkForce (pkgs.applyPatches {
+      name = "dms-plugin-wallpaperBing-keep-manual-choice";
+      src = bingPlugin.src;
+      patches = [./patches/bing-keep-manual-choice.patch];
+    }));
 
-  # No existing daily trigger point in this repo fits (home-manager activation
-  # only runs at rebuild time) - retention needs its own timer. Runs an hour
-  # after the plugin's own dailyRefreshTime (09:00, dms.nix) so today's image
-  # has already landed before pruning runs.
-  systemd.user.services.bing-wallpaper-gc.Service = {
-    Type = "oneshot";
-    ExecStart = "${binGc}/bin/bing-wallpaper-gc";
-  };
-  systemd.user.timers.bing-wallpaper-gc = {
-    Timer = {
-      OnCalendar = "10:00";
-      Persistent = true;
+    home.packages = [
+      pkgs.curl
+      pkgs.inotify-tools
+      binPin
+      binUnpin
+      binList
+      binSkip
+      binResume
+      binGc
+      binBackfill
+    ];
+
+    # No existing daily trigger point in this repo fits (home-manager activation
+    # only runs at rebuild time) - retention needs its own timer. Runs an hour
+    # after the plugin's own dailyRefreshTime (09:00, dms.nix) so today's image
+    # has already landed before pruning runs.
+    systemd.user.services.bing-wallpaper-gc.Service = {
+      Type = "oneshot";
+      ExecStart = "${binGc}/bin/bing-wallpaper-gc";
     };
-    Install.WantedBy = ["timers.target"];
+    systemd.user.timers.bing-wallpaper-gc = {
+      Timer = {
+        OnCalendar = "10:00";
+        Persistent = true;
+      };
+      Install.WantedBy = ["timers.target"];
+    };
   };
 }

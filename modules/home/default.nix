@@ -35,6 +35,13 @@
   ];
 
   # options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";
+
+  # Every area of this set has a `dots.<area>.enable` switch, on by default: turn one
+  # off to leave that area out (a laptop without the desktop shell, say). The areas
+  # that were already opt-in (vscode, devlog, dictation, flameshot, globalprotect, repos)
+  # keep their own `enable`, off by default, and this set turns vscode on.
+  options.dots.packages.enable = lib.mkEnableOption "dots' general-purpose package list (the tools in home.packages below)" // {default = true;};
+
   config = {
     dots.user.name = lib.mkDefault config.home.username;
     dots.vscode.enable = lib.mkDefault true;
@@ -42,7 +49,7 @@
     # dots.services CLIs (modules/shared/services.nix), then the rest.
     home.packages =
       config.dots.servicesPackages
-      ++ (with pkgs; [
+      ++ lib.optionals config.dots.packages.enable (with pkgs; [
         ## essential
         wget
         fzf

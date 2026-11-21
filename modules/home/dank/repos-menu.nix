@@ -32,7 +32,7 @@ in {
   # (modules dedupe by path).
   imports = [../repos];
 
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf (cfg.enable && config.dots.dank.enable) {
     programs.dank-material-shell.plugins.dotsRepos = {
       enable = true;
       src = ./plugins/dotsRepos;

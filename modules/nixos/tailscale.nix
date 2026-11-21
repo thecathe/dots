@@ -8,26 +8,31 @@
 # needs no sudo: `tailscale up` / `tailscale down`, or the DMS services menu.
 {
   config,
+  lib,
   pkgs,
   ...
 }: {
-  services.tailscale = {
-    enable = true;
-    openFirewall = true; # the direct-connection UDP port, so peers needn't relay
-    extraSetFlags = ["--operator=${config.dots.user.name}"];
-  };
+  options.dots.tailscale.enable = lib.mkEnableOption "Tailscale, with the per-user tools" // {default = true;};
 
-  dots.services.tailscale = let
-    tailscale = "${config.services.tailscale.package}/bin/tailscale";
-  in {
-    label = "Tailscale";
-    icon = "vpn_lock";
-    up = [tailscale "up"];
-    down = [tailscale "down"];
-    status = [
-      "${pkgs.writeShellScript "tailscale-is-up" ''
-        ${tailscale} status --json 2>/dev/null | ${pkgs.jq}/bin/jq -e '.BackendState == "Running"' >/dev/null
-      ''}"
-    ];
+  config = lib.mkIf config.dots.tailscale.enable {
+    services.tailscale = {
+      enable = true;
+      openFirewall = true; # the direct-connection UDP port, so peers needn't relay
+      extraSetFlags = ["--operator=${config.dots.user.name}"];
+    };
+
+    dots.services.tailscale = let
+      tailscale = "${config.services.tailscale.package}/bin/tailscale";
+    in {
+      label = "Tailscale";
+      icon = "vpn_lock";
+      up = [tailscale "up"];
+      down = [tailscale "down"];
+      status = [
+        "${pkgs.writeShellScript "tailscale-is-up" ''
+          ${tailscale} status --json 2>/dev/null | ${pkgs.jq}/bin/jq -e '.BackendState == "Running"' >/dev/null
+        ''}"
+      ];
+    };
   };
 }

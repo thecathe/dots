@@ -1,4 +1,4 @@
-{...}: {
+{lib, ...}: {
   imports = [
     ./dms.nix
     ./dock-toggle.nix
@@ -9,4 +9,5 @@
     ./repos-menu.nix
     ./dictation-status.nix
   ];
+  options.dots.dank.enable = lib.mkEnableOption "DankMaterialShell with its menus and settings handling" // {default = true;};
 }

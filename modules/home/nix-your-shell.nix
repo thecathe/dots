@@ -4,6 +4,14 @@
 # nix-your-shell defines `nix` and `nix-shell` functions in interactive zsh that
 # rerun them with the current shell; scripts, shebangs and `--run`/`--command`
 # are untouched. `command nix-shell ...` bypasses the wrapper.
-{...}: {
-  programs.nix-your-shell.enable = true;
+{
+  config,
+  lib,
+  ...
+}: {
+  options.dots.nixYourShell.enable = lib.mkEnableOption "nix-your-shell, which keeps zsh inside nix-shell and nix develop" // {default = true;};
+
+  config = lib.mkIf config.dots.nixYourShell.enable {
+    programs.nix-your-shell.enable = true;
+  };
 }

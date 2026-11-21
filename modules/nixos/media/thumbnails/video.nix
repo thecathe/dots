@@ -1,10 +1,17 @@
-{pkgs, ...}:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 ## https://wiki.nixos.org/wiki/Thumbnails#Enable_Video_Thumbnails
 {
-  environment.systemPackages = with pkgs; [
-    ffmpeg-headless
-    ffmpegthumbnailer
-  ];
+  config = lib.mkIf config.dots.media.enable {
+    environment.systemPackages = with pkgs; [
+      ffmpeg-headless
+      ffmpegthumbnailer
+    ];
 
-  # 'ffmpegthumbnailer.thumbnailer' is created in '/run/current-system/sw/share/thumbnailers'
+    # 'ffmpegthumbnailer.thumbnailer' is created in '/run/current-system/sw/share/thumbnailers'
+  };
 }

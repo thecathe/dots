@@ -1,4 +1,5 @@
 {
+  lib,
   config,
   pkgs,
   ...
@@ -35,28 +36,31 @@ in {
   # everything else, but dank-dock-toggle flips it ad hoc. Declaring it here
   # has dms.nix's clean filter reset it to true on the way into git, and its
   # overlay seed put a host's real value back (see options.dank.settingsState).
-  dank.settingsState.showDock = true;
 
-  # dank-material-shell's own home-manager module (inputs.dms) defines the
-  # "dms" systemd user service that actually launches the shell. Adding to
-  # its ExecStartPre here (rather than replacing it) so the dock is always
-  # forced visible immediately before DMS starts reading settings.json -
-  # see dankResetDockScript above.
-  systemd.user.services.dms.Service.ExecStartPre = ["${dankResetDockScript}"];
+  config = lib.mkIf config.dots.dank.enable {
+    dank.settingsState.showDock = true;
 
-  # Manual dock visibility toggle (bound to Super+Alt+D in niri), independent
-  # of dockSmartAutoHide - just flips SettingsData.showDock via DMS's own IPC
-  # and toasts (also via DMS's IPC) which way it went, so it can be silenced
-  # on demand for anything (games, screenshares) without touching settings.
-  home.packages = [
-    (pkgs.writeShellScriptBin "dank-dock-toggle" ''
-      set -u
-      result="$(${config.programs.dank-material-shell.package}/bin/dms ipc call dock toggle)"
-      case "$result" in
-        DOCK_SHOW_SUCCESS) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast info "Dock shown" ;;
-        DOCK_HIDE_SUCCESS) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast info "Dock hidden" ;;
-        *) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast warn "Dock toggle: unexpected response ($result)" ;;
-      esac
-    '')
-  ];
+    # dank-material-shell's own home-manager module (inputs.dms) defines the
+    # "dms" systemd user service that actually launches the shell. Adding to
+    # its ExecStartPre here (rather than replacing it) so the dock is always
+    # forced visible immediately before DMS starts reading settings.json -
+    # see dankResetDockScript above.
+    systemd.user.services.dms.Service.ExecStartPre = ["${dankResetDockScript}"];
+
+    # Manual dock visibility toggle (bound to Super+Alt+D in niri), independent
+    # of dockSmartAutoHide - just flips SettingsData.showDock via DMS's own IPC
+    # and toasts (also via DMS's IPC) which way it went, so it can be silenced
+    # on demand for anything (games, screenshares) without touching settings.
+    home.packages = [
+      (pkgs.writeShellScriptBin "dank-dock-toggle" ''
+        set -u
+        result="$(${config.programs.dank-material-shell.package}/bin/dms ipc call dock toggle)"
+        case "$result" in
+          DOCK_SHOW_SUCCESS) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast info "Dock shown" ;;
+          DOCK_HIDE_SUCCESS) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast info "Dock hidden" ;;
+          *) ${config.programs.dank-material-shell.package}/bin/dms ipc call toast warn "Dock toggle: unexpected response ($result)" ;;
+        esac
+      '')
+    ];
+  };
 }
