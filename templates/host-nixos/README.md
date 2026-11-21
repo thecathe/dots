@@ -24,7 +24,8 @@ use the `host-home` template instead.
 
    With flakes, nix only sees files git tracks, so `git add` the new files before building.
 
-4. Link the dots checkout to `~/dots`, where dots' scripts expect it, then apply:
+4. Put the dots checkout at `~/dots` (or link it there; that is where dots expects it unless you set
+   `dots.checkout`), then apply:
 
    ```sh
    sudo nixos-rebuild switch --flake .#NEW_HOST

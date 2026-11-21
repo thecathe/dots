@@ -1,6 +1,7 @@
 # The user's home-manager configuration on a machine that does not run NixOS
 # (standalone home-manager on another distribution).
 {
+  config,
   inputs,
   pkgs,
   ...
@@ -10,9 +11,9 @@
   home.username = "NEW_USER";
   home.homeDirectory = "/home/NEW_USER";
 
-  # dots' scripts, and several of its modules, expect the dots checkout (or a
-  # link to it) at ~/dots.
-  home.sessionPath = ["$HOME/dots/bin"];
+  # Several of dots' modules and scripts read and write files in a checkout of dots,
+  # expected at ~/dots; set dots.checkout if it lives elsewhere.
+  home.sessionPath = ["${config.dots.checkout}/bin"];
 
   # Standalone home-manager installs and updates itself.
   programs.home-manager.enable = true;

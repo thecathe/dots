@@ -18,7 +18,8 @@ instead. For a second user on someone else's machine who wants nothing of dots, 
 2. Replace every `NEW_HOST` and `NEW_USER` (in `flake.nix` and `home.nix`) with the machine's hostname
    and your username. With flakes, nix only sees files git tracks, so `git add` them.
 
-3. Link the dots checkout to `~/dots`, where dots' scripts expect it, then apply:
+3. Put the dots checkout at `~/dots` (or link it there; that is where dots expects it unless you set
+   `dots.checkout`), then apply:
 
    ```sh
    nix run home-manager/master -- switch --flake .#NEW_USER@NEW_HOST
