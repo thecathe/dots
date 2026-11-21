@@ -150,15 +150,10 @@
     # `nix fmt` formats the repo with alejandra.
     formatter.x86_64-linux = alejandra;
 
-    # The generated reference for the `dots.*` options (lib/options-doc.nix): the
-    # pages in docs/ are what `nix build .#options-reference` makes, and
-    # `nix run .#update-options-reference` rewrites them.
+    # The generated reference for the `dots.*` options (lib/options-doc.nix). The
+    # GitHub Action in .github/workflows builds it on every push to `main` and
+    # publishes the pages to the `options-reference` branch.
     packages.x86_64-linux.options-reference = optionsDoc.reference;
-    apps.x86_64-linux.update-options-reference = {
-      type = "app";
-      program = "${optionsDoc.update}/bin/update-options-reference";
-      meta.description = "Rewrite docs/options-*.md from the modules' option declarations";
-    };
 
     # dots cannot see what depends on it. These stand in for consumers; the real
     # test of the hosts is `check` in the hosts repo. `formatting` fails if any
