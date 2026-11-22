@@ -86,6 +86,13 @@
     alejandra = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
     optionsDoc = import ./lib/options-doc.nix {inherit inputs;};
     checkTool = import ./tools/check/package.nix {pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;};
+    # dots' own inputs, as the `dotsInputs` module argument of both module sets, so a
+    # module does not depend on what the importing flake calls its inputs (keyed, so
+    # importing several sets is fine).
+    dotsArgs = {
+      key = "dots-args";
+      _module.args.dotsInputs = inputs;
+    };
   in {
     # Constructors for the wiring every host shares; a host supplies only what
     # is specific to it. See lib/hosts.nix.
@@ -113,12 +120,7 @@
     # theme into it), so importing it here as well would declare its options
     # twice. `mkHome` adds it for a standalone configuration, and
     # modules/home/stylix skips the theme, with a warning, where it is absent.
-    homeModules = let
-      dotsArgs = {
-        key = "dots-args";
-        _module.args.dotsInputs = inputs;
-      };
-    in {
+    homeModules = {
       default = {
         key = "dots-home";
         imports = [
@@ -141,9 +143,14 @@
     nixosModules.default = {
       key = "dots-nixos";
       imports = [
+        dotsArgs
         inputs.stylix.nixosModules.stylix
         inputs.dms.nixosModules.dank-material-shell
         inputs.dms-plugin-registry.nixosModules.default
+        # nix-gaming's Wine and SteamOS-sysctl modules, which the gaming profile uses
+        # (both inert until enabled). Its low-latency PipeWire module is not here.
+        inputs.nix-gaming.nixosModules.wine
+        inputs.nix-gaming.nixosModules.platformOptimizations
         ./modules/nixos
       ];
     };

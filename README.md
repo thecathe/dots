@@ -69,7 +69,9 @@ Timezone, locale and keyboard stay with the host. `dots.profile.gnome` is the GN
 trimmed set of its core apps (a whole second desktop next to niri, a fallback when the window manager does not start).
 The home set has profiles of the same names (`modules/home/profiles`), separate switches, since each set must work
 without the other: home `base` (home-manager managing itself, fontconfig, the checkout's `bin` on PATH) home `gnome` (GNOME Shell extensions, a
-dark GTK theme) and home `office` (LibreOffice). `dots.loginSessions` (NixOS) says which session GDM starts for
+dark GTK theme) and home `office` (LibreOffice). `dots.profile.gaming` (NixOS) is Steam with gamescope and Proton-GE, gamemode,
+the Wine and Proton tools, Lutris and the nix-gaming cache, with Steam's server port open only while hosting; home `gaming` is
+its launcher entry, whose `steamEnv` carries what one GPU needs (the kernel, PipeWire's latency and the GPU driver are not in it). `dots.loginSessions` (NixOS) says which session GDM starts for
 each account, for a machine where two accounts want different ones; see its description.
 
 To change dots without breaking a machine, test the change against every machine before merging. `check`

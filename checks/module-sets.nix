@@ -298,6 +298,17 @@ in {
         dots.checkout = "/srv/dots";
       }
     ];
+    gamed = (nixos [dots.nixosModules.default {dots.profile.gaming.enable = true;}]).config;
+    homeGaming = env:
+      home [
+        dots.homeModules.default
+        {
+          dots.profile.gaming = {
+            enable = true;
+            steamEnv = env;
+          };
+        }
+      ];
     homeOffice = home [dots.homeModules.default {dots.profile.office.enable = true;}];
     homeOverridden = home [
       dots.homeModules.default
@@ -321,6 +332,10 @@ in {
     assert written "profiles-gnome-home" "home gnome does not set the dark GTK theme" (homeGnome.gtk.enable && homeGnome.gtk.gtk3.extraConfig.gtk-theme-name == "adw-gtk3-dark");
     assert written "profiles-gnome-home" "a host's own values do not beat the home profiles'" (homeOverridden.gtk.gtk3.extraConfig.gtk-theme-name == "Adwaita" && !homeOverridden.fonts.fontconfig.enable);
     assert written "profiles-gnome-home" "home base does not put the checkout's bin on PATH, or it does not follow dots.checkout" (homeBased.home.sessionPath == ["/home/consumer/dots/bin"] && homeMoved.home.sessionPath == ["/srv/dots/bin"] && alone.home.sessionPath == []);
+    assert written "profiles-gnome-home" "gaming is on in a plain import" (!nixosAlone.config.programs.steam.enable && !(alone.xdg.desktopEntries ? steam));
+    assert written "profiles-gnome-home" "gaming does not set up Steam, its tools and the server ports" (gamed.programs.steam.enable && gamed.programs.steam.platformOptimizations.enable && gamed.programs.gamemode.enable && hasPackage "mo2installer" gamed.environment.systemPackages && gamed.systemd.services ? steam-server-ports && lib.elem "https://nix-gaming.cachix.org" gamed.nix.settings.substituters);
+    assert written "profiles-gnome-home" "the Steam entry does not run Steam plainly without steamEnv" ((homeGaming []).xdg.desktopEntries.steam.exec == "steam -pipewire %U");
+    assert written "profiles-gnome-home" "the Steam entry does not put steamEnv in front of Steam, in order" ((homeGaming ["B=2" "A=1"]).xdg.desktopEntries.steam.exec == "env B=2 A=1 steam -pipewire %U");
     assert written "profiles-gnome-home" "office is on in a plain import, or does not add LibreOffice" (!(hasPackage "libreoffice" alone.home.packages) && hasPackage "libreoffice" homeOffice.home.packages);
     assert written "profiles-gnome-home" "a host's own package replaces home gnome's list instead of adding to it" (hasPackage "hello" homeOverridden.home.packages && hasPackage "adw-gtk3" homeOverridden.home.packages);
       pkgs.writeText "module-sets-profiles-gnome-home" (builtins.unsafeDiscardStringContext (gnomed.system.build.toplevel.drvPath + (homeDrv [dots.homeModules.default {dots.profile.gnome.enable = true;}])));

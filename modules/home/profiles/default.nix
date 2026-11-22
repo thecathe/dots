@@ -11,5 +11,6 @@
     ./base.nix
     ./gnome.nix
     ./office.nix
+    ./gaming.nix
   ];
 }

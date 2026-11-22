@@ -22,5 +22,6 @@
   imports = [
     ./base.nix
     ./gnome.nix
+    ./gaming.nix
   ];
 }
