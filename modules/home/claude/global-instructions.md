@@ -132,17 +132,24 @@ standing branch. When the project's practice is unclear, ask before acting.
   logins, addresses, secrets) and how to keep a private detail in a `<!-- private -->`
   block.
 - A project's folder is laid out as:
-  - `index.md`: the single point of entry and table of contents. It links every
-    feature entry (title, date, status, one-line summary) and holds one-line
-    entries for small fixes and tweaks directly. A small change gets no file of
-    its own.
+  - `index.md`: the single point of entry and table of contents. Its table of
+    feature entries is generated from each entry's `entry:` front matter (status,
+    a short note of what is pending, dates, repos, summary) by `bin/devlog index`;
+    never edit the table by hand. Small fixes and tweaks are bullets there of at
+    most three lines (date, what, the commit); a small change gets no file of its
+    own, and anything longer is an entry.
   - One `<feature>.md` per mini-project of adequate scope (a feature, a subsystem,
     or a design thread worth a session or more), not per session. It tells the
     story: the original vision, how and why the plan changed, and the final
     outcome. Record dates, context, decisions and why, alternatives considered,
-    open questions, and the commits (with the repo each belongs to).
-  - Returning to a topic updates its entry rather than starting a second one.
-    Add or update the `index.md` line in the same commit.
+    open questions, and the commits (with the repo each belongs to). Start one
+    with `bin/devlog new`.
+  - Returning to a topic updates its entry rather than starting a second one:
+    its story, and its `entry:` block (`status`, `note`, `last`), then run
+    `bin/devlog index`, in the same commit.
+  - Before committing there, run `nix develop -c bin/devlog check`. The format
+    and the statuses are in `publishing.md`, "Entries, their front matter, and
+    the generated indexes".
 - The repo's root `index.md` lists the projects and links each project's `index.md`.
 - A project that already keeps its own log in-repo (e.g. `DEVELOPMENT.md`,
   `ASSISTED-CHANGES.md`) keeps using it until the user chooses to migrate it. Don't
