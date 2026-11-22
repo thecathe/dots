@@ -27,22 +27,24 @@ nix develop .#opam-file --command dune build
 
 ```
 opam init --bare --no-setup --yes
-opam switch create . --locked --deps-only --yes
+opam switch create . --locked --deps-only --with-dev-setup --yes
 ```
 
-The first command creates this project's own opam root in `./.opam-root` (see [Additional Notes](#additional-notes)); it is quick and only needed once per clone. The second creates a local opam switch, which the direnv `.envrc` will automatically use upon entering the directory.
+The first command creates this project's own opam root in `./.opam-root` (see [Additional Notes](#additional-notes)); it is quick and only needed once per clone. The second creates a local opam switch with every package in `dune-project`, including those marked `:with-dev-setup`, which the direnv `.envrc` will automatically use upon entering the directory. (Drop `--locked` if there is no `.opam.locked` file yet.)
+
+Do it in one step. Creating the switch first and installing the dev tools afterwards is two solves, and the second may change the compiler the first chose: one project saw OCaml 5.5.2 downgraded to 5.4.1, where its `ocaml-lsp-server` no longer built. If a project needs a particular compiler, name it in the same command: `opam switch create . ocaml-base-compiler.X.Y.Z --deps-only --with-dev-setup --yes`.
 
 Run these inside the dev shell (direnv, or `nix develop`): it is what points `opam` at the project's root.
 
 > Note: after this step you may need to kill your terminal (`ctrl+d`) and reopen a new one. Alternatively, run `direnv reload`.
 
-### Install opam packages
+### Install opam packages later
 
 ```
 opam install . --locked --deps-only --with-dev-setup --yes
 ```
 
-This installs all the packages listed in `dune-project`, including those marked as `:with-dev-setup`. Since we are using nix, at a certain point you'll likely reach the following screen:
+After a change to `dune-project`, this installs what is new without recreating the switch. In either step, since we are using nix, at a certain point you'll likely reach the following screen:
 
 ```
 <><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>

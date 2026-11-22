@@ -85,7 +85,10 @@
           # flag instead, which registers *and* selects it atomically (in
           # this project's own root).
           rocq_repos='default,rocq-released=https://rocq-prover.org/opam/released'
-          bootstrap="$opam_init && opam switch create . --repositories=$rocq_repos --deps-only --yes && opam install . --deps-only --with-dev-setup --yes"
+          # One solve, dev tools included: a second `opam install
+          # --with-dev-setup` after the switch exists can swap the compiler the
+          # first solve chose (seen in membranes: 5.5.2 downgraded to 5.4.1).
+          bootstrap="$opam_init && opam switch create . --repositories=$rocq_repos --deps-only --with-dev-setup --yes"
           # The tests below are `find | grep -q .` rather than `ls -- *.opam`:
           # direnv runs this hook in a bash with `nullglob` on, where an
           # unmatched glob expands to nothing, so `ls --` lists the directory
@@ -107,7 +110,7 @@
             bootstrap="{ nix develop .#opam-file --command dune build; find . -maxdepth 1 -name '*.opam' | grep -q .; } && $bootstrap"
             note="(Expect dune to report 'Program rocq not found' on the way: rocq is installed by a later step, and the .opam file is written regardless.)"
           elif find . -maxdepth 1 -name '*.opam.locked' | grep -q .; then
-            bootstrap="$opam_init && opam switch create . --repositories=$rocq_repos --locked --deps-only --yes && opam install . --locked --deps-only --with-dev-setup --yes"
+            bootstrap="$opam_init && opam switch create . --repositories=$rocq_repos --locked --deps-only --with-dev-setup --yes"
           fi
 
           # Test for the binary rather than just _opam/, so a half-built

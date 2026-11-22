@@ -71,7 +71,10 @@
           # --no-setup: don't edit ~/.zshrc and friends; this shell's
           # environment comes from direnv / nix develop, not opam's hooks.
           opam_init='opam init --bare --no-setup --yes'
-          bootstrap="$opam_init && opam switch create . --deps-only --yes && opam install . --deps-only --with-dev-setup --yes"
+          # One solve, dev tools included: a second `opam install
+          # --with-dev-setup` after the switch exists can swap the compiler the
+          # first solve chose (seen in membranes: 5.5.2 downgraded to 5.4.1).
+          bootstrap="$opam_init && opam switch create . --deps-only --with-dev-setup --yes"
           # The tests below are `find | grep -q .` rather than `ls -- *.opam`:
           # direnv runs this hook in a bash with `nullglob` on, where an
           # unmatched glob expands to nothing, so `ls --` lists the directory
@@ -90,7 +93,7 @@
             # are installed (a library, say), but only after writing the file.
             bootstrap="{ nix develop .#opam-file --command dune build; find . -maxdepth 1 -name '*.opam' | grep -q .; } && $bootstrap"
           elif find . -maxdepth 1 -name '*.opam.locked' | grep -q .; then
-            bootstrap="$opam_init && opam switch create . --locked --deps-only --yes && opam install . --locked --deps-only --with-dev-setup --yes"
+            bootstrap="$opam_init && opam switch create . --locked --deps-only --with-dev-setup --yes"
           fi
 
           # Test for the binary rather than just _opam/, so a half-built
