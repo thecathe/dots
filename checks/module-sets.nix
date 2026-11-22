@@ -285,6 +285,36 @@ in {
     assert written "profiles" "a host's own package replaces base's list instead of adding to it" (hasPackage "hello" overridden.environment.systemPackages && hasPackage "xplr" overridden.environment.systemPackages);
       pkgs.writeText "module-sets-profiles" (builtins.unsafeDiscardStringContext based.system.build.toplevel.drvPath);
 
+  # The gnome profile on NixOS, and the home profiles (modules/home/profiles): off in a
+  # plain import, on when asked, and a host's own values beating theirs.
+  module-sets-profiles-gnome-home = let
+    gnomed = (nixos [dots.nixosModules.default {dots.profile.gnome.enable = true;}]).config;
+    homeBased = home [dots.homeModules.default {dots.profile.base.enable = true;}];
+    homeGnome = home [dots.homeModules.default {dots.profile.gnome.enable = true;}];
+    homeOverridden = home [
+      dots.homeModules.default
+      {
+        dots.profile.base.enable = true;
+        dots.profile.gnome.enable = true;
+        gtk.gtk3.extraConfig.gtk-theme-name = "Adwaita";
+        fonts.fontconfig.enable = false;
+        home.packages = [pkgs.hello];
+      }
+    ];
+    # dconf values come back as GVariants; .value is the list itself.
+    shellExtensions = c: (c.dconf.settings."org/gnome/shell".enabled-extensions or {value = [];}).value;
+  in
+    assert written "profiles-gnome-home" "gnome is on in a plain import" (!nixosAlone.config.services.desktopManager.gnome.enable);
+    assert written "profiles-gnome-home" "gnome does not turn on GNOME and GDM" (gnomed.services.desktopManager.gnome.enable && gnomed.services.displayManager.gdm.enable);
+    assert written "profiles-gnome-home" "gnome does not trim the core apps" (lib.any (p: lib.getName p == "geary") gnomed.environment.gnome.excludePackages);
+    assert written "profiles-gnome-home" "a home profile is on in a plain import" (!alone.programs.home-manager.enable && !alone.fonts.fontconfig.enable && shellExtensions alone == [] && !alone.gtk.enable);
+    assert written "profiles-gnome-home" "home base does not set its values" (homeBased.programs.home-manager.enable && homeBased.fonts.fontconfig.enable);
+    assert written "profiles-gnome-home" "home gnome does not turn on its extensions" (lib.length (shellExtensions homeGnome) == 7 && hasPackage "gnome-shell-extension-vitals" homeGnome.home.packages);
+    assert written "profiles-gnome-home" "home gnome does not set the dark GTK theme" (homeGnome.gtk.enable && homeGnome.gtk.gtk3.extraConfig.gtk-theme-name == "adw-gtk3-dark");
+    assert written "profiles-gnome-home" "a host's own values do not beat the home profiles'" (homeOverridden.gtk.gtk3.extraConfig.gtk-theme-name == "Adwaita" && !homeOverridden.fonts.fontconfig.enable);
+    assert written "profiles-gnome-home" "a host's own package replaces home gnome's list instead of adding to it" (hasPackage "hello" homeOverridden.home.packages && hasPackage "adw-gtk3" homeOverridden.home.packages);
+      pkgs.writeText "module-sets-profiles-gnome-home" (builtins.unsafeDiscardStringContext (gnomed.system.build.toplevel.drvPath + (homeDrv [dots.homeModules.default {dots.profile.gnome.enable = true;}])));
+
   # dots.loginSessions (modules/nixos/login-sessions.nix): nothing at all when empty,
   # and an entry hands the session to the module instead of `defaultSession`.
   module-sets-login-sessions = let

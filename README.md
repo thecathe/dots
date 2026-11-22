@@ -65,7 +65,11 @@ Profiles bundle settings that are not areas of their own, behind `dots.profile.<
 `modules/nixos/profiles`). `dots.profile.base` is what any NixOS machine here has: nix housekeeping, systemd-boot,
 the dots user's account, NetworkManager, PipeWire, printing and a list of everyday tools. A single value a profile
 sets is a `mkDefault`, so a host's own assignment wins; a list (packages, groups) adds to the host's instead.
-Timezone, locale and keyboard stay with the host. `dots.loginSessions` (NixOS) says which session GDM starts for
+Timezone, locale and keyboard stay with the host. `dots.profile.gnome` is the GNOME desktop with GDM, its portals and a
+trimmed set of its core apps (a whole second desktop next to niri, a fallback when the window manager does not start).
+The home set has profiles of the same names (`modules/home/profiles`), separate switches, since each set must work
+without the other: home `base` (home-manager managing itself, fontconfig) and home `gnome` (GNOME Shell extensions, a
+dark GTK theme). `dots.loginSessions` (NixOS) says which session GDM starts for
 each account, for a machine where two accounts want different ones; see its description.
 
 To change dots without breaking a machine, test the change against every machine before merging. `check`
