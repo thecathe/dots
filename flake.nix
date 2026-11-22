@@ -11,7 +11,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # nix-gaming
+    # nix-gaming. Deliberately NOT `inputs.nixpkgs.follows = "nixpkgs"`: the one
+    # package taken from it, mo2installer (gaming profile), needs a Windows-target
+    # gcc that does not evaluate on our nixos-unstable ("cannot coerce a set to a
+    # string: { model = "win32"; ... }", tried 2026-11-22), so it builds with
+    # nix-gaming's own nixpkgs. Its NixOS modules use the host's pkgs either way.
     nix-gaming.url = "github:fufexan/nix-gaming";
 
     # declarative disk partitioning (used by hosts installed via nixos-anywhere)
