@@ -10,5 +10,6 @@
   imports = [
     ./base.nix
     ./gnome.nix
+    ./office.nix
   ];
 }

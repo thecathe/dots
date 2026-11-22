@@ -291,6 +291,14 @@ in {
     gnomed = (nixos [dots.nixosModules.default {dots.profile.gnome.enable = true;}]).config;
     homeBased = home [dots.homeModules.default {dots.profile.base.enable = true;}];
     homeGnome = home [dots.homeModules.default {dots.profile.gnome.enable = true;}];
+    homeMoved = home [
+      dots.homeModules.default
+      {
+        dots.profile.base.enable = true;
+        dots.checkout = "/srv/dots";
+      }
+    ];
+    homeOffice = home [dots.homeModules.default {dots.profile.office.enable = true;}];
     homeOverridden = home [
       dots.homeModules.default
       {
@@ -312,6 +320,8 @@ in {
     assert written "profiles-gnome-home" "home gnome does not turn on its extensions" (lib.length (shellExtensions homeGnome) == 7 && hasPackage "gnome-shell-extension-vitals" homeGnome.home.packages);
     assert written "profiles-gnome-home" "home gnome does not set the dark GTK theme" (homeGnome.gtk.enable && homeGnome.gtk.gtk3.extraConfig.gtk-theme-name == "adw-gtk3-dark");
     assert written "profiles-gnome-home" "a host's own values do not beat the home profiles'" (homeOverridden.gtk.gtk3.extraConfig.gtk-theme-name == "Adwaita" && !homeOverridden.fonts.fontconfig.enable);
+    assert written "profiles-gnome-home" "home base does not put the checkout's bin on PATH, or it does not follow dots.checkout" (homeBased.home.sessionPath == ["/home/consumer/dots/bin"] && homeMoved.home.sessionPath == ["/srv/dots/bin"] && alone.home.sessionPath == []);
+    assert written "profiles-gnome-home" "office is on in a plain import, or does not add LibreOffice" (!(hasPackage "libreoffice" alone.home.packages) && hasPackage "libreoffice" homeOffice.home.packages);
     assert written "profiles-gnome-home" "a host's own package replaces home gnome's list instead of adding to it" (hasPackage "hello" homeOverridden.home.packages && hasPackage "adw-gtk3" homeOverridden.home.packages);
       pkgs.writeText "module-sets-profiles-gnome-home" (builtins.unsafeDiscardStringContext (gnomed.system.build.toplevel.drvPath + (homeDrv [dots.homeModules.default {dots.profile.gnome.enable = true;}])));
 

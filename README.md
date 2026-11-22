@@ -68,8 +68,8 @@ sets is a `mkDefault`, so a host's own assignment wins; a list (packages, groups
 Timezone, locale and keyboard stay with the host. `dots.profile.gnome` is the GNOME desktop with GDM, its portals and a
 trimmed set of its core apps (a whole second desktop next to niri, a fallback when the window manager does not start).
 The home set has profiles of the same names (`modules/home/profiles`), separate switches, since each set must work
-without the other: home `base` (home-manager managing itself, fontconfig) and home `gnome` (GNOME Shell extensions, a
-dark GTK theme). `dots.loginSessions` (NixOS) says which session GDM starts for
+without the other: home `base` (home-manager managing itself, fontconfig, the checkout's `bin` on PATH) home `gnome` (GNOME Shell extensions, a
+dark GTK theme) and home `office` (LibreOffice). `dots.loginSessions` (NixOS) says which session GDM starts for
 each account, for a machine where two accounts want different ones; see its description.
 
 To change dots without breaking a machine, test the change against every machine before merging. `check`
