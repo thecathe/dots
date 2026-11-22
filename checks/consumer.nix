@@ -1,10 +1,10 @@
-# Evaluation-only checks standing in for downstream flakes that use dots by file
-# path instead of through the host constructors. dots cannot see such consumers,
-# so these reproduce how one actually does it (modelled on a real downstream
-# flake): the shell and nvim modules imported by path, and a vscode module of its
-# own that builds profiles from dots' individual feature files, `groups.nix`,
-# `lib.nix`, `keybindings.nix` and `settings/global`, never importing dots'
-# `modules/home/vscode/default.nix`.
+# Evaluation-only checks standing in for downstream flakes that use dots' home
+# modules without the host constructors. dots cannot see such consumers, so these
+# reproduce how one does it: the area modules (`homeModules.*`) as a real
+# downstream flake uses them, and single modules imported by path. (Until
+# 2026-11-22 two more checks rebuilt that flake's older shape, a vscode module of
+# its own built from dots' feature files by path; it moved to `homeModules` on
+# 2026-10-29, so they were dropped.)
 #
 # Only the derivation path is computed (written to a file, nothing is built), so
 # `nix flake check` stays cheap.
@@ -21,57 +21,6 @@
     home.username = "consumer";
     home.homeDirectory = "/home/consumer";
     home.stateVersion = "25.11";
-  };
-
-  # A downstream vscode module: deep imports of dots' files, own list of profiles.
-  vscodeModule = {
-    pkgs,
-    config,
-    lib,
-    ...
-  }: let
-    dotsVscode = "${dots}/modules/home/vscode";
-    globalSettings = import "${dotsVscode}/settings/global";
-    globalKeybindings = import "${dotsVscode}/keybindings.nix";
-    vscodeLib = import "${dotsVscode}/lib.nix" {inherit lib globalSettings globalKeybindings;};
-    features =
-      builtins.mapAttrs (_: path: import path {inherit pkgs config;})
-      (lib.genAttrs [
-          "nix"
-          "git"
-          "markdown"
-          "better-comments"
-          "tab-groups"
-          "toml"
-          "json"
-          "kdl"
-          "theme"
-          "utils"
-          "claude"
-          "latex"
-          "java"
-          "python"
-          "vsrocq"
-          "haskell"
-          "ocaml"
-          "disable-breakpoint"
-          "unicode-math-symbols"
-        ]
-        (name: "${dotsVscode}/features/${name}.nix"));
-    groups = import "${dotsVscode}/groups.nix" {inherit features;};
-  in {
-    imports = ["${dotsVscode}/profile-ui-state.nix"];
-    programs.vscode = {
-      enable = true;
-      mutableExtensionsDir = false;
-      profiles = {
-        default = (vscodeLib.mkProfile groups.default).profile;
-        java = (vscodeLib.mkProfile groups.java).profile;
-        python = (vscodeLib.mkProfile groups.python).profile;
-        rocq = (vscodeLib.mkProfile groups.rocq).profile;
-        haskell = (vscodeLib.mkProfile groups.haskell).profile;
-      };
-    };
   };
 
   consumerConfig = modules:
@@ -409,16 +358,11 @@ in {
   consumer-flameshot = flameshotConsumer;
   # The area modules with dots.vscode, as a second user's flake uses them.
   consumer-modules = pkgs.writeText "consumer-modules-evaluates" (builtins.unsafeDiscardStringContext modulesConsumer);
-  # shell + nvim by path, plus the vscode module above: the full downstream shape.
-  consumer-full = check "consumer-full-evaluates" [
-    "${dots}/modules/home/shell"
-    "${dots}/modules/home/nvim"
-    vscodeModule
-  ];
-  # The same without nvim: the shell module plus the vscode module. Nothing here may
-  # rely on the nvim module happening to declare an option that others read.
+  # The area modules without nvim. Nothing here may rely on the nvim module
+  # happening to declare an option that others read.
   consumer-no-nvim = check "consumer-no-nvim-evaluates" [
-    "${dots}/modules/home/shell"
-    vscodeModule
+    dots.homeModules.shell
+    dots.homeModules.vscode
+    {dots.vscode.enable = true;}
   ];
 }
