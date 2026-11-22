@@ -33,6 +33,7 @@
     ./navi # cheatsheets, incl. keyboard shortcuts (navi/cheats)
     ./repos # the `repos` CLI; with DMS, the repositories bar menu (dank/repos-menu.nix)
     ./rebuild # the `rebuild` and `rebuild-pinned` aliases, for a machine built from a hosts flake
+    ./profiles # dots.profile.<name>.enable: named bundles, off by default
   ];
 
   # options.myConfig.onto-nvimPlugin.enable = lib.mkEnableOption "onto nvim plugin";
