@@ -87,6 +87,23 @@ EOF
 export GIT_TERMINAL_PROMPT=0
 export GIT_SSH_COMMAND=${GIT_SSH_COMMAND:-"ssh -o BatchMode=yes"}
 
+# dirty_count DIR: the changed paths of a worktree, as `git status` counts
+# them: staged, changed in the worktree, unmerged, untracked (an untracked
+# directory once). Not `git status --porcelain` itself: git compares sizes
+# before it runs a clean filter, so it lists a file whose size differs from
+# the index's even when its cleaned content is the same (dots' DMS
+# settings.json: `git diff` is empty, `git status` says M until a `git add`),
+# and the menu then hid the pull of a tree with nothing in it. `git diff`
+# compares the cleaned content.
+dirty_count() {
+  local d=$1
+  {
+    timeout 20 git -C "$d" --no-optional-locks diff --name-only -z
+    timeout 20 git -C "$d" --no-optional-locks diff --cached --name-only -z
+    timeout 20 git -C "$d" --no-optional-locks ls-files -z --others --exclude-standard --directory --no-empty-directory
+  } 2>/dev/null | sort -zu | tr -cd '\0' | wc -c
+}
+
 # The directory of ID, or exit 2.
 repo_dir() {
   local id=$1
@@ -155,7 +172,7 @@ describe() {
   fi
 
   local dirty
-  dirty=$(timeout 20 git -C "$dir" --no-optional-locks status --porcelain 2>/dev/null | wc -l)
+  dirty=$(dirty_count "$dir")
 
   # Paths inside .git, absolute: this runs from another directory.
   gitpath() { g rev-parse --path-format=absolute --git-path "$1"; }
@@ -225,7 +242,7 @@ describe() {
         local wdirty=null main=false
         [ "$path" = "$dir" ] && main=true
         if [ "$main" = false ] && [ -d "$path" ]; then
-          wdirty=$(timeout 20 git -C "$path" --no-optional-locks status --porcelain 2>/dev/null | wc -l)
+          wdirty=$(dirty_count "$path")
         fi
         jq -n -c --arg path "$path" --arg branch "$wbranch" --argjson detached "$wdet" \
           --argjson main "$main" --argjson dirty "$wdirty" --argjson exists "$([ -d "$path" ] && echo true || echo false)" \
@@ -360,7 +377,7 @@ case $cmd in
   branch-switch)
     [ $# -eq 3 ] || usage
     dir=$(repo_dir "$2")
-    [ -z "$(git -C "$dir" --no-optional-locks status --porcelain)" ] || {
+    [ "$(dirty_count "$dir")" -eq 0 ] || {
       echo "$2 has uncommitted changes"
       exit 3
     }
