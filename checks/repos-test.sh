@@ -3,7 +3,8 @@
 # repository with a bare origin, merged and unmerged branches, a dirty tree
 # and a linked worktree; one with no remote, detached; one on master; a linked
 # worktree at the top level (skipped as a repository); an excluded one; and,
-# near the end, a clean filter's size-only change. Run by
+# near the end, a clean filter's size-only change and `pull` against one
+# origin with clones in each state it reports. Run by
 # checks/repos.nix (repos, git and jq on PATH); run by hand the same way.
 set -u
 
@@ -274,8 +275,8 @@ check "config file: owners" [ "$(ids)" = "q/x,q/y" ]
 
 # Changed paths are counted by content: a file whose size differs from the
 # index's but whose content through a clean filter does not (dots' DMS
-# settings.json) is listed by `git status` and is not a change. Owner p: one
-# origin, a clone that pushes and five that are behind it.
+# settings.json) is listed by `git status` and is not a change. And `pull`:
+# owner p, one origin, a clone that pushes and five that are behind it.
 P=$root/p.git
 git init -q --bare "$P"
 git config --global filter.strip.clean "tr -d X"
@@ -307,6 +308,31 @@ json=$(REPOS_OWNERS='["p"]' repos --json)
 check "an untracked directory counts once, as git status shows it" is p/up .dirty 1
 rm -rf "$g/p/up/newdir"
 
+out=$(REPOS_OWNERS='["p"]' repos pull 2>&1)
+code=$?
+check "pull: one not fast-forwarded is exit 3" [ "$code" -eq 3 ]
+check "pull: a clean one behind is pulled" grep -qx "p/up: pulled 1" <<<"$out"
+check "pull: local changes the pull does not touch do not stop it" grep -qx "p/dirty-ok: pulled 1" <<<"$out"
+check "pull: ...and are kept" [ "$(cat "$g/p/dirty-ok/g")" = local ]
+check "pull: the filter's size-only change does not stop it" grep -qx "p/filter: pulled 1" <<<"$out"
+check "pull: local changes in the way are refused" grep -qx "p/blocked: not pulled: local changes are in the way" <<<"$out"
+check "pull: ...and kept" [ "$(cat "$g/p/blocked/f")" = local ]
+check "pull: a diverged branch is refused" grep -qx "p/diverged: not pulled: diverged from its upstream" <<<"$out"
+check "pull: ...and not merged" [ "$(git -C "$g/p/diverged" rev-list --count --merges HEAD)" = 0 ]
+check "pull: one in step is up to date" grep -qx "p/pusher: up to date" <<<"$out"
+out=$(REPOS_OWNERS='["p"]' repos pull p/up 2>&1)
+code=$?
+check "pull: one named, nothing to do, exit 0" [ "$code" -eq 0 ] && [ "$out" = "p/up: up to date" ]
+out=$(repos pull o/legacy q/x 2>&1)
+code=$?
+check "pull: no remote is not an error" [ "$code" -eq 0 ]
+check "...and says so" [ "$out" = "$(printf 'o/legacy: no remote\nq/x: no remote')" ]
+git -C "$g/p/up" switch -q -c topic
+out=$(repos pull p/up 2>&1)
+check "pull: a branch with no upstream says so" [ "$out" = "p/up: no upstream" ]
+git -C "$g/p/up" checkout -q --detach
+out=$(repos pull p/up 2>&1)
+check "pull: detached says so" [ "$out" = "p/up: detached" ]
 
 repos nonsense >/dev/null 2>&1
 check "unknown command is usage (64)" [ $? -eq 64 ]

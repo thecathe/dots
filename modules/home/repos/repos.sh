@@ -7,6 +7,7 @@
 #   repos                        one line per repository
 #   repos --json                 the same as JSON ({root, generated, repos: [...]})
 #   repos fetch [ID...]          git fetch --prune in the named repositories (all when none)
+#   repos pull [ID...]           fast-forward each checked-out branch from its upstream (all when none)
 #   repos branch-delete ID NAME  delete a local branch, only if it is merged (git branch -d)
 #   repos worktree-remove ID DIR remove a linked worktree, only if it is clean (git worktree remove)
 #   repos worktree-prune ID      forget worktrees whose directory is gone
@@ -27,12 +28,12 @@
 # when the last fetch was, every local branch (with whether it is merged into
 # the integration branch, how many commits it has beyond it, and whether its
 # upstream is gone), and every worktree. Nothing here talks to a remote except
-# `fetch`, which never prompts: a repository that needs credentials the
-# environment lacks is reported as failed.
+# `fetch`, `pull` and the push and pull of a branch, which never prompt: a
+# repository that needs credentials the environment lacks is reported as failed.
 #
 # Which repositories are listed: every one under the root, minus those named in
 # `exclude` (IDs) and, when `owners` is not empty, those of any other owner. The
-# same set is what a bare `fetch` covers. A repository named explicitly to a
+# same set is what a bare `fetch` or `pull` covers. A repository named explicitly to a
 # subcommand (`path`, `branch-delete`, ...) is found whatever the filters say.
 #
 # Configuration: REPOS_CONFIG names a JSON file {root, integration, exclude,
@@ -41,7 +42,8 @@
 # override its fields. Without either, the root is ~/Documents/git.
 #
 # Exit codes: 0 done, 2 a repository or branch was not found, 3 git refused
-# (unmerged branch, dirty worktree, failed fetch), 64 bad usage.
+# (unmerged branch, dirty worktree, failed fetch, a pull that could not
+# fast-forward), 64 bad usage.
 
 # writeShellApplication turns errexit and pipefail on; this script checks every
 # git call itself (a repository in an odd state must still be listed), so off.
@@ -70,6 +72,7 @@ usage() {
 usage: repos                        one line per repository
        repos --json                 the same as JSON
        repos fetch [ID...]          git fetch --prune (all repositories when none named)
+       repos pull [ID...]           git pull --ff-only (all repositories when none named)
        repos branch-delete ID NAME  delete a merged local branch
        repos worktree-remove ID DIR remove a clean linked worktree
        repos worktree-prune ID      forget worktrees whose directory is gone
@@ -335,6 +338,51 @@ case $cmd in
       fi
     done
     [ "$failed" -eq 0 ] || exit 3
+    ;;
+  pull)
+    # One line per repository, "ID: what happened": "pulled N", "up to date",
+    # "not pulled: why" (the ones the menu marks), or "no remote", "no
+    # upstream", "detached" (nothing to pull). Fast-forward only, never a
+    # merge or a rebase; git itself decides whether local changes are in the
+    # way (only those the pull would touch are). Exit 3 if any was not pulled.
+    shift
+    refused=0
+    if [ $# -eq 0 ]; then
+      mapfile -t dirs < <(repo_dirs)
+    else
+      dirs=()
+      for id in "$@"; do dirs+=("$(repo_dir "$id")"); done
+    fi
+    for dir in "${dirs[@]}"; do
+      id=${dir#"$root"/}
+      if [ -z "$(git -C "$dir" remote)" ]; then
+        echo "$id: no remote"
+        continue
+      fi
+      if ! git -C "$dir" symbolic-ref -q HEAD >/dev/null; then
+        echo "$id: detached"
+        continue
+      fi
+      if ! git -C "$dir" rev-parse -q --verify '@{u}' >/dev/null 2>&1; then
+        echo "$id: no upstream"
+        continue
+      fi
+      before=$(git -C "$dir" rev-parse HEAD)
+      if out=$(timeout 120 git -C "$dir" pull --ff-only --quiet 2>&1); then
+        n=$(git -C "$dir" rev-list --count "$before..HEAD")
+        if [ "$n" -eq 0 ]; then echo "$id: up to date"; else echo "$id: pulled $n"; fi
+      else
+        case $out in
+          *"would be overwritten"*) why="local changes are in the way" ;;
+          *"Not possible to fast-forward"* | *"not possible to fast-forward"*) why="diverged from its upstream" ;;
+          *) why=$(grep -m 1 -E '^(fatal|error): ' <<<"$out" | sed -E 's/^(fatal|error): //')
+             [ -n "$why" ] || why=$(grep -m 1 . <<<"$out") ;;
+        esac
+        echo "$id: not pulled: ${why:-git exited with an error}"
+        refused=1
+      fi
+    done
+    [ "$refused" -eq 0 ] || exit 3
     ;;
   branch-delete)
     [ $# -eq 3 ] || usage

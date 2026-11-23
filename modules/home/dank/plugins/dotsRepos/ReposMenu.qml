@@ -19,6 +19,7 @@ PluginComponent {
 
     readonly property var statusCommand: pluginData.statusCommand || []
     readonly property var fetchCommand: pluginData.fetchCommand || []
+    readonly property var pullCommand: pluginData.pullCommand || []
     readonly property var branchDeleteCommand: pluginData.branchDeleteCommand || []
     readonly property var worktreeRemoveCommand: pluginData.worktreeRemoveCommand || []
     readonly property var terminalCommand: pluginData.terminalCommand || []
@@ -60,6 +61,9 @@ PluginComponent {
     property string expanded: ""
     // The branch whose actions are open ("<id>:<branch>"), "" when none.
     property string expandedBranch: ""
+    // The repositories the last "pull all" could not fast-forward: { id: why }.
+    // An entry stays until a status shows that repository no longer behind.
+    property var pullRefused: ({})
 
     readonly property int attention: repos.filter(r => root.needsAttention(r)).length
 
@@ -79,6 +83,11 @@ PluginComponent {
             try {
                 const data = JSON.parse(stdout);
                 repos = data.repos || [];
+                const still = {};
+                for (const r of repos)
+                    if (pullRefused[r.id] !== undefined && (r.behind || 0) > 0)
+                        still[r.id] = pullRefused[r.id];
+                pullRefused = still;
                 if (data.root)
                     rootDir = data.root;
                 loaded = true;
@@ -108,6 +117,44 @@ PluginComponent {
 
     function fetchAll() {
         run("fetch", fetchCommand, "Fetch");
+    }
+    // `repos pull` prints "ID: what happened" per repository: "pulled N", "up to
+    // date", "not pulled: why", or a reason there was nothing to pull. Exit 3
+    // when any was not pulled, which is an answer here, not a failure.
+    function parsePull(stdout) {
+        const out = { pulled: [], refused: {} };
+        for (const line of (stdout || "").split("\n")) {
+            const at = line.indexOf(": ");
+            if (at < 0)
+                continue;
+            const id = line.slice(0, at);
+            const what = line.slice(at + 2);
+            if (what.startsWith("pulled "))
+                out.pulled.push(id);
+            else if (what.startsWith("not pulled: "))
+                out.refused[id] = what.slice("not pulled: ".length);
+        }
+        return out;
+    }
+    function pullAll() {
+        if (busy !== "" || pullCommand.length === 0)
+            return;
+        busy = "pull";
+        Proc.runCommand("dotsRepos.action.pull", pullCommand, (stdout, exitCode) => {
+            const r = parsePull(stdout);
+            const refusedIds = Object.keys(r.refused);
+            pullRefused = r.refused;
+            const pulled = r.pulled.length === 0 ? "Nothing to pull" : "Pulled " + r.pulled.length + (r.pulled.length === 1 ? " repository" : " repositories");
+            if (refusedIds.length > 0)
+                ToastService.showWarning(pulled + "; not pulled: " + refusedIds.join(", "), refusedIds.map(id => id + ": " + r.refused[id]).join("\n"));
+            else if (exitCode !== 0) {
+                const line = (stdout || "").split("\n").find(l => l.trim() !== "") || "";
+                ToastService.showError("Pull failed" + (line !== "" ? ": " + line : " (exit " + exitCode + ")"));
+            } else
+                ToastService.showInfo(pulled);
+            busy = "";
+            refresh();
+        }, 0, -1);
     }
     function fetchRepo(repo) {
         run("fetch:" + repo.id, fetchCommand.concat([repo.id]), repo.id + ": fetch");
@@ -188,6 +235,8 @@ PluginComponent {
     }
     function summary(r) {
         const parts = [];
+        if (pullRefused[r.id] !== undefined)
+            parts.push("not pulled");
         if (r.operation)
             parts.push(r.operation);
         if (r.detached)
@@ -435,31 +484,46 @@ PluginComponent {
                 }
             }
 
-            // Fetch every repository, then check again.
+            // Pull every repository (fast-forward only), and fetch every repository;
+            // either checks again after.
             headerActions: Component {
-                Rectangle {
-                    id: fetchAllButton
+                Row {
+                    spacing: 0
 
-                    width: 32
-                    height: 32
-                    radius: 16
-                    color: fetchAllArea.containsMouse ? Theme.primaryHover : "transparent"
-                    opacity: root.busy === "" ? 1 : 0.5
+                    Repeater {
+                        model: [
+                            { key: "pull", icon: "download", enabled: root.pullCommand.length > 0 },
+                            { key: "fetch", icon: "sync", enabled: true }
+                        ].filter(b => b.enabled)
 
-                    DankIcon {
-                        anchors.centerIn: parent
-                        name: "sync"
-                        size: Theme.iconSize - 4
-                        color: root.busy === "fetch" ? Theme.primary : Theme.surfaceText
-                    }
+                        delegate: Rectangle {
+                            id: headerButton
 
-                    MouseArea {
-                        id: fetchAllArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        enabled: root.busy === ""
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.fetchAll()
+                            required property var modelData
+
+                            width: 32
+                            height: 32
+                            radius: 16
+                            color: headerArea.containsMouse ? Theme.primaryHover : "transparent"
+                            opacity: root.busy === "" ? 1 : 0.5
+
+                            DankIcon {
+                                anchors.centerIn: parent
+                                name: headerButton.modelData.icon
+                                size: Theme.iconSize - 4
+                                color: root.busy === headerButton.modelData.key ? Theme.primary : Theme.surfaceText
+                            }
+
+                            MouseArea {
+                                id: headerArea
+                                objectName: headerButton.modelData.key + "AllArea"
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                enabled: root.busy === ""
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: headerButton.modelData.key === "pull" ? root.pullAll() : root.fetchAll()
+                            }
+                        }
                     }
                 }
             }
@@ -635,6 +699,17 @@ PluginComponent {
                                 leftPadding: Theme.spacingM + Theme.iconSizeSmall + Theme.spacingS
 
                                 readonly property real innerWidth: width - leftPadding - Theme.spacingM
+
+                                // Why the last "pull all" left this repository behind.
+                                StyledText {
+                                    visible: root.pullRefused[item.modelData.id] !== undefined
+                                    width: parent.innerWidth
+                                    text: "Not pulled: " + (root.pullRefused[item.modelData.id] || "")
+                                    color: Theme.error
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    wrapMode: Text.Wrap
+                                    bottomPadding: Theme.spacingXS
+                                }
 
                                 // Actions: fetch, open, terminal, VS Code. A Flow, so a narrow popout or
                                 // a large font wraps the buttons instead of pushing them off the edge.

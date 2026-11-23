@@ -17,6 +17,7 @@ TestCase {
         root: "/g",
         statusCommand: ["repos", "--json"],
         fetchCommand: ["repos", "fetch"],
+        pullCommand: ["repos", "pull"],
         branchDeleteCommand: ["repos", "branch-delete"],
         worktreeRemoveCommand: ["repos", "worktree-remove"],
         terminalCommand: ["kitty", "--detach", "--directory"],
@@ -202,6 +203,47 @@ TestCase {
         compare(a[1].id, "dotsRepos.action.fetch");
         compare(JSON.stringify(a[1].command), JSON.stringify(["repos", "fetch"]));
         compare(statusCalls(), before + 1);
+    }
+
+    // The header's download button: `repos pull`, then a status; a repository it
+    // could not fast-forward says so on its row and, open, why; a status that shows
+    // it no longer behind clears that.
+    function test_pull_all_marks_the_repositories_it_could_not_pull() {
+        Proc.nextExit = 3;
+        Proc.nextOut = "me/dots: up to date\nme/forest: pulled 2\nother/thing: not pulled: local changes are in the way\n";
+        const before = statusCalls();
+        clickCentre(icons("download").filter(i => i.parent && i.parent.width === 32)[0]); wait(30);
+        const a = actions();
+        compare(a.length, 1);
+        compare(a[0].id, "dotsRepos.action.pull");
+        compare(JSON.stringify(a[0].command), JSON.stringify(["repos", "pull"]));
+        compare(statusCalls(), before + 1);
+        compare(plugin.busy, "");
+        compare(ToastService.errors.length, 0);
+        compare(JSON.stringify(ToastService.warnings), JSON.stringify(["Pulled 1 repository; not pulled: other/thing"]));
+        compare(ToastService.details[0], "other/thing: local changes are in the way");
+        textItem("not pulled · rebase · ↑0 ↓3");
+        open("thing");
+        textItem("Not pulled: local changes are in the way");
+        const s = JSON.parse(Proc.statusOut);
+        s.repos[2].behind = 0;
+        Proc.statusOut = JSON.stringify(s);
+        plugin.refresh(); wait(30);
+        compare(plugin.pullRefused["other/thing"], undefined);
+        compare(plugin.summary(plugin.repos[2]), "rebase");
+    }
+    function test_pull_all_with_nothing_refused() {
+        Proc.nextOut = "me/dots: up to date\nme/forest: pulled 1\nother/thing: pulled 3\n";
+        clickCentre(icons("download").filter(i => i.parent && i.parent.width === 32)[0]); wait(30);
+        compare(JSON.stringify(ToastService.infos), JSON.stringify(["Pulled 2 repositories"]));
+        compare(ToastService.warnings.length, 0);
+        compare(JSON.stringify(plugin.pullRefused), "{}");
+    }
+    function test_pull_all_that_fails_outright_is_an_error() {
+        Proc.nextExit = 64;
+        Proc.nextOut = "usage: repos ...\n";
+        clickCentre(icons("download").filter(i => i.parent && i.parent.width === 32)[0]); wait(30);
+        compare(JSON.stringify(ToastService.errors), JSON.stringify(["Pull failed: usage: repos ..."]));
     }
 
     function test_open_and_terminal_do_not_recheck() {
