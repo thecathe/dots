@@ -20,6 +20,7 @@ PluginComponent {
     readonly property var statusCommand: pluginData.statusCommand || []
     readonly property var fetchCommand: pluginData.fetchCommand || []
     readonly property var pullCommand: pluginData.pullCommand || []
+    readonly property var pushCommand: pluginData.pushCommand || []
     readonly property var branchDeleteCommand: pluginData.branchDeleteCommand || []
     readonly property var worktreeRemoveCommand: pluginData.worktreeRemoveCommand || []
     readonly property var terminalCommand: pluginData.terminalCommand || []
@@ -64,6 +65,9 @@ PluginComponent {
     // The repositories the last "pull all" could not fast-forward: { id: why }.
     // An entry stays until a status shows that repository no longer behind.
     property var pullRefused: ({})
+    // The same for the last "push all": { id: ["branch: why", ...] }. An entry stays
+    // until a status shows no branch of that repository ahead of its upstream.
+    property var pushRefused: ({})
 
     readonly property int attention: repos.filter(r => root.needsAttention(r)).length
 
@@ -88,6 +92,11 @@ PluginComponent {
                     if (pullRefused[r.id] !== undefined && (r.behind || 0) > 0)
                         still[r.id] = pullRefused[r.id];
                 pullRefused = still;
+                const stillPush = {};
+                for (const r of repos)
+                    if (pushRefused[r.id] !== undefined && (r.branches || []).some(b => (b.aheadUpstream || 0) > 0))
+                        stillPush[r.id] = pushRefused[r.id];
+                pushRefused = stillPush;
                 if (data.root)
                     rootDir = data.root;
                 loaded = true;
@@ -152,6 +161,47 @@ PluginComponent {
                 ToastService.showError("Pull failed" + (line !== "" ? ": " + line : " (exit " + exitCode + ")"));
             } else
                 ToastService.showInfo(pulled);
+            busy = "";
+            refresh();
+        }, 0, -1);
+    }
+    // `repos push` prints "ID: BRANCH: pushed N" (or "merged R/B, pushed N") per
+    // branch it pushed, "ID: BRANCH: ...not pushed: why" per branch it could not,
+    // and per repository "ID: not pushed: why" (the fetch failed), "ID: nothing to
+    // push" or "ID: no remote". Exit 3 when any was not pushed.
+    function parsePush(stdout) {
+        const out = { pushed: 0, refused: {} };
+        for (const line of (stdout || "").split("\n")) {
+            const at = line.indexOf(": ");
+            if (at < 0)
+                continue;
+            const id = line.slice(0, at);
+            const what = line.slice(at + 2);
+            const no = what.indexOf("not pushed: ");
+            if (no >= 0) {
+                const branch = what.startsWith("not pushed: ") ? "" : what.slice(0, what.indexOf(": ") + 2);
+                (out.refused[id] = out.refused[id] || []).push(branch + what.slice(no + "not pushed: ".length));
+            } else if (/pushed [0-9]+$/.test(what))
+                out.pushed += 1;
+        }
+        return out;
+    }
+    function pushAll() {
+        if (busy !== "" || pushCommand.length === 0)
+            return;
+        busy = "push";
+        Proc.runCommand("dotsRepos.action.push", pushCommand, (stdout, exitCode) => {
+            const r = parsePush(stdout);
+            const refusedIds = Object.keys(r.refused);
+            pushRefused = r.refused;
+            const pushed = r.pushed === 0 ? "Nothing to push" : "Pushed " + r.pushed + (r.pushed === 1 ? " branch" : " branches");
+            if (refusedIds.length > 0)
+                ToastService.showWarning(pushed + "; not pushed: " + refusedIds.join(", "), refusedIds.map(id => r.refused[id].map(w => id + ": " + w).join("\n")).join("\n"));
+            else if (exitCode !== 0) {
+                const line = (stdout || "").split("\n").find(l => l.trim() !== "") || "";
+                ToastService.showError("Push failed" + (line !== "" ? ": " + line : " (exit " + exitCode + ")"));
+            } else
+                ToastService.showInfo(pushed);
             busy = "";
             refresh();
         }, 0, -1);
@@ -237,6 +287,8 @@ PluginComponent {
         const parts = [];
         if (pullRefused[r.id] !== undefined)
             parts.push("not pulled");
+        if (pushRefused[r.id] !== undefined)
+            parts.push("not pushed");
         if (r.operation)
             parts.push(r.operation);
         if (r.detached)
@@ -484,14 +536,16 @@ PluginComponent {
                 }
             }
 
-            // Pull every repository (fast-forward only), and fetch every repository;
-            // either checks again after.
+            // Push every branch ahead of its upstream (merging first only when the
+            // merge is clean), pull every repository (fast-forward only), and fetch
+            // every repository; each checks again after.
             headerActions: Component {
                 Row {
                     spacing: 0
 
                     Repeater {
                         model: [
+                            { key: "push", icon: "upload", enabled: root.pushCommand.length > 0 },
                             { key: "pull", icon: "download", enabled: root.pullCommand.length > 0 },
                             { key: "fetch", icon: "sync", enabled: true }
                         ].filter(b => b.enabled)
@@ -521,7 +575,7 @@ PluginComponent {
                                 hoverEnabled: true
                                 enabled: root.busy === ""
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: headerButton.modelData.key === "pull" ? root.pullAll() : root.fetchAll()
+                                onClicked: headerButton.modelData.key === "push" ? root.pushAll() : headerButton.modelData.key === "pull" ? root.pullAll() : root.fetchAll()
                             }
                         }
                     }
@@ -705,6 +759,17 @@ PluginComponent {
                                     visible: root.pullRefused[item.modelData.id] !== undefined
                                     width: parent.innerWidth
                                     text: "Not pulled: " + (root.pullRefused[item.modelData.id] || "")
+                                    color: Theme.error
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    wrapMode: Text.Wrap
+                                    bottomPadding: Theme.spacingXS
+                                }
+
+                                // Why the last "push all" left branches of this repository unpushed.
+                                StyledText {
+                                    visible: root.pushRefused[item.modelData.id] !== undefined
+                                    width: parent.innerWidth
+                                    text: "Not pushed: " + (root.pushRefused[item.modelData.id] || []).join("; ")
                                     color: Theme.error
                                     font.pixelSize: Theme.fontSizeSmall
                                     wrapMode: Text.Wrap

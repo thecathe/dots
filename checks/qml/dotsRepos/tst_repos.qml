@@ -18,6 +18,7 @@ TestCase {
         statusCommand: ["repos", "--json"],
         fetchCommand: ["repos", "fetch"],
         pullCommand: ["repos", "pull"],
+        pushCommand: ["repos", "push"],
         branchDeleteCommand: ["repos", "branch-delete"],
         worktreeRemoveCommand: ["repos", "worktree-remove"],
         terminalCommand: ["kitty", "--detach", "--directory"],
@@ -244,6 +245,48 @@ TestCase {
         Proc.nextOut = "usage: repos ...\n";
         clickCentre(icons("download").filter(i => i.parent && i.parent.width === 32)[0]); wait(30);
         compare(JSON.stringify(ToastService.errors), JSON.stringify(["Pull failed: usage: repos ..."]));
+    }
+
+    // The header's upload button: `repos push`, then a status; a repository with a
+    // branch it could not push says so on its row and, open, why; a status that
+    // shows none of its branches ahead clears that.
+    function test_push_all_marks_the_repositories_it_could_not_push() {
+        Proc.nextExit = 3;
+        Proc.nextOut = "me/dots: main: not pushed: diverged from origin/main, and merging it conflicts in 1 file(s)\n"
+            + "me/dots: feat/x: merged origin/feat/x, pushed 2\nme/forest: nothing to push\nother/thing: main: pushed 1\n";
+        const before = statusCalls();
+        clickCentre(icons("upload").filter(i => i.parent && i.parent.width === 32)[0]); wait(30);
+        const a = actions();
+        compare(a.length, 1);
+        compare(a[0].id, "dotsRepos.action.push");
+        compare(JSON.stringify(a[0].command), JSON.stringify(["repos", "push"]));
+        compare(statusCalls(), before + 1);
+        compare(plugin.busy, "");
+        compare(ToastService.errors.length, 0);
+        compare(JSON.stringify(ToastService.warnings), JSON.stringify(["Pushed 2 branches; not pushed: me/dots"]));
+        compare(ToastService.details[0], "me/dots: main: diverged from origin/main, and merging it conflicts in 1 file(s)");
+        verify(plugin.summary(plugin.repos[0]).startsWith("not pushed · "), plugin.summary(plugin.repos[0]));
+        open("dots");
+        textItem("Not pushed: main: diverged from origin/main, and merging it conflicts in 1 file(s)");
+        const s = JSON.parse(Proc.statusOut);
+        s.repos[0].branches[0].aheadUpstream = 0;
+        Proc.statusOut = JSON.stringify(s);
+        plugin.refresh(); wait(30);
+        compare(plugin.pushRefused["me/dots"], undefined);
+    }
+    function test_push_all_with_nothing_refused() {
+        Proc.nextOut = "me/dots: nothing to push\nme/forest: nothing to push\nother/thing: no remote\n";
+        clickCentre(icons("upload").filter(i => i.parent && i.parent.width === 32)[0]); wait(30);
+        compare(JSON.stringify(ToastService.infos), JSON.stringify(["Nothing to push"]));
+        compare(ToastService.warnings.length, 0);
+        compare(JSON.stringify(plugin.pushRefused), "{}");
+    }
+    function test_push_all_with_a_failed_fetch_names_the_repository() {
+        Proc.nextExit = 3;
+        Proc.nextOut = "me/forest: not pushed: fetch failed: could not read from remote\n";
+        clickCentre(icons("upload").filter(i => i.parent && i.parent.width === 32)[0]); wait(30);
+        compare(JSON.stringify(ToastService.warnings), JSON.stringify(["Nothing to push; not pushed: me/forest"]));
+        compare(ToastService.details[0], "me/forest: fetch failed: could not read from remote");
     }
 
     function test_open_and_terminal_do_not_recheck() {
