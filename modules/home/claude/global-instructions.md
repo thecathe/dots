@@ -29,6 +29,15 @@ If a command a task needs depends on a package that is not installed, do not ass
 installed for good. Ask the user to run it through a one-off shell:
 `nix-shell -p PACKAGE --run "the-command --with args"`.
 
+## Heavy Nix commands
+A whole-flake evaluation (`nix flake check`, the hosts repo's `./check`, evaluating or building a
+machine) can take more than 7 GB and has nearly run a laptop out of memory, freezing the desktop.
+- Run only checks that are scoped to the change (`nix build .#checks.<system>.<name>`) and capped:
+  `systemd-run --user --scope -p MemoryMax=3G -p MemorySwapMax=0 nice nix ... --max-jobs 1 --cores 2`.
+  A run that hits the cap fails. Report it; never raise the cap or retry it uncapped on your own.
+- Running all of the checks, or anything without a cap, needs the author's explicit permission
+  each time, especially on the laptops (`worklaptop`, `nixos-laptop`).
+
 ## Git workflow
 
 ### Commits

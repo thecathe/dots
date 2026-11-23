@@ -8,6 +8,7 @@
 #   repos --json                 the same as JSON ({root, generated, repos: [...]})
 #   repos fetch [ID...]          git fetch --prune in the named repositories (all when none)
 #   repos pull [ID...]           fast-forward each checked-out branch from its upstream (all when none)
+#   repos push [ID...]           push every branch ahead of its upstream, merging cleanly first when diverged
 #   repos branch-delete ID NAME  delete a local branch, only if it is merged (git branch -d)
 #   repos worktree-remove ID DIR remove a linked worktree, only if it is clean (git worktree remove)
 #   repos worktree-prune ID      forget worktrees whose directory is gone
@@ -28,12 +29,12 @@
 # when the last fetch was, every local branch (with whether it is merged into
 # the integration branch, how many commits it has beyond it, and whether its
 # upstream is gone), and every worktree. Nothing here talks to a remote except
-# `fetch`, `pull` and the push and pull of a branch, which never prompt: a
+# `fetch`, `pull`, `push` and the push and pull of a branch, which never prompt: a
 # repository that needs credentials the environment lacks is reported as failed.
 #
 # Which repositories are listed: every one under the root, minus those named in
 # `exclude` (IDs) and, when `owners` is not empty, those of any other owner. The
-# same set is what a bare `fetch` or `pull` covers. A repository named explicitly to a
+# same set is what a bare `fetch`, `pull` or `push` covers. A repository named explicitly to a
 # subcommand (`path`, `branch-delete`, ...) is found whatever the filters say.
 #
 # Configuration: REPOS_CONFIG names a JSON file {root, integration, exclude,
@@ -43,7 +44,7 @@
 #
 # Exit codes: 0 done, 2 a repository or branch was not found, 3 git refused
 # (unmerged branch, dirty worktree, failed fetch, a pull that could not
-# fast-forward), 64 bad usage.
+# fast-forward, a push that was refused), 64 bad usage.
 
 # writeShellApplication turns errexit and pipefail on; this script checks every
 # git call itself (a repository in an odd state must still be listed), so off.
@@ -73,6 +74,7 @@ usage: repos                        one line per repository
        repos --json                 the same as JSON
        repos fetch [ID...]          git fetch --prune (all repositories when none named)
        repos pull [ID...]           git pull --ff-only (all repositories when none named)
+       repos push [ID...]           push each branch ahead of its upstream (merging first only when clean)
        repos branch-delete ID NAME  delete a merged local branch
        repos worktree-remove ID DIR remove a clean linked worktree
        repos worktree-prune ID      forget worktrees whose directory is gone
@@ -381,6 +383,129 @@ case $cmd in
         echo "$id: not pulled: ${why:-git exited with an error}"
         refused=1
       fi
+    done
+    [ "$refused" -eq 0 ] || exit 3
+    ;;
+  push)
+    # Every local branch whose upstream is a branch of the same name on a
+    # remote, and which has commits the upstream lacks. Never forced, so the
+    # remote can never lose a commit: git refuses anything that is not a
+    # fast-forward of what it has.
+    #
+    # A branch that has diverged (the remote has commits it lacks too) is
+    # merged first, but only when the merge is clean, and without touching
+    # any working tree until it is known to be: `git merge-tree --write-tree`
+    # computes it in memory and exits 1 on any conflict (content,
+    # modify/delete, rename), and then nothing changes. A clean merge is
+    # committed (both parents kept, so no commit of either side is dropped)
+    # and the branch moved to it by a fast-forward: `git merge --ff-only` in
+    # the worktree that has it checked out (git refuses if a local change is
+    # in the way), or `git branch -f` otherwise (git refuses a branch that a
+    # worktree, a rebase or a bisect is using). Never `-X ours`/`-X theirs`,
+    # which settle a conflict by dropping one side.
+    #
+    # One line per branch that had something to push, "ID: BRANCH: pushed N",
+    # "ID: BRANCH: merged R/B, pushed N" or "ID: BRANCH: [merged R/B, ]not
+    # pushed: why", and per repository "ID: nothing to push", "ID: no remote"
+    # or "ID: not pushed: fetch failed: why". Exit 3 if any was not pushed.
+    shift
+    refused=0
+    if [ $# -eq 0 ]; then
+      mapfile -t dirs < <(repo_dirs)
+    else
+      dirs=()
+      for id in "$@"; do dirs+=("$(repo_dir "$id")"); done
+    fi
+    first_error() { # the first error line of git's output
+      local why
+      why=$(grep -m 1 -E '^(fatal|error|remote): ' <<<"$1" | sed -E 's/^(fatal|error|remote): //')
+      [ -n "$why" ] || why=$(grep -m 1 '\[rejected\]\|\[remote rejected\]' <<<"$1" | sed -E 's/^ *! *//')
+      [ -n "$why" ] || why=$(grep -m 1 . <<<"$1")
+      printf '%s' "${why:-git exited with an error}"
+    }
+    for dir in "${dirs[@]}"; do
+      id=${dir#"$root"/}
+      if [ -z "$(git -C "$dir" remote)" ]; then
+        echo "$id: no remote"
+        continue
+      fi
+      # The remote's state now, not the last fetch's, to know what diverged.
+      if ! out=$(timeout 60 git -C "$dir" fetch --all --prune --quiet 2>&1); then
+        echo "$id: not pushed: fetch failed: $(first_error "$out")"
+        refused=1
+        continue
+      fi
+      any=0
+      while IFS=$'\t' read -r b upref remote remoteref; do
+        case $upref in refs/remotes/*) ;; *) continue ;; esac # no upstream, or a local one
+        git -C "$dir" rev-parse -q --verify "$upref" >/dev/null || continue # gone
+        up=${upref#refs/remotes/}
+        ahead=$(git -C "$dir" rev-list --count "$upref..refs/heads/$b")
+        [ "$ahead" -gt 0 ] || continue
+        any=1
+        if [ "$remoteref" != "refs/heads/$b" ]; then
+          echo "$id: $b: not pushed: its upstream $up has another name (push it by hand)"
+          refused=1
+          continue
+        fi
+        merged=""
+        behind=$(git -C "$dir" rev-list --count "refs/heads/$b..$upref")
+        if [ "$behind" -gt 0 ]; then
+          old=$(git -C "$dir" rev-parse "refs/heads/$b")
+          theirs=$(git -C "$dir" rev-parse "$upref")
+          out=$(git -C "$dir" merge-tree --write-tree --name-only --no-messages "$old" "$theirs" 2>&1)
+          case $? in
+            0) ;;
+            1)
+              n=$(tail -n +2 <<<"$out" | grep -c .)
+              echo "$id: $b: not pushed: diverged from $up, and merging it conflicts in $n file(s)"
+              refused=1
+              continue
+              ;;
+            *)
+              echo "$id: $b: not pushed: the merge failed: $(first_error "$out")"
+              refused=1
+              continue
+              ;;
+          esac
+          tree=$(head -n 1 <<<"$out")
+          if ! commit=$(git -C "$dir" commit-tree "$tree" -p "$old" -p "$theirs" \
+            -m "Merge remote-tracking branch '$up' into $b" 2>&1); then
+            echo "$id: $b: not pushed: the merge commit failed: $(first_error "$commit")"
+            refused=1
+            continue
+          fi
+          # The worktree that has the branch checked out, if any.
+          wt=$(git -C "$dir" worktree list --porcelain | awk -v ref="refs/heads/$b" '
+            /^worktree / { path = substr($0, 10) }
+            $0 == "branch " ref { print path; exit }')
+          if [ -n "$wt" ]; then
+            out=$(git -C "$wt" merge --ff-only --quiet "$commit" 2>&1)
+          else
+            out=$(git -C "$dir" branch -f -- "$b" "$commit" 2>&1)
+          fi
+          # shellcheck disable=SC2181 # the status of whichever ran
+          if [ $? -ne 0 ]; then
+            case $out in
+              *"would be overwritten"*) why="local changes are in the way" ;;
+              *) why=$(first_error "$out") ;;
+            esac
+            echo "$id: $b: not pushed: diverged from $up; it merges cleanly, but $why"
+            refused=1
+            continue
+          fi
+          merged="merged $up, "
+          ahead=$(git -C "$dir" rev-list --count "$upref..refs/heads/$b")
+        fi
+        if out=$(timeout 120 git -C "$dir" push --quiet "$remote" "refs/heads/$b:$remoteref" 2>&1); then
+          echo "$id: $b: ${merged}pushed $ahead"
+        else
+          echo "$id: $b: ${merged}not pushed: $(first_error "$out")"
+          refused=1
+        fi
+      done < <(git -C "$dir" for-each-ref refs/heads \
+        --format='%(refname:short)%09%(upstream)%09%(upstream:remotename)%09%(upstream:remoteref)')
+      [ "$any" -eq 1 ] || echo "$id: nothing to push"
     done
     [ "$refused" -eq 0 ] || exit 3
     ;;

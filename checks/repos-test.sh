@@ -3,8 +3,9 @@
 # repository with a bare origin, merged and unmerged branches, a dirty tree
 # and a linked worktree; one with no remote, detached; one on master; a linked
 # worktree at the top level (skipped as a repository); an excluded one; and,
-# near the end, a clean filter's size-only change and `pull` against one
-# origin with clones in each state it reports. Run by
+# near the end, a clean filter's size-only change, `pull` against one
+# origin with clones in each state it reports, and `push`, with a clone per
+# case and a second clone of each origin standing in for another machine. Run by
 # checks/repos.nix (repos, git and jq on PATH); run by hand the same way.
 set -u
 
@@ -333,6 +334,93 @@ check "pull: a branch with no upstream says so" [ "$out" = "p/up: no upstream" ]
 git -C "$g/p/up" checkout -q --detach
 out=$(repos pull p/up 2>&1)
 check "pull: detached says so" [ "$out" = "p/up: detached" ]
+
+# push: owner s, each repository with its own origin and a second clone
+# ($root/other-NAME) that pushes the remote side's commits.
+mkdir -p "$g/s"
+pair() { # pair NAME: an origin with one commit (files f and g), cloned to s/NAME and other-NAME
+  git init -q --bare "$root/s-$1.git"
+  git clone -q "$root/s-$1.git" "$g/s/$1" 2>/dev/null
+  printf 'a\nb\nc\n' >"$g/s/$1/f"
+  commit "$g/s/$1" g "1" "base"
+  git -C "$g/s/$1" add f
+  git -C "$g/s/$1" commit -q -m "base f"
+  git -C "$g/s/$1" push -q origin main
+  git clone -q "$root/s-$1.git" "$root/other-$1" 2>/dev/null
+}
+remote_side() { # remote_side NAME FILE CONTENT: the other machine commits and pushes
+  commit "$root/other-$1" "$2" "$3" "remote: $2"
+  git -C "$root/other-$1" push -q origin HEAD
+}
+heads() { git -C "$g/s/$1" rev-parse HEAD; }
+on_origin() { git --git-dir="$root/s-$1.git" rev-parse "${2:-main}"; }
+
+pair ahead
+commit "$g/s/ahead" h "1" "local"
+pair clean
+commit "$g/s/clean" h "1" "local h"
+remote_side clean g "2"
+pair conflict
+commit "$g/s/conflict" g "local" "local g"
+remote_side conflict g "remote"
+conflict_head=$(heads conflict)
+conflict_origin=$(on_origin conflict)
+pair delete
+git -C "$g/s/delete" rm -q g
+git -C "$g/s/delete" commit -q -m "local: delete g"
+remote_side delete g "changed"
+pair inway
+commit "$g/s/inway" h "1" "local h"
+remote_side inway g "2"
+echo uncommitted >"$g/s/inway/g"
+inway_head=$(heads inway)
+pair side
+git -C "$g/s/side" push -q -u origin main:topic 2>/dev/null
+git -C "$g/s/side" branch -q --track topic origin/topic
+git -C "$g/s/side" switch -q topic
+commit "$g/s/side" h "1" "local topic"
+git -C "$g/s/side" switch -q main
+git -C "$root/other-side" fetch -q
+git -C "$root/other-side" switch -q topic 2>/dev/null
+remote_side side g "2"
+echo uncommitted >"$g/s/side/f"
+pair rename
+git -C "$g/s/rename" branch -q -m main mine
+git -C "$g/s/rename" branch -q -u origin/main mine
+commit "$g/s/rename" h "1" "local"
+pair still
+git -C "$g/s/still" switch -q -c unpublished
+commit "$g/s/still" h "1" "not on the remote"
+
+out=$(REPOS_OWNERS='["s"]' repos push 2>&1)
+code=$?
+printf '%s\n' "$out" | sed 's/^/      /'
+check "push: one refused is exit 3" [ "$code" -eq 3 ]
+check "push: ahead is pushed" grep -qx "s/ahead: main: pushed 1" <<<"$out"
+check "push: ...and the origin has it" [ "$(on_origin ahead)" = "$(heads ahead)" ]
+check "push: diverged with a clean merge is merged and pushed" grep -qx "s/clean: main: merged origin/main, pushed 2" <<<"$out"
+check "push: ...a merge commit with both sides" [ "$(git -C "$g/s/clean" rev-list --count --merges HEAD)" = 1 ] &&
+  [ "$(cat "$g/s/clean/g")" = 2 ] && [ "$(cat "$g/s/clean/h")" = 1 ]
+check "push: ...the tree is clean after" [ -z "$(git -C "$g/s/clean" status --porcelain)" ]
+check "push: ...and the origin has it" [ "$(on_origin clean)" = "$(heads clean)" ]
+check "push: a conflicting merge is refused" grep -qx "s/conflict: main: not pushed: diverged from origin/main, and merging it conflicts in 1 file(s)" <<<"$out"
+check "push: ...nothing moved, locally or on the origin" [ "$(heads conflict)" = "$conflict_head" ] && [ "$(on_origin conflict)" = "$conflict_origin" ]
+check "push: ...and the tree is untouched" [ -z "$(git -C "$g/s/conflict" status --porcelain)" ] && [ "$(cat "$g/s/conflict/g")" = local ]
+check "push: a modify/delete conflict is refused" grep -q "^s/delete: main: not pushed: diverged from origin/main, and merging it conflicts" <<<"$out"
+check "push: a clean merge with local changes in the way is refused" grep -qx "s/inway: main: not pushed: diverged from origin/main; it merges cleanly, but local changes are in the way" <<<"$out"
+check "push: ...the change is kept and nothing moved" [ "$(cat "$g/s/inway/g")" = uncommitted ] && [ "$(heads inway)" = "$inway_head" ]
+check "push: a branch not checked out is merged and pushed" grep -qx "s/side: topic: merged origin/topic, pushed 2" <<<"$out"
+check "push: ...without touching the worktree" [ "$(git -C "$g/s/side" symbolic-ref --short HEAD)" = main ] && [ "$(cat "$g/s/side/f")" = uncommitted ]
+check "push: ...and the origin has it" [ "$(on_origin side topic)" = "$(git -C "$g/s/side" rev-parse topic)" ]
+check "push: an upstream of another name is refused" grep -qx "s/rename: mine: not pushed: its upstream origin/main has another name (push it by hand)" <<<"$out"
+check "push: ...and not pushed" [ "$(on_origin rename)" != "$(heads rename)" ]
+check "push: a branch with no upstream is left alone" grep -qx "s/still: nothing to push" <<<"$out"
+check "push: ...and not published" not git --git-dir="$root/s-still.git" rev-parse -q --verify unpublished
+out=$(repos push s/ahead 2>&1)
+code=$?
+check "push: again, nothing to push, exit 0" [ "$code" -eq 0 ] && [ "$out" = "s/ahead: nothing to push" ]
+out=$(repos push o/legacy 2>&1)
+check "push: no remote says so" [ "$out" = "o/legacy: no remote" ]
 
 repos nonsense >/dev/null 2>&1
 check "unknown command is usage (64)" [ $? -eq 64 ]

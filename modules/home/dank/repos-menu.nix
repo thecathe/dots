@@ -7,8 +7,8 @@
 # minute (modules/home/repos). A
 # repository's row opens to its branches and worktrees and the actions: fetch,
 # open the directory, a terminal there, VS Code there, delete a merged branch,
-# remove a clean worktree; and in the header, pull (fast-forward) and fetch
-# every repository. The commands come from here, so the QML never
+# remove a clean worktree; and in the header, push (merging first only when
+# clean), pull (fast-forward) and fetch every repository. The commands come from here, so the QML never
 # guesses a path.
 {
   config,
@@ -45,6 +45,7 @@ in {
         statusCommand = [repos "--json"];
         fetchCommand = [repos "fetch"];
         pullCommand = [repos "pull"];
+        pushCommand = [repos "push"];
         branchDeleteCommand = [repos "branch-delete"];
         worktreeRemoveCommand = [repos "worktree-remove"];
         branchPublishCommand = [repos "branch-publish"];
