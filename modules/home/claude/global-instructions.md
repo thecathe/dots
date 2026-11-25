@@ -44,8 +44,11 @@ in one process and was killed by the kernel at 10 GiB. Never run it there; run t
   `nix build .#checks.<system>.<name>` capped:
   `systemd-run --user --scope -p MemoryMax=3G -p MemorySwapMax=0 nice nix ... --max-jobs 1 --cores 2`).
   A run that hits the cap fails. Report it; never raise the cap or retry it uncapped on your own.
-- Running all of the checks (`check-each` with no names), or anything without a cap, needs the
-  author's explicit permission each time, especially on the laptops.
+- `nix run .#check-each` may be run without asking, all checks included (no names), as often as
+  the work needs: the ceiling on each check and the one-at-a-time run are what make it safe (the
+  author's word, 2026-11-25). Anything without a cap, a higher ceiling or `--no-cap`, and a whole
+  `nix flake check` still need the author's explicit permission each time, especially on the
+  laptops.
 
 ## Git workflow
 
