@@ -195,7 +195,7 @@
         dots.flameshot = {
           enable = true;
           wlrScreenshotPortal = true;
-          screenOrder = ["HDMI-A-1" "DP-1"];
+          pointerOutput = true;
         };
       }
     ];
@@ -233,7 +233,19 @@
           dots.flameshot = {
             enable = true;
             singleOutputOnly = true;
-            screenOrder = ["HDMI-A-1"];
+            pointerOutput = true;
+          };
+        }
+      ]).config;
+    # A host that still sets the old list (nixos did until the order was read from the
+    # compositor) keeps the wrapper on Print, and is told to move to pointerOutput.
+    legacy =
+      (consumerConfig [
+        flameshotModule
+        {
+          dots.flameshot = {
+            enable = true;
+            screenOrder = ["HDMI-A-1" "DP-1"];
           };
         }
       ]).config;
@@ -285,7 +297,7 @@
     assert lib.assertMsg (!(on.systemd.user.services ? xdg-desktop-portal-wlr) && !(on.xdg.portal.config ? niri))
     "consumer-flameshot: the wlr portal is added although wlrScreenshotPortal is off";
     assert lib.assertMsg (lib.hasInfix "/bin/flameshot\" \"gui\"" (niriFile on) && !(lib.hasInfix "flameshot-screen" (niriFile on)))
-    "consumer-flameshot: without screenOrder, Print is not plain `flameshot gui`";
+    "consumer-flameshot: without pointerOutput, Print is not plain `flameshot gui`";
     assert lib.assertMsg (multi.xdg.portal.config.niri."org.freedesktop.impl.portal.Screenshot" == "wlr")
     "consumer-flameshot: Screenshot is not routed to the wlr portal";
     assert lib.assertMsg (multi.xdg.portal.config.niri.default == "gnome;gtk" && multi.xdg.portal.config.niri."org.freedesktop.impl.portal.Access" == "gtk" && multi.xdg.portal.config.niri."org.freedesktop.impl.portal.FileChooser" == "gtk")
@@ -297,7 +309,11 @@
     assert lib.assertMsg (!(lib.hasPrefix (toString pkgs.xdg-desktop-portal-wlr) (lib.head (lib.toList multi.systemd.user.services.xdg-desktop-portal-wlr.Service.ExecStart))) && multi.dots.flameshot.portalPngLevel == 0)
     "consumer-flameshot: the wlr portal is the stock package, not the one built with the uncompressed-PNG grim";
     assert lib.assertMsg (lib.hasInfix "/bin/flameshot-screen\"" (niriFile multi) && !(lib.hasInfix "\"gui\"" (niriFile multi)))
-    "consumer-flameshot: with screenOrder, Print does not run the per-output wrapper";
+    "consumer-flameshot: with pointerOutput, Print does not run the per-output wrapper";
+    assert lib.assertMsg (lib.hasInfix "/bin/flameshot-screen\"" (niriFile legacy) && lib.any (w: lib.hasInfix "screenOrder is deprecated" w) legacy.warnings)
+    "consumer-flameshot: a host that still sets screenOrder lost the per-output wrapper, or is not told the option is deprecated";
+    assert lib.assertMsg (!(lib.any (w: lib.hasInfix "screenOrder" w) multi.warnings))
+    "consumer-flameshot: pointerOutput on its own draws the screenOrder deprecation warning";
     assert lib.assertMsg (lib.hasPrefix (toString pkgs.flameshot) (execStart on) && lib.hasPrefix (toString pkgs.flameshot) (execStart multi))
     "consumer-flameshot: Flameshot is not the stock package where boundingBoxCrop is off (nixos would rebuild it)";
     assert lib.assertMsg (!(lib.hasPrefix (toString pkgs.flameshot) (execStart laptop)) && lib.hasSuffix "/bin/flameshot" (execStart laptop))
@@ -309,7 +325,7 @@
     assert lib.assertMsg (!(laptop.systemd.user.services ? xdg-desktop-portal-wlr) && !(laptop.xdg.portal.config ? niri))
     "consumer-flameshot: the laptop options add the wlr portal, which Ubuntu's portal frontend would not see";
     assert lib.assertMsg (!(builtins.tryEval conflict.home.username).success)
-    "consumer-flameshot: singleOutputOnly together with screenOrder or wlrScreenshotPortal is not refused";
+    "consumer-flameshot: singleOutputOnly together with pointerOutput or wlrScreenshotPortal is not refused";
       pkgs.writeText "consumer-flameshot-evaluates" (builtins.unsafeDiscardStringContext (
         consumer [flameshotModule {dots.flameshot.enable = true;}] + consumer multiModules + consumer laptopModules + consumer bothModules
       ));

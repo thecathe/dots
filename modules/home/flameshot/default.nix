@@ -53,10 +53,15 @@
 #
 # Flameshot then asks which output to use before every capture (a window with a
 # preview of each, waiting for a click): `captureActiveMonitor` would skip that
-# but is refused on Wayland, and `flameshot gui` has no output option. `screenOrder`
-# skips it: `flameshot screen --edit -n N` opens the same overlay on output number
-# N, and a small wrapper on the Print key looks up the focused output (the one the
-# pointer is on) in `screenOrder` to find N.
+# but is refused on Wayland, and `flameshot gui` has no output option. `pointerOutput`
+# skips it: `flameshot screen --edit -n N` opens the same overlay on screen number
+# N, and a small wrapper on the Print key (screen.sh) finds N for the focused output
+# (the one the pointer is on). N is Qt's number for it, which follows the order the
+# compositor announced the outputs in, and that changes when an output is switched
+# off and on again; so the wrapper reads the order from the compositor each time
+# (`wayland-info`) instead of trusting a list kept in the host's settings, which is
+# what it did until 2026-11-25 (`screenOrder`) and which then sent the overlay to the
+# other monitor from either one.
 #
 # A host that cannot use the wlr portal (the work laptop: Ubuntu's portal
 # frontend reads only /usr/share/xdg-desktop-portal/portals, so a portal added to
@@ -120,43 +125,15 @@
     then pkgs.niri
     else p;
 
-  # Print with `screenOrder` set: open Flameshot's overlay on the output the
-  # pointer is on, without its output picker. Anything unexpected (niri not
-  # answering, an output missing from the list) falls back to the plain
-  # `flameshot gui`, which still works and asks.
-  screenWrapper = pkgs.writeShellApplication {
-    name = "flameshot-screen";
-    runtimeInputs = [niriPackage pkgs.jq package];
-    text = ''
-      order=(${lib.escapeShellArgs cfg.screenOrder})
-      focused=$(niri msg --json focused-output | jq -r '.name // empty' || true)
-      # Qt only knows the outputs that are switched on, so the number is the
-      # place among those, not in the whole list. If one is on that the list does
-      # not name, the numbering cannot be trusted: ask (`gui`, which does not
-      # ask when there is a single screen).
-      mapfile -t enabled < <(niri msg --json outputs | jq -r 'to_entries[] | select(.value.logical != null) | .key' || true)
-      for name in "''${enabled[@]}"; do
-        listed=0
-        for o in "''${order[@]}"; do
-          if [ "$o" = "$name" ]; then listed=1; fi
-        done
-        if [ "$listed" = 0 ]; then
-          exec flameshot gui
-        fi
-      done
-      n=0
-      for o in "''${order[@]}"; do
-        for name in "''${enabled[@]}"; do
-          if [ "$name" = "$o" ]; then
-            if [ "$o" = "$focused" ]; then
-              exec flameshot screen --edit -n "$n"
-            fi
-            n=$((n + 1))
-          fi
-        done
-      done
-      exec flameshot gui
-    '';
+  # Print with `pointerOutput`: open Flameshot's overlay on the output the pointer is on,
+  # without its output picker (screen.sh says how, and why it asks the compositor).
+  # `screenOrder` is the old way to switch this on; a host that still sets it gets
+  # the same wrapper.
+  usePointer = cfg.pointerOutput || cfg.screenOrder != [];
+  screenWrapper = import ./screen.nix {
+    inherit pkgs;
+    niri = niriPackage;
+    flameshot = package;
   };
 
   # xdg-desktop-portal-wlr takes its `grim` as a build input, so the faster one is
@@ -214,7 +191,7 @@
 
   # What the bind runs.
   captureCommand =
-    if cfg.screenOrder != []
+    if usePointer
     then ''"${screenWrapper}/bin/flameshot-screen"''
     else if cfg.singleOutputOnly
     then ''"${singleOutputWrapper}/bin/flameshot-or-niri"''
@@ -301,7 +278,7 @@ in {
         Flameshot only while exactly one output is on, and niri's own region
         selector (without drawing or pinning) while more are, instead of a
         capture that fails after 30 seconds. Not for use with
-        `wlrScreenshotPortal` or `screenOrder`, which are the answers for more
+        `wlrScreenshotPortal` or `pointerOutput`, which are the answers for more
         than one output.
       '';
     };
@@ -335,24 +312,37 @@ in {
       '';
     };
 
+    pointerOutput = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Print opens the overlay straight on the output the pointer is on, instead
+        of Flameshot first asking which output to capture (a window with a preview
+        of each, which it shows with more than one screen and cannot be told to
+        skip on Wayland). A small wrapper takes the focused output's name from
+        niri and works out Flameshot's number for it with
+        `flameshot screen --edit -n`. That number is Qt's, which follows the order
+        the compositor announced the outputs in, and that order changes when an
+        output is switched off and on again, so the wrapper reads it from the
+        compositor (`wayland-info`) every time rather than from a setting. If it
+        cannot (the compositor does not answer, the pointer's output is not in the
+        list) it opens the plain `flameshot gui`, which asks. Only useful with more
+        than one output, and then needs `wlrScreenshotPortal` or a portal that can
+        capture several.
+      '';
+    };
+
     screenOrder = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
-      example = ["HDMI-A-1" "DP-1"];
       description = ''
-        The outputs in the order Flameshot (Qt) numbers them, which follows the
-        order the compositor announces them, not their position. With this set,
-        Print opens the overlay straight on the output the pointer is on instead
-        of asking which one: the wrapper takes the focused output's name from
-        niri and passes its place in this list to `flameshot screen --edit -n`.
-        List every output the host can have: only the ones switched on at the
-        time count, so with the Dell off the AOC is number 0, not 1. An output
-        that is on but not in the list gets the plain `flameshot gui` (with its
-        question, unless it is the only screen). To find the order on a host, run
-        `flameshot screen -n 0 -p /tmp/f` and then `-n 1`, and compare the images'
-        sizes with `niri msg outputs`. If the wrong output shows up later, the
-        order changed (a monitor was unplugged and replugged, for instance) and
-        this list is what to fix.
+        Deprecated, replaced by `pointerOutput`: the list's content is no longer
+        used, the order is read from the compositor. A non-empty list still turns
+        `pointerOutput` on, so a host that sets it keeps working (with a warning)
+        until it is changed. It was the outputs in the order Qt numbered them when
+        it was set, and went wrong on 2026-11-25 when the Dell was switched off and
+        on again and the AOC became number 0: the overlay then opened on the other
+        monitor from either one.
       '';
     };
 
@@ -390,10 +380,12 @@ in {
 
       assertions = [
         {
-          assertion = !(cfg.singleOutputOnly && (cfg.wlrScreenshotPortal || cfg.screenOrder != []));
-          message = "dots.flameshot.singleOutputOnly falls back to niri's selector when more than one output is on; wlrScreenshotPortal and screenOrder capture with more than one, so use one or the other";
+          assertion = !(cfg.singleOutputOnly && (cfg.wlrScreenshotPortal || usePointer));
+          message = "dots.flameshot.singleOutputOnly falls back to niri's selector when more than one output is on; wlrScreenshotPortal and pointerOutput capture with more than one, so use one or the other";
         }
       ];
+
+      warnings = lib.optional (cfg.screenOrder != []) "dots.flameshot.screenOrder is deprecated and its list is no longer used: the wrapper reads the outputs' order from the compositor. Replace it with dots.flameshot.pointerOutput = true.";
 
       home.packages = [package];
 
