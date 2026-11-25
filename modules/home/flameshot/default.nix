@@ -58,6 +58,21 @@
 # N, and a small wrapper on the Print key looks up the focused output (the one the
 # pointer is on) in `screenOrder` to find N.
 #
+# A host that cannot use the wlr portal (the work laptop: Ubuntu's portal
+# frontend reads only /usr/share/xdg-desktop-portal/portals, so a portal added to
+# home-manager's profile is never seen) still captures through niri's own portal
+# handler, which has two limits, each answered by an option:
+#   - It refuses more than one output (above). `singleOutputOnly` puts a wrapper
+#     on Print that runs Flameshot only while exactly one output is on, and niri's
+#     own selector otherwise, instead of a capture that fails after 30 seconds.
+#   - With one output on, the picture is that output alone, but Flameshot
+#     expects it to start at the layout's (0, 0) (`cropToMonitor`, above), and
+#     niri keeps an output where it was put: a laptop panel at x=1920 gives a
+#     cut and stretched strip. `boundingBoxCrop` builds Flameshot with a patch that
+#     takes the picture to start at the leftmost output instead, on Wayland.
+#     With it, the grim wrapper below must not pad the picture out to the origin
+#     any more (that was this same fix from the other side), so it does not.
+#
 # Known rough edges (worked out from Flameshot's source and niri's documented
 # behaviour, not yet seen on a real desktop; see the devlog entry
 # dots/flameshot.md):
@@ -83,7 +98,18 @@
   iniFormat = pkgs.formats.ini {};
   configFile = iniFormat.generate "flameshot.ini" cfg.settings;
 
-  flameshot = "${cfg.package}/bin/flameshot";
+  # The package that runs: `cfg.package`, or with `boundingBoxCrop` the same
+  # built with bounding-box-crop.patch (src/utils/screengrabber.cpp, Flameshot 14;
+  # it has no cached build, so the host compiles it once per version).
+  package =
+    if cfg.boundingBoxCrop
+    then
+      cfg.package.overrideAttrs (old: {
+        patches = (old.patches or []) ++ [./bounding-box-crop.patch];
+      })
+    else cfg.package;
+
+  flameshot = "${package}/bin/flameshot";
 
   # The niri client has to match the running compositor, so use the same package
   # the niri module installs.
@@ -100,7 +126,7 @@
   # `flameshot gui`, which still works and asks.
   screenWrapper = pkgs.writeShellApplication {
     name = "flameshot-screen";
-    runtimeInputs = [niriPackage pkgs.jq cfg.package];
+    runtimeInputs = [niriPackage pkgs.jq package];
     text = ''
       order=(${lib.escapeShellArgs cfg.screenOrder})
       focused=$(niri msg --json focused-output | jq -r '.name // empty' || true)
@@ -149,27 +175,50 @@
   fastGrim = pkgs.writeShellApplication {
     name = "grim";
     runtimeInputs = [niriPackage pkgs.jq];
-    text = ''
-      region=$(niri msg --json outputs | jq -r '
-        [.[] | .logical | select(. != null)] | select(length > 0)
-        | ([.[].x] | min | if . > 0 then 0 else . end) as $x0
-        | ([.[].y] | min | if . > 0 then 0 else . end) as $y0
-        | ([.[] | .x + .width] | max) as $x1
-        | ([.[] | .y + .height] | max) as $y1
-        | "\($x0),\($y0) \($x1 - $x0)x\($y1 - $y0)"' || true)
-      if [ -n "$region" ]; then
-        exec ${pkgs.grim}/bin/grim -l ${toString cfg.portalPngLevel} -g "$region" "$@"
-      fi
-      exec ${pkgs.grim}/bin/grim -l ${toString cfg.portalPngLevel} "$@"
-    '';
+    text =
+      if cfg.boundingBoxCrop
+      then ''
+        exec ${pkgs.grim}/bin/grim -l ${toString cfg.portalPngLevel} "$@"
+      ''
+      else ''
+        region=$(niri msg --json outputs | jq -r '
+          [.[] | .logical | select(. != null)] | select(length > 0)
+          | ([.[].x] | min | if . > 0 then 0 else . end) as $x0
+          | ([.[].y] | min | if . > 0 then 0 else . end) as $y0
+          | ([.[] | .x + .width] | max) as $x1
+          | ([.[] | .y + .height] | max) as $y1
+          | "\($x0),\($y0) \($x1 - $x0)x\($y1 - $y0)"' || true)
+        if [ -n "$region" ]; then
+          exec ${pkgs.grim}/bin/grim -l ${toString cfg.portalPngLevel} -g "$region" "$@"
+        fi
+        exec ${pkgs.grim}/bin/grim -l ${toString cfg.portalPngLevel} "$@"
+      '';
   };
   wlrPortal = pkgs.xdg-desktop-portal-wlr.override {grim = fastGrim;};
 
+  # Print with `singleOutputOnly`: Flameshot while exactly one output is on, niri's
+  # own selector (`screenshot`, what Shift+Print runs) while more are, because the
+  # portal cannot capture then. niri not answering gives an empty count, which is
+  # taken as "not more than one": Flameshot is tried, as it would be without this.
+  singleOutputWrapper = pkgs.writeShellApplication {
+    name = "flameshot-or-niri";
+    runtimeInputs = [niriPackage pkgs.jq package];
+    text = ''
+      count=$(niri msg --json outputs | jq '[.[] | select(.logical != null)] | length' || true)
+      if [ "''${count:-0}" -gt 1 ]; then
+        exec niri msg action screenshot
+      fi
+      exec flameshot gui
+    '';
+  };
+
   # What the bind runs.
   captureCommand =
-    if cfg.screenOrder == []
-    then ''"${flameshot}" "gui"''
-    else ''"${screenWrapper}/bin/flameshot-screen"'';
+    if cfg.screenOrder != []
+    then ''"${screenWrapper}/bin/flameshot-screen"''
+    else if cfg.singleOutputOnly
+    then ''"${singleOutputWrapper}/bin/flameshot-or-niri"''
+    else ''"${flameshot}" "gui"'';
 
   # Included from niri's config.kdl the way dictation's binds are. The bind
   # replaces config.kdl's own `Print { screenshot; }` (niri replaces a conflicting
@@ -242,6 +291,38 @@ in {
       '';
     };
 
+    singleOutputOnly = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        For a host whose Screenshot portal is niri's own and cannot capture while
+        more than one output is on (niri 26.04, see the top of this file), and
+        which has no `wlrScreenshotPortal` to fall back on. Print then runs
+        Flameshot only while exactly one output is on, and niri's own region
+        selector (without drawing or pinning) while more are, instead of a
+        capture that fails after 30 seconds. Not for use with
+        `wlrScreenshotPortal` or `screenOrder`, which are the answers for more
+        than one output.
+      '';
+    };
+
+    boundingBoxCrop = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Build Flameshot with a patch to its crop (`cropToMonitor`): on Wayland
+        the portal's picture is taken to start at the leftmost output that is
+        on, not at the layout's (0, 0). Needed on a host where niri leaves the
+        only output that is on away from the origin (a laptop panel at x=1920
+        whose external monitor is unplugged): without it the capture is a cut,
+        stretched strip. The patched package is not in any binary cache, so the
+        host compiles it. With `wlrScreenshotPortal` the grim wrapper then stops
+        padding the picture out to the origin, as this patch is the same fix.
+        Leave it off on a host that already works without it (`nixos`): turning
+        it on rebuilds the package.
+      '';
+    };
+
     portalPngLevel = lib.mkOption {
       type = lib.types.ints.between 0 9;
       default = 0;
@@ -307,7 +388,14 @@ in {
         saveAfterCopy = lib.mkDefault true;
       };
 
-      home.packages = [cfg.package];
+      assertions = [
+        {
+          assertion = !(cfg.singleOutputOnly && (cfg.wlrScreenshotPortal || cfg.screenOrder != []));
+          message = "dots.flameshot.singleOutputOnly falls back to niri's selector when more than one output is on; wlrScreenshotPortal and screenOrder capture with more than one, so use one or the other";
+        }
+      ];
+
+      home.packages = [package];
 
       xdg.configFile."flameshot/flameshot.ini".source = configFile;
 
