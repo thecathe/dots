@@ -32,11 +32,20 @@ installed for good. Ask the user to run it through a one-off shell:
 ## Heavy Nix commands
 A whole-flake evaluation (`nix flake check`, the hosts repo's `./check`, evaluating or building a
 machine) can take more than 7 GB and has nearly run a laptop out of memory, freezing the desktop.
-- Run only checks that are scoped to the change (`nix build .#checks.<system>.<name>`) and capped:
-  `systemd-run --user --scope -p MemoryMax=3G -p MemorySwapMax=0 nice nix ... --max-jobs 1 --cores 2`.
+In the dots repository `nix flake check` is too big for any cap: it holds every check's evaluation
+in one process and was killed by the kernel at 10 GiB. Never run it there; run the checks with
+`nix run .#check-each` (in the dots checkout or worktree; `--help` lists the options) instead.
+- `check-each` runs each check in a process of its own under a memory ceiling (6 GiB by default,
+  no swap), one after another. Name checks to run only those; `--cap SIZE` sets the ceiling, and on
+  the laptops (`worklaptop`, `nixos-laptop`) that is `--cap 3G`, which leaves the heaviest checks
+  `KILLED`. A `KILLED` line means that check was NOT RUN (it hit the ceiling): it is neither a pass
+  nor a failure, so report it as not run. Never raise the ceiling, or use `--no-cap`, on your own.
+- For one change, prefer the checks scoped to it (`nix run .#check-each -- NAME...`, or
+  `nix build .#checks.<system>.<name>` capped:
+  `systemd-run --user --scope -p MemoryMax=3G -p MemorySwapMax=0 nice nix ... --max-jobs 1 --cores 2`).
   A run that hits the cap fails. Report it; never raise the cap or retry it uncapped on your own.
-- Running all of the checks, or anything without a cap, needs the author's explicit permission
-  each time, especially on the laptops (`worklaptop`, `nixos-laptop`).
+- Running all of the checks (`check-each` with no names), or anything without a cap, needs the
+  author's explicit permission each time, especially on the laptops.
 
 ## Git workflow
 
