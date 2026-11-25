@@ -28,8 +28,8 @@
 - `./modules/nixos/` -> NixOS modules (exported as `nixosModules.default`)
 - `./modules/shared/` -> lists both sides use (fonts, the unfree allow-list)
 - `./.github/` -> the Action that publishes the options reference (workflow and script)
-- `./checks/` -> stand-ins for the flakes that consume dots (`nix flake check`)
-- `./tools/` -> `check`, run by the flakes that consume dots (`nix run github:thecathe/dots#check`)
+- `./checks/` -> stand-ins for the flakes that consume dots, and the behaviour tests of the scripts (see "checks" below)
+- `./tools/` -> `check`, run by the flakes that consume dots (`nix run github:thecathe/dots#check`), and `check-each`, which runs this repository's own checks (`nix run .#check-each`)
 - `./templates/` -> project templates, `nix flake init -t`
 
 ## hosts
@@ -96,9 +96,26 @@ option with its type, default, example and the file that declares it. The pages 
 check of `nix flake check` fails when an option has no description, and when a default shows a value from the evaluation
 (the placeholder user, a store path) because it lacks a `defaultText`.
 
+## checks
+
+`nix run .#check-each` runs every check of the flake, one at a time, each in a Nix process of its own under a memory
+ceiling (`systemd-run --user --scope`, 6 GiB, no swap; `--cap SIZE` changes it). It exists because `nix flake check` runs
+all the checks inside a single process, whose memory is the sum of their evaluations: it outgrew 10 GiB and was killed by
+the kernel. Run one at a time, the peak is that of the largest check (`module-sets-gates`, about 5 GiB), and the whole
+run takes about five minutes. The line for each check says `ok`, `FAIL` (with the tail of its log) or `KILLED`: killed at
+the ceiling means the check was **not run**, which is neither a pass nor a failure of the code. The exit status is 0 when
+everything passed, 1 when something failed, 3 when nothing failed but something was killed, and 2 for a setup problem.
+`nix run .#check-each -- --list` names the checks; name some to run only those, `--skip` leaves one out, `--no-outputs`
+skips the evaluation of the flake's other outputs that follows the checks. It refuses to run without systemd's memory
+ceiling unless `--no-cap` says so. `check-each --help` has the rest. `nix flake check` still works where there is
+memory for it (and checks the shape of every output itself, which `check-each` only samples).
+
+A machine with less memory than the ceiling cannot run the checks that need it: on a laptop, pass a smaller `--cap` and
+read a `KILLED` line as "not run here".
+
 ## formatting
 
 Nix files are formatted with alejandra, declared as the flake's `formatter`: run `nix fmt` (or
-`nix fmt <files>`). `nix flake check` fails if any `.nix` file is not formatted. The one-off commit that
+`nix fmt <files>`). The `formatting` check fails if any `.nix` file is not formatted. The one-off commit that
 formatted the whole repo is listed in `.git-blame-ignore-revs`; to have local `git blame` skip it, run
 `git config blame.ignoreRevsFile .git-blame-ignore-revs`.

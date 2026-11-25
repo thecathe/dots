@@ -90,6 +90,7 @@
     alejandra = inputs.nixpkgs.legacyPackages.x86_64-linux.alejandra;
     optionsDoc = import ./lib/options-doc.nix {inherit inputs;};
     checkTool = import ./tools/check/package.nix {pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;};
+    checkEachTool = import ./tools/check-each/package.nix {pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;};
     # dots' own inputs, as the `dotsInputs` module argument of both module sets, so a
     # module does not depend on what the importing flake calls its inputs (keyed, so
     # importing several sets is fine).
@@ -170,16 +171,28 @@
       # Evaluates every machine of a flake that consumes dots, against a local dots
       # if given (tools/check/check.sh): `nix run github:thecathe/dots#check -- --help`.
       check = checkTool;
+      # Runs every check of this flake in a process of its own under a memory ceiling,
+      # one after another (tools/check-each/check-each.sh): `nix run .#check-each`.
+      check-each = checkEachTool;
     };
     apps.x86_64-linux.check = {
       type = "app";
       program = "${checkTool}/bin/check";
       meta.description = "Evaluate every machine of a flake that consumes dots, optionally against a local dots";
     };
+    apps.x86_64-linux.check-each = {
+      type = "app";
+      program = "${checkEachTool}/bin/check-each";
+      meta.description = "Run every check of this flake one at a time, each in its own memory-capped process";
+    };
 
     # dots cannot see what depends on it. These stand in for consumers; the real
     # test of the hosts is `check` in the hosts repo. `formatting` fails if any
     # .nix file is not alejandra-formatted (fix with `nix fmt`).
+    #
+    # `nix flake check` runs all of these inside one Nix process, whose memory is the
+    # sum of the evaluations and outgrew 10 GiB on 2026-11-25. `nix run .#check-each`
+    # runs the same checks one process at a time under a memory ceiling instead.
     checks.x86_64-linux =
       import ./checks/consumer.nix {inherit inputs;}
       // import ./checks/module-sets.nix {inherit inputs;}
@@ -189,6 +202,7 @@
       // import ./checks/repos.nix {inherit inputs;}
       // import ./checks/niri-dms-outputs.nix {inherit inputs;}
       // import ./checks/flameshot-screen.nix {inherit inputs;}
+      // import ./checks/check-each.nix {inherit inputs;}
       // import ./checks/options-reference.nix {inherit inputs optionsDoc;}
       // {
         formatting = inputs.nixpkgs.legacyPackages.x86_64-linux.runCommand "formatting" {} ''
