@@ -1,0 +1,22 @@
+--- a/src/utils/screengrabber.cpp
++++ b/src/utils/screengrabber.cpp
+@@ -492,6 +492,19 @@
+     int minX = 0, minY = 0;
+     int maxX = 0, maxY = 0;
+ 
++    // On Wayland the portal's picture covers the bounding box of the outputs
++    // that are on, not the layout from (0, 0): a compositor that keeps an
++    // output where it was put (niri) leaves it at x=1920 when it is the only
++    // one on, and the picture is then only as wide as that output. Starting
++    // the minimum at 0 would expect a picture 1920 wider than it is.
++    if (QGuiApplication::platformName().startsWith(QLatin1String("wayland"))) {
++        const QRect first = screens.first()->geometry();
++        minX = first.x();
++        minY = first.y();
++        maxX = first.x() + first.width();
++        maxY = first.y() + first.height();
++    }
++
+     for (QScreen* screen : screens) {
+         QRect geo = screen->geometry();
+         minX = qMin(minX, geo.x());

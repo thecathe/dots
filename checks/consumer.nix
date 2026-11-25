@@ -200,6 +200,55 @@
       }
     ];
     multi = (consumerConfig multiModules).config;
+    # A host whose portal is niri's own (the work laptop): the patched Flameshot and
+    # the wrapper that hands Print to niri's selector while more than one output is on.
+    laptopModules = [
+      flameshotModule
+      {
+        dots.flameshot = {
+          enable = true;
+          boundingBoxCrop = true;
+          singleOutputOnly = true;
+        };
+      }
+    ];
+    laptop = (consumerConfig laptopModules).config;
+    # The same without the patch: reading the kdl builds the wrapper, which carries its
+    # Flameshot, and the patched one would be compiled by a check that only evaluates.
+    laptopStock =
+      (consumerConfig [
+        flameshotModule
+        {
+          dots.flameshot = {
+            enable = true;
+            singleOutputOnly = true;
+          };
+        }
+      ]).config;
+    # The two answers to more than one output cannot be combined with the fallback.
+    conflict =
+      (consumerConfig [
+        flameshotModule
+        {
+          dots.flameshot = {
+            enable = true;
+            singleOutputOnly = true;
+            screenOrder = ["HDMI-A-1"];
+          };
+        }
+      ]).config;
+    # The patch together with the wlr portal: its grim wrapper stops padding.
+    bothModules = [
+      flameshotModule
+      {
+        dots.flameshot = {
+          enable = true;
+          wlrScreenshotPortal = true;
+          boundingBoxCrop = true;
+        };
+      }
+    ];
+    execStart = c: lib.head (lib.toList c.systemd.user.services.flameshot.Service.ExecStart);
     # The file the one `include "<path>"` line in niri's config points at, read.
     # replaceStrings keeps the string context that says the path is a build
     # output (builtins.match would drop it, and pure evaluation then refuses the
@@ -249,8 +298,20 @@
     "consumer-flameshot: the wlr portal is the stock package, not the one built with the uncompressed-PNG grim";
     assert lib.assertMsg (lib.hasInfix "/bin/flameshot-screen\"" (niriFile multi) && !(lib.hasInfix "\"gui\"" (niriFile multi)))
     "consumer-flameshot: with screenOrder, Print does not run the per-output wrapper";
+    assert lib.assertMsg (lib.hasPrefix (toString pkgs.flameshot) (execStart on) && lib.hasPrefix (toString pkgs.flameshot) (execStart multi))
+    "consumer-flameshot: Flameshot is not the stock package where boundingBoxCrop is off (nixos would rebuild it)";
+    assert lib.assertMsg (!(lib.hasPrefix (toString pkgs.flameshot) (execStart laptop)) && lib.hasSuffix "/bin/flameshot" (execStart laptop))
+    "consumer-flameshot: boundingBoxCrop does not run a patched Flameshot";
+    assert lib.assertMsg (lib.any (p: (p.pname or "") == "flameshot" && lib.any (x: lib.hasSuffix "bounding-box-crop.patch" (toString x)) (p.patches or [])) laptop.home.packages)
+    "consumer-flameshot: the patched Flameshot is not the one installed, or it lacks the crop patch";
+    assert lib.assertMsg (lib.hasInfix "/bin/flameshot-or-niri\"" (niriFile laptopStock) && !(lib.hasInfix "\"gui\"" (niriFile laptopStock)))
+    "consumer-flameshot: singleOutputOnly does not put the fallback wrapper on Print";
+    assert lib.assertMsg (!(laptop.systemd.user.services ? xdg-desktop-portal-wlr) && !(laptop.xdg.portal.config ? niri))
+    "consumer-flameshot: the laptop options add the wlr portal, which Ubuntu's portal frontend would not see";
+    assert lib.assertMsg (!(builtins.tryEval conflict.home.username).success)
+    "consumer-flameshot: singleOutputOnly together with screenOrder or wlrScreenshotPortal is not refused";
       pkgs.writeText "consumer-flameshot-evaluates" (builtins.unsafeDiscardStringContext (
-        consumer [flameshotModule {dots.flameshot.enable = true;}] + consumer multiModules
+        consumer [flameshotModule {dots.flameshot.enable = true;}] + consumer multiModules + consumer laptopModules + consumer bothModules
       ));
 
   # The DMS bar indicator for dictation (modules/home/dank/dictation-status.nix) next
