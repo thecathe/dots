@@ -163,9 +163,8 @@ standing branch. When the project's practice is unclear, ask before acting.
 - A project that already keeps its own log in-repo (e.g. `DEVELOPMENT.md`,
   `ASSISTED-CHANGES.md`) keeps using it until the user chooses to migrate it. Don't
   split or move it unprompted.
-- When returning to a project after a gap, or at the end of a substantial session,
-  offer once to revisit its past entries (start from its `index.md`): what held up,
-  and what could be improved or iterated on.
+- When returning to a project after a gap, offer once to revisit its past entries
+  (start from its `index.md`): what held up, and what could be improved or iterated on.
 
 ## AI-generated published content
 - Any page Claude writes or substantially edits for a published site is explicitly
