@@ -188,6 +188,7 @@
       // import ./checks/orient.nix {inherit inputs;}
       // import ./checks/repos.nix {inherit inputs;}
       // import ./checks/niri-dms-outputs.nix {inherit inputs;}
+      // import ./checks/flameshot-screen.nix {inherit inputs;}
       // import ./checks/options-reference.nix {inherit inputs optionsDoc;}
       // {
         formatting = inputs.nixpkgs.legacyPackages.x86_64-linux.runCommand "formatting" {} ''
