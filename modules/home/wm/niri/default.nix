@@ -30,6 +30,14 @@
     runtimeEnv.NIRI_GAPS = niriGaps;
     text = builtins.readFile ./move-column.sh;
   };
+
+  # Started by `spawn-at-startup` in config.kdl: turns off the outputs DMS has
+  # marked `off`, which a host's own `output` block for them would otherwise
+  # shadow (see dms-outputs.sh).
+  niriDmsOutputs = import ./dms-outputs.nix {
+    inherit pkgs;
+    niri = config.wayland.windowManager.niri.package;
+  };
 in {
   options.dots.niri.enable = lib.mkEnableOption "the niri window manager configuration" // {default = true;};
 
@@ -196,6 +204,7 @@ in {
     home.packages = [
       pkgs.swaybg # wallpaper
       niriMoveColumn
+      niriDmsOutputs
     ];
   };
 }

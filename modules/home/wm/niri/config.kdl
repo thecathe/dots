@@ -287,6 +287,12 @@ layout {
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 
+// Turns off the outputs DMS has marked `off` (its display profile, e.g. "1 Screen")
+// in dms/outputs.kdl. A host's own `output` block for the same output comes first
+// and niri uses only the first matching block, so the `off` is otherwise ignored
+// at login (dms-outputs.sh has the whole story). Does nothing when there is none.
+spawn-at-startup "niri-dms-outputs"
+
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
     skip-at-startup
