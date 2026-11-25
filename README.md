@@ -93,8 +93,8 @@ option with its type, default, example and the file that declares it. The pages 
 (`.github/workflows/options-reference.yml`) builds them on every push to `main` and publishes them to the
 `options-reference` branch, where GitHub renders them. To change one, change the option's `description` in its module.
 `nix build .#options-reference` makes the same pages locally, plus `options-*.json` for tools. The `options-reference`
-check of `nix flake check` fails when an option has no description, and when a default shows a value from the evaluation
-(the placeholder user, a store path) because it lacks a `defaultText`.
+check (run it with `nix run .#check-each -- options-reference`) fails when an option has no description, and when a default
+shows a value from the evaluation (the placeholder user, a store path) because it lacks a `defaultText`.
 
 ## checks
 
