@@ -465,6 +465,153 @@
     assert lib.assertMsg (lib.attrNames on.dots == ["repos"])
     "consumer-repos: the export declares options besides dots.repos (${toString (lib.attrNames on.dots)})";
       check "consumer-repos-evaluates" [dots.homeModules.repos {dots.repos.enable = true;}];
+
+  # The services module imported by path on its own (it declares dots.services
+  # itself): what the `services` command is given from the entries. Ids default to
+  # the attribute name and an action's to a slug of its label, a host can rename an
+  # entry it did not define and give either a short name, two things answering to
+  # one name are refused (across services, and across one service's actions), the
+  # name and the limit are options, and the command is installed when, and only
+  # when, there is an entry, unless switched off.
+  servicesModule = "${dots}/modules/home/services";
+  servicesConsumer = let
+    lib = inputs.nixpkgs.lib;
+    package = import "${dots}/modules/home/services/package.nix";
+    entry = extra:
+      {
+        up = ["up"];
+        down = ["down"];
+        status = ["status"];
+      }
+      // extra;
+    entries = {
+      alpha = entry {
+        label = "Alpha";
+        short = "a";
+        actions = [
+          {
+            label = "Start / stop recording";
+            argv = ["toggle"];
+          }
+          {
+            label = "Console";
+            id = "con";
+            short = "c";
+            argv = ["console"];
+            terminal = true;
+            requiresUp = true;
+          }
+        ];
+      };
+      beta = entry {id = "rec";};
+    };
+    on = (consumerConfig [servicesModule {dots.services = entries;}]).config;
+    named =
+      (consumerConfig [
+        servicesModule
+        {
+          dots.services = entries;
+          dots.servicesCli = {
+            name = "svc";
+            timeout = 1.5;
+          };
+        }
+      ]).config;
+    none = (consumerConfig [servicesModule]).config;
+    off = (consumerConfig [servicesModule {dots.services = entries;} {dots.servicesCli.enable = false;}]).config;
+    has = name: c: lib.any (p: lib.getName p == name) c.home.packages;
+    manifest = on.dots.servicesCli.manifest;
+    byId = id: lib.findFirst (s: s.id == id) null manifest.services;
+    fails = modules: !(builtins.tryEval (consumer ([servicesModule] ++ modules))).success;
+  in
+    assert lib.assertMsg (has "services" on && !(has "services" none) && !(has "services" off))
+    "consumer-services: the command is not installed exactly when there is an entry and it is not switched off";
+    assert lib.assertMsg (lib.getName named.dots.servicesCli.package == "svc" && named.dots.servicesCli.manifest.timeout == 1.5 && named.dots.servicesCli.manifest.name == "svc")
+    "consumer-services: dots.servicesCli.name and .timeout do not reach the command";
+    assert lib.assertMsg (manifest.timeout == 3)
+    "consumer-services: the status limit does not default to 3 seconds";
+    assert lib.assertMsg (map (s: s.id) manifest.services == ["alpha" "rec"])
+    "consumer-services: ids are not the attribute names, with an id set where one was (${toString (map (s: s.id) manifest.services)})";
+    assert lib.assertMsg ((byId "alpha").short == "a" && (byId "rec").short == null)
+    "consumer-services: a short name is lost, or invented";
+    assert lib.assertMsg (map (a: a.id) (byId "alpha").actions == ["start-stop-recording" "con"])
+    "consumer-services: an action's id is not the slug of its label unless set (${toString (map (a: a.id) (byId "alpha").actions)})";
+    assert lib.assertMsg ((lib.elemAt (byId "alpha").actions 1).short == "c" && (lib.elemAt (byId "alpha").actions 1).terminal && (lib.elemAt (byId "alpha").actions 1).requiresUp)
+    "consumer-services: an action loses its short name, terminal or requiresUp";
+    assert lib.assertMsg (lib.hasSuffix "/bin/systemd-run" (lib.head manifest.window.prefix) && lib.hasSuffix "/bin/kitty" (lib.elemAt manifest.window.prefix 5) && lib.last manifest.window.prefix == "--detach")
+    "consumer-services: a window is not kitty --detach in a systemd-run scope";
+    assert lib.assertMsg (on.dots.servicesCli.package.drvPath == (package {inherit pkgs manifest;}).drvPath)
+    "consumer-services: the package is not package.nix built from the manifest";
+    assert lib.assertMsg (on.dots.servicesCli.package.drvPath != named.dots.servicesCli.package.drvPath)
+    "consumer-services: a different name and limit built the same package";
+    assert lib.assertMsg (fails [{dots.services = entries // {gamma = entry {id = "alpha";};};}])
+    "consumer-services: two services with one id evaluated";
+    assert lib.assertMsg (fails [{dots.services = entries // {gamma = entry {short = "alpha";};};}])
+    "consumer-services: a short name equal to another service's id evaluated";
+    assert lib.assertMsg (fails [{dots.services = entries // {gamma = entry {short = "a";};};}])
+    "consumer-services: two services with one short name evaluated";
+    assert lib.assertMsg (fails [
+      {
+        dots.services.alpha = entry {
+          actions = [
+            {
+              label = "Go";
+              argv = ["x"];
+            }
+            {
+              label = "go";
+              argv = ["y"];
+            }
+          ];
+        };
+      }
+    ])
+    "consumer-services: two actions whose labels make one id evaluated";
+    assert lib.assertMsg (fails [
+      {
+        dots.services.alpha = entry {
+          actions = [
+            {
+              label = "One";
+              short = "t";
+              argv = ["x"];
+            }
+            {
+              label = "Two";
+              short = "t";
+              argv = ["y"];
+            }
+          ];
+        };
+      }
+    ])
+    "consumer-services: two actions with one short name evaluated";
+    assert lib.assertMsg (!(fails [
+      {
+        dots.services = {
+          x = entry {
+            actions = [
+              {
+                label = "Go";
+                argv = ["x"];
+              }
+            ];
+          };
+          y = entry {
+            actions = [
+              {
+                label = "Go";
+                argv = ["x"];
+              }
+            ];
+          };
+        };
+      }
+    ]))
+    "consumer-services: the same action id on two different services was refused";
+    assert lib.assertMsg (fails [{dots.services.alpha = entry {id = "has space";};}])
+    "consumer-services: an id with a space evaluated";
+      check "consumer-services-evaluates" [servicesModule {dots.services = entries;}];
 in {
   # The devlog module alone, by path.
   consumer-devlog = devlogConsumer;
@@ -478,6 +625,8 @@ in {
   consumer-flameshot = flameshotConsumer;
   # The repos module through its export, as a second user's flake imports it.
   consumer-repos = reposConsumer;
+  # The services module alone, by path.
+  consumer-services = servicesConsumer;
   # The area modules with dots.vscode, as a second user's flake uses them.
   consumer-modules = pkgs.writeText "consumer-modules-evaluates" (builtins.unsafeDiscardStringContext modulesConsumer);
   # The area modules without nvim. Nothing here may rely on the nvim module
