@@ -144,6 +144,10 @@
       flameshot = {imports = [dotsArgs ./modules/home/flameshot];};
       # Needs nothing from dots' inputs, hence no dotsArgs.
       globalprotect = {imports = [./modules/home/globalprotect];};
+      # The `repos` CLI and its `dots.repos` options, likewise without dotsArgs.
+      # The bar menu over it is DankMaterialShell's (modules/home/dank), so it is
+      # in `default` only and a consumer of this set gets the CLI alone.
+      repos = {imports = [./modules/home/repos];};
     };
     nixosModules.default = {
       key = "dots-nixos";

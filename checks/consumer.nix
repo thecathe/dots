@@ -422,6 +422,49 @@
     assert lib.assertMsg (lib.hasInfix "--argjson allow '[]'" (script noHook) && lib.hasInfix "--argjson allow '[]'" (script off))
     "consumer-devlog: the permission is allowed although the hook is switched off, or there is no clone";
       check "consumer-devlog-evaluates" [devlogModule clone];
+
+  # The repos module through its export, `homeModules.repos`, as a second user's
+  # flake imports it: the CLI alone, with nothing of DankMaterialShell (the bar
+  # menu over it is in `default` only). Enabled it installs `repos`, built from
+  # the options: the same derivation package.nix gives for the same arguments,
+  # so each option reaches the script, and a different one does not. Disabled
+  # (it is opt-in) it adds nothing. The export declares no option but its own,
+  # so the menu's wiring did not come with it.
+  reposConsumer = let
+    lib = inputs.nixpkgs.lib;
+    package = import "${dots}/modules/home/repos/package.nix";
+    root = "/home/consumer/Documents/git";
+    args = {
+      owners = ["me"];
+      exclude = ["me/big"];
+      integration = {"me/x" = "dev";};
+    };
+    on =
+      (consumerConfig [
+        dots.homeModules.repos
+        {
+          dots.repos = {
+            enable = true;
+            owners = args.owners;
+            exclude = args.exclude;
+            integrationBranch = args.integration;
+          };
+        }
+      ]).config;
+    off = (consumerConfig [dots.homeModules.repos]).config;
+    has = name: c: lib.any (p: lib.getName p == name) c.home.packages;
+  in
+    assert lib.assertMsg (has "repos" on && !(has "repos" off))
+    "consumer-repos: `repos` is installed when, and only when, dots.repos.enable is set";
+    assert lib.assertMsg (on.dots.repos.root == root)
+    "consumer-repos: the root does not default to ~/Documents/git (${on.dots.repos.root})";
+    assert lib.assertMsg (on.dots.repos.package.drvPath == (package ({inherit pkgs root;} // args)).drvPath)
+    "consumer-repos: the package is not package.nix built from the options";
+    assert lib.assertMsg (on.dots.repos.package.drvPath != (package ({inherit pkgs root;} // args // {owners = ["you"];})).drvPath)
+    "consumer-repos: a different owner built the same package, so the options do not reach the script";
+    assert lib.assertMsg (lib.attrNames on.dots == ["repos"])
+    "consumer-repos: the export declares options besides dots.repos (${toString (lib.attrNames on.dots)})";
+      check "consumer-repos-evaluates" [dots.homeModules.repos {dots.repos.enable = true;}];
 in {
   # The devlog module alone, by path.
   consumer-devlog = devlogConsumer;
@@ -433,6 +476,8 @@ in {
   consumer-dictation-widget = dictationWidgetConsumer;
   # The flameshot module alone, by path.
   consumer-flameshot = flameshotConsumer;
+  # The repos module through its export, as a second user's flake imports it.
+  consumer-repos = reposConsumer;
   # The area modules with dots.vscode, as a second user's flake uses them.
   consumer-modules = pkgs.writeText "consumer-modules-evaluates" (builtins.unsafeDiscardStringContext modulesConsumer);
   # The area modules without nvim. Nothing here may rely on the nvim module

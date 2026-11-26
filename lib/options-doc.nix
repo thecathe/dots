@@ -159,7 +159,7 @@
     doc = home;
     intro = {
       title = "dots options: home-manager";
-      text = "The `dots.*` options of `dots.homeModules.default`, the home-manager module set. The single-area modules (`homeModules.shell`, `vscode`, `nvim`, `flameshot`, `globalprotect`) declare a subset of them.";
+      text = "The `dots.*` options of `dots.homeModules.default`, the home-manager module set. The single-area modules (`homeModules.shell`, `vscode`, `nvim`, `flameshot`, `globalprotect`, `repos`) declare a subset of them.";
       set = "homeModules.default";
       other = "The NixOS side is in [options-nixos.md](options-nixos.md).";
     };
