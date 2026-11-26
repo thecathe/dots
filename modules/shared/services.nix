@@ -2,6 +2,8 @@
 # running all the time (Immich, Tailscale, a game server, ...). Each entry says
 # how to bring it up, take it down and check it, which gives:
 #   - optionally a `<command> up|down|status` CLI (dots.services.<name>.command),
+#   - on the home-manager side, the `services` CLI over every entry, with its
+#     actions and `detail` (modules/home/services),
 #   - the list the DMS services menu shows (modules/home/dank/services-menu.nix),
 #     where an entry's optional `actions` (e.g. "attach to its console") are
 #     listed behind a "..." button on its row, and its optional `detail` (what
@@ -19,13 +21,38 @@
   inherit (lib) mkOption mkDefault types;
   systemctl = "${pkgs.systemd}/bin/systemctl";
 
+  # What the `services` CLI accepts as the name of a service or an action: it is
+  # typed on a command line and printed in columns, so no spaces.
+  nameType = types.strMatching "[A-Za-z0-9_-]+";
+
+  # A label as a name: "Start / stop recording" becomes "start-stop-recording".
+  slug = label:
+    lib.concatStringsSep "-" (lib.filter (part: builtins.isString part && part != "") (builtins.split "[^a-z0-9]+" (lib.toLower label)));
+
   # An extra thing to do with a service besides switching it, offered in the
   # services menu behind the "..." button on the service's row.
-  action = types.submodule {
+  action = types.submodule ({config, ...}: {
     options = {
       label = mkOption {
         type = types.str;
         description = "The name the menu shows for the action.";
+      };
+      id = mkOption {
+        type = nameType;
+        default = slug config.label;
+        defaultText = lib.literalMD "the label in lower case, each run of other characters as one `-` (`Start / stop recording` is `start-stop-recording`)";
+        example = "toggle-record";
+        description = ''
+          The name the `services` CLI knows the action by
+          (`services action <service> <id>`). It must differ from every other
+          action's id and short name on the same service.
+        '';
+      };
+      short = mkOption {
+        type = types.nullOr nameType;
+        default = null;
+        example = "tr";
+        description = "A shorter name for the same action, accepted wherever the id is.";
       };
       icon = mkOption {
         type = types.str;
@@ -51,11 +78,12 @@
         default = false;
         description = ''
           List the action only while the service is up: for commands that talk
-          to the running service and would just fail while it is down.
+          to the running service and would just fail while it is down. The
+          `services` CLI refuses it in the same case.
         '';
       };
     };
-  };
+  });
 
   service = types.submodule ({
     name,
@@ -67,6 +95,24 @@
         type = types.str;
         default = name;
         description = "The name the services menu shows.";
+      };
+      id = mkOption {
+        type = nameType;
+        default = name;
+        defaultText = lib.literalMD "the attribute name";
+        example = "rec";
+        description = ''
+          The name the `services` CLI knows the service by (`services up <id>`).
+          Set it to rename an entry that a dots module defines, since the
+          attribute name cannot be changed from outside. It must differ from
+          every other service's id and short name.
+        '';
+      };
+      short = mkOption {
+        type = types.nullOr nameType;
+        default = null;
+        example = "rec";
+        description = "A shorter name for the same service, accepted wherever the id is.";
       };
       icon = mkOption {
         type = types.str;
@@ -107,8 +153,8 @@
           A command (argv) that prints one short word about what an up service
           is doing right now (e.g. "recording"), or nothing. The menu shows the
           word in the error colour in place of "up". It runs after `status`
-          succeeds, each time the menu opens, so keep it cheap. Only the menu
-          uses it.
+          succeeds, each time the menu opens, so keep it cheap. The menu and
+          the `services` CLI use it.
         '';
       };
       actions = mkOption {
@@ -124,8 +170,9 @@
         ];
         description = ''
           Extra actions for the services menu. A service with any gets a "..."
-          button on its row that lists them; one without has no button. Only the
-          menu uses them: they do not appear in the CLI.
+          button on its row that lists them; one without has no button. The
+          `services` CLI runs them too (`services action <service> <id>`); the
+          per-service `command` CLI does not.
         '';
       };
       command = mkOption {

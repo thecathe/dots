@@ -32,6 +32,7 @@
     ./zathura # epub reader?
     ./navi # cheatsheets, incl. keyboard shortcuts (navi/cheats)
     ./repos # the `repos` CLI; with DMS, the repositories bar menu (dank/repos-menu.nix)
+    ./services # the `services` CLI over dots.services (the services bar menu is dank/services-menu.nix)
     ./rebuild # the `rebuild` and `rebuild-pinned` aliases, for a machine built from a hosts flake
     ./profiles # dots.profile.<name>.enable: named bundles, off by default
   ];
@@ -43,7 +44,8 @@
   # default are the areas that are personal or reach beyond the machine (claude,
   # obsidian) and those that were always opt-in (vscode, dictation, globalprotect,
   # repos, rebuild), each with its own `enable`; devlog is gated by its clone directory, and
-  # this set turns vscode on. flameshot is on by default.
+  # this set turns vscode on. flameshot is on by default. The `services` command is on
+  # wherever there is a dots.services entry (dots.servicesCli.enable).
   options.dots.packages.enable = lib.mkEnableOption "dots' general-purpose package list (the tools in home.packages below)" // {default = true;};
 
   config = {
