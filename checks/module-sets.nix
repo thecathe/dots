@@ -70,7 +70,8 @@
   #  - the Areas: on by default, and turning one off removes what it adds;
   #  - the OffByDefault areas (personal, or reaching beyond the machine): off in a
   #    plain import, and turning one on adds what it adds;
-  #  - the OptIn areas, off by default as well, which have checks of their own.
+  #  - the OptIn areas, off by default as well, which have checks of their own
+  #    (servicesCli is on only where there is a dots.services entry: consumer-services).
   # (devlog has no switch: a clone directory gates it.)
   hasPackage = name: pkgsList: lib.any (p: lib.getName p == name) pkgsList;
   homeAreas = {
@@ -98,7 +99,7 @@
     claude = c: c.programs.claude-code.enable;
     obsidian = c: c.programs.obsidian.enable;
   };
-  homeOptIn = ["vscode" "dictation" "globalprotect" "repos" "rebuild"];
+  homeOptIn = ["vscode" "dictation" "globalprotect" "repos" "rebuild" "servicesCli"];
 
   nixosAreas = {
     direnv = c: c.programs.direnv.enable;
