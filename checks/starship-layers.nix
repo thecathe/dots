@@ -33,6 +33,11 @@
 
   defaults = eval {};
   custom = eval {
+    # entries added to the prompt's palette: starship draws them too, the layers can name them
+    dots.shell.starship.palette = {
+      color_custom = "#AABBCC";
+      color_custom_ssh = "#0A8A8A";
+    };
     dots.shell.starship.layers = {
       maxShown = 1;
       kinds = {
@@ -41,11 +46,12 @@
           text = "sh";
           colors = ["#112233" "#445566" "#778899"];
         };
-        # shares its first colour with nix-shell's, and its second with direnv's
+        # shares its first colour with nix-shell's, and its second (a palette name, whose
+        # entry is in upper case) with direnv's
         nix-develop = {
           symbol = "D";
           text = "dv";
-          colors = ["#112233" "#aabbcc"];
+          colors = ["#112233" "color_custom"];
         };
         direnv = {
           symbol = "E";
@@ -56,7 +62,7 @@
       ssh = {
         symbol = "Z";
         text = "rm";
-        color = "#0A8A8A";
+        color = "color_custom_ssh"; # a palette entry of the host's own
         # the keys are matched in lower case: Alpha is alpha
         hosts = {
           Alpha = {}; # its host name
@@ -76,7 +82,14 @@
 
   behaviour = name: hm: let
     layers = hm.config.dots.shell.starship.layers;
-    kindsFile = pkgs.writeText "kinds" (lib.concatStrings (lib.mapAttrsToList (kind: k: "${kind}\t${k.symbol}\t${k.text}\t${lib.concatStringsSep " " k.colors}\n") layers.kinds));
+    palette = hm.config.dots.shell.starship.palette;
+    # the test script compares #rrggbb: a colour named from the palette is resolved here
+    resolve = c:
+      if lib.hasPrefix "#" c
+      then c
+      else palette.${c};
+    kindsFile = pkgs.writeText "kinds" (lib.concatStrings (lib.mapAttrsToList (kind: k: "${kind}\t${k.symbol}\t${k.text}\t${lib.concatStringsSep " " (map resolve k.colors)}\n") layers.kinds));
+    paletteFile = pkgs.writeText "palette" (lib.concatStrings (lib.mapAttrsToList (name: hex: "${name}\t${hex}\n") palette));
     # a string that is not set is @null and an empty one @empty: a tab is whitespace to `read`
     field = v:
       if v == null
@@ -98,7 +111,8 @@
         else "0";
       SSH_SYMBOL = layers.ssh.symbol;
       SSH_TEXT = layers.ssh.text;
-      SSH_COLOR = layers.ssh.color;
+      SSH_COLOR = resolve layers.ssh.color;
+      PALETTE = paletteFile;
       SSH_HOSTS = hostsFile;
     } ''
       bash ${./starship-layers-test.sh}
@@ -117,6 +131,16 @@
     one = eval {dots.shell.starship.layers.kinds.direnv.colors = ["#98971a"];};
     partial = (eval {dots.shell.starship.layers.kinds.nix-shell.colors = ["#112233" "#445566"];}).config.dots.shell.starship.layers.kinds.nix-shell;
     default = defaults.config.dots.shell.starship.layers.kinds.nix-shell;
+    palette = defaults.config.dots.shell.starship.palette;
+    defaultLayers = defaults.config.dots.shell.starship.layers;
+    defaultColours = lib.concatMap (k: k.colors) (lib.attrValues defaultLayers.kinds) ++ [defaultLayers.ssh.color];
+    extended = (eval {dots.shell.starship.palette.color_extra = "#123456";}).config.dots.shell.starship.palette;
+    recoloured = let
+      c = (eval {dots.shell.starship.palette.color_faded_red = "#111111";}).config;
+    in {
+      deployed = c.programs.starship.settings.palettes.gruvbox_dark;
+      layer = c.dots.shell.starship.palette.${builtins.head c.dots.shell.starship.layers.kinds.nix-shell.colors};
+    };
   in
     lib.assertMsg (has "${defaults.config.dots.shell.starship.layers.package}/layers.zsh" zshInit)
     "consumer-starship-layers: the hook is not sourced from the zsh init"
@@ -147,6 +171,23 @@
       }
     ])
     "consumer-starship-layers: a default symbol is not the codepoint it names"
+    # ---- one palette for the prompt and the layers
+    && lib.assertMsg (lib.all (c: palette ? ${c}) defaultColours)
+    "consumer-starship-layers: a default layer or ssh colour is not an entry of the palette (it would be off-palette)"
+    && lib.assertMsg (defaults.config.programs.starship.settings.palettes.gruvbox_dark == palette && defaults.config.programs.starship.settings.palette == "gruvbox_dark")
+    "consumer-starship-layers: starship is not handed the one palette"
+    && lib.assertMsg (lib.all (n: builtins.elem n (lib.attrNames palette)) ["color_orange" "color_yellow" "color_aqua" "color_blue" "color_fg0" "color_bg1" "color_bg3" "color_faded_orange" "color_faded_red" "color_faded_green"])
+    "consumer-starship-layers: the palette lost an entry the prompt or the layers use"
+    && lib.assertMsg (extended.color_extra == "#123456" && extended.color_orange == palette.color_orange && lib.length (lib.attrNames extended) == lib.length (lib.attrNames palette) + 1)
+    "consumer-starship-layers: adding one palette entry lost the others"
+    && lib.assertMsg (recoloured.deployed.color_faded_red == "#111111" && recoloured.layer == "#111111")
+    "consumer-starship-layers: changing a palette entry did not reach both starship and the layers"
+    && lib.assertMsg (refused {dots.shell.starship.layers.kinds.nix-shell.colors = ["color_nope" "#00ff00"];})
+    "consumer-starship-layers: a colour name that is not in the palette evaluated"
+    && lib.assertMsg (refused {dots.shell.starship.layers.ssh.color = "color_nope";})
+    "consumer-starship-layers: an ssh colour name that is not in the palette evaluated"
+    && lib.assertMsg (refused {dots.shell.starship.palette.color_bad = "red";})
+    "consumer-starship-layers: a palette entry that is not #rrggbb evaluated"
     && lib.assertMsg (refused {dots.shell.starship.layers.maxShown = 3;})
     "consumer-starship-layers: maxShown = 3 evaluated (3 shown layers would need hundreds of configs)"
     && lib.assertMsg (refused {dots.shell.starship.layers.kinds.nix-shell.colors = ["red" "#00ff00"];})
@@ -159,12 +200,14 @@
     "consumer-starship-layers: a kind with a single colour evaluated (a nested layer of it would look like its parent)"
     && lib.assertMsg (!(builtins.tryEval (eval {dots.shell.starship.layers.kinds.direnv.colors = ["#98971a" "#98971A"];}).activationPackage.drvPath).success)
     "consumer-starship-layers: a kind whose two colours are the same one evaluated"
-    && lib.assertMsg (refused {dots.shell.starship.layers.ssh.color = "#B16286";})
-    "consumer-starship-layers: an ssh colour that is a layer's evaluated (the arrow between them would not show)"
+    && lib.assertMsg (refused {dots.shell.starship.layers.ssh.color = "color_faded_red";})
+    "consumer-starship-layers: an ssh colour that is a layer's, by name, evaluated (the arrow between them would not show)"
+    && lib.assertMsg (refused {dots.shell.starship.layers.ssh.color = "#9D0006";})
+    "consumer-starship-layers: an ssh colour that is a layer's, by its hex, evaluated"
     && lib.assertMsg (!refused {
       dots.shell.starship.layers.ssh = {
         enable = false;
-        color = "#b16286";
+        color = "color_faded_red";
       };
     })
     "consumer-starship-layers: the ssh colour was checked with the segment off"

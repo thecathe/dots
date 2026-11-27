@@ -8,11 +8,16 @@
 # without the U+; a codepoint above FFFF, the Material icons, works too). Private-use glyphs
 # often do not survive a chat or an editor, so the codepoint is the safe way.
 #
-# Colours: "#rrggbb". Each kind needs two different ones, the second for a layer nested in
-# another of the same kind (a layer takes the first colour of its kind's list that differs from
-# the layer outside it). The ssh colour may be no layer's. None may be the prompt's first
-# segment's (`color_orange`) or the directory's (`color_yellow`), which sit either side;
-# whichever rule is broken, the build says so.
+# Colours: names of the prompt's palette, which starship draws every segment from too (the
+# list is in ../palette.nix, one level up, and a host can add to it with
+# `dots.shell.starship.palette`), or a literal "#rrggbb". Each kind needs two different ones,
+# the second for a layer nested in another of the same kind (a layer takes the first colour of
+# its kind's list that differs from the layer outside it). The ssh colour may be no layer's.
+# None may be the prompt's first segment's (`color_orange`) or the directory's
+# (`color_yellow`), which sit either side; whichever rule is broken, the build says so.
+#
+# The layers sit between that orange and yellow, so they take the warm, faded end of the
+# palette: faded orange (ssh), faded red (a nix-shell), faded green (direnv).
 #
 # Strings may not contain any of `[ ] ( ) $ \ "`, which a starship format reads.
 {glyph}: {
@@ -24,20 +29,20 @@
     nix-shell = {
       symbol = glyph "F120";
       text = "shell";
-      colors = ["#b16286" "#cc241d"];
+      colors = ["color_faded_red" "color_red"];
     };
     # `nix develop`.
     nix-develop = {
       symbol = glyph "F0AD";
       text = "dev";
-      colors = ["#458588" "#689d6a"];
+      colors = ["color_blue" "color_aqua"];
     };
     # A directory whose `.envrc` direnv manages (also one that is not allowed: direnv sets
     # the same variables for it).
     direnv = {
       symbol = glyph "ED75";
       text = "env";
-      colors = ["#98971a" "#689d6a"];
+      colors = ["color_faded_green" "color_green"];
     };
   };
 
@@ -45,7 +50,7 @@
   ssh = {
     symbol = glyph "F08C0";
     text = "ssh";
-    color = "#d3869b";
+    color = "color_faded_orange";
 
     # Machines that show something other than `text`, by their own short host name in lower
     # case (the prompt is drawn on the machine you ssh into, so this table can be the same
