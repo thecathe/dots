@@ -8,7 +8,9 @@
 # Environment (from checks/starship-layers.nix):
 #   LAYERS  the generated package (variants/NAME.toml, data.zsh, layers.zsh)
 #   BASE    the deployed starship.toml the variants were made from
-#   KINDS   one line per kind: name TAB symbol TAB text TAB colours (space separated)
+#   KINDS   one line per kind: name TAB symbol TAB text TAB colours (space separated, #rrggbb:
+#           a colour named from the palette is resolved before it gets here)
+#   PALETTE one line per entry of the prompt's palette: name TAB #rrggbb
 #   MAX     how many layers are shown
 #   SSH_ENABLED, SSH_SYMBOL, SSH_TEXT, SSH_COLOR   the ssh segment's settings
 #   SSH_HOSTS  one line per machine that shows something else: name TAB symbol TAB text, where a
@@ -248,6 +250,24 @@ for f in "$LAYERS"/variants/*.toml; do
   got=$(DOTS_SSH_LABEL="x ssh" STARSHIP_CONFIG=$f starship prompt --terminal-width=120 | wc -l)
   ((got == want)) || bad "${f##*/} draws $got lines, the deployed config $want"
 done
+
+# ---- 1b. one palette -----------------------------------------------------------------------
+# The prompt's colours and the layers' are one list: the palette starship was handed
+# (dots.shell.starship.palette) is the whole of the deployed config's palette table, entry for
+# entry, so nothing in it comes from the preset any more, and every layer colour above was
+# resolved from it.
+before=$nfail
+entries=0
+while IFS=$'\t' read -r name hex; do
+  [[ -n $name ]] || continue
+  entries=$((entries + 1))
+  got=$(palette "$name")
+  [[ $got == "${hex,,}" ]] || bad "the deployed palette has $name = '$got', the one palette says $hex"
+done <"$PALETTE"
+deployed=$(sed -n '/^\[palettes\.gruvbox_dark\]/,/^$/p' "$BASE" | grep -c '^color_' || true)
+((deployed == entries)) || bad "the deployed palette has $deployed entries, the one palette $entries: the preset adds some of its own"
+[[ $(sed -n 's/^palette = "\(.*\)"$/\1/p' "$BASE") == gruvbox_dark ]] || bad "the deployed config does not select the gruvbox_dark palette"
+if ((nfail == before)); then ok "the deployed starship palette is the one palette: all $entries entries, none else"; fi
 
 # ---- 2. every stack up to three deep, in real nested shells ------------------------------
 # The hook chooses the oracle's config, the file exists, and the prompt it draws shows the
