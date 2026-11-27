@@ -23,9 +23,10 @@
   # and not rebuilt from `settings`.
   baseConfig = config.home.file.${starship.configPath}.source;
 
-  # Nix strings have no \u escape, and a private-use glyph is not safe to paste in a chat. JSON's
-  # \u takes four hex digits, so a codepoint above U+FFFF (the Material icons, U+F0000 and up) is
-  # written as a surrogate pair: `0` would be U+F08C followed by a "0".
+  # Nix strings have no unicode escape, and a private-use glyph is not safe to paste in a chat, so
+  # a symbol is written by codepoint and built through JSON, whose escape takes exactly four hex
+  # digits: a codepoint above FFFF (the Material icons, F0000 and up) is a surrogate pair, and
+  # five digits after the backslash-u would be read as four and a stray digit.
   glyph = hex: let
     cp = lib.fromHexString hex;
     four = n: lib.fixedWidthString 4 "0" (lib.toHexString n);
@@ -37,13 +38,16 @@
       else ''"\u${four (55296 + off / 1024)}\u${four (56320 + lib.mod off 1024)}"''
     );
 
+  # Every default is in defaults.nix, for editing.
+  defaults = import ./defaults.nix {inherit glyph;};
+
   hexColour = lib.types.strMatching "#[0-9a-fA-F]{6}";
   # Characters that would end or open something in a starship format string.
   plainText = lib.types.strMatching "[^][()$\\\\\"]*";
 
   # The defaults are on the fields, not on the kind, so that setting one field of a kind
   # (just its colours, say) keeps the others.
-  kindOption = defaults: what:
+  kindOption = kindDefaults: what:
     lib.mkOption {
       default = {};
       description = "The segment for ${what}.";
@@ -51,17 +55,17 @@
         options = {
           symbol = lib.mkOption {
             type = plainText;
-            default = defaults.symbol;
+            default = kindDefaults.symbol;
             description = "The glyph shown first in the segment (a Nerd Font symbol). May not contain any of `[]()$\\\"`.";
           };
           text = lib.mkOption {
             type = plainText;
-            default = defaults.text;
+            default = kindDefaults.text;
             description = "A short word after the symbol; never the derivation's name. May not contain any of `[]()$\\\"`.";
           };
           colors = lib.mkOption {
             type = lib.types.listOf hexColour;
-            default = defaults.colors;
+            default = kindDefaults.colors;
             description = ''
               Background colours as `#rrggbb`, in order of preference. A layer takes the first
               one that differs from the layer directly outside it, so that a nested layer
@@ -232,7 +236,7 @@ in {
 
     maxShown = lib.mkOption {
       type = lib.types.ints.between 1 2;
-      default = 2;
+      default = defaults.maxShown;
       description = ''
         How many layers are shown, the innermost ones. Nested layers are shown side by side
         and the colour rule looks at all of them, shown or not. Each shown depth multiplies
@@ -244,21 +248,9 @@ in {
     kinds = lib.mkOption {
       type = lib.types.submodule {
         options = {
-          nix-shell = kindOption {
-            symbol = glyph "F120";
-            text = "shell";
-            colors = ["#b16286" "#cc241d"];
-          } "a `nix-shell` (also `nix-shell --pure`)";
-          nix-develop = kindOption {
-            symbol = glyph "F0AD";
-            text = "dev";
-            colors = ["#458588" "#689d6a"];
-          } "a `nix develop`";
-          direnv = kindOption {
-            symbol = glyph "ED75";
-            text = "env";
-            colors = ["#98971a" "#689d6a"];
-          } "a directory whose `.envrc` direnv has loaded (it comes and goes as you `cd`, and wins over the `nix develop` reading, which a `use flake` directory has exactly)";
+          nix-shell = kindOption defaults.kinds.nix-shell "a `nix-shell` (also `nix-shell --pure`)";
+          nix-develop = kindOption defaults.kinds.nix-develop "a `nix develop`";
+          direnv = kindOption defaults.kinds.direnv "a directory whose `.envrc` direnv has loaded (it comes and goes as you `cd`, and wins over the `nix develop` reading, which a `use flake` directory has exactly)";
         };
       };
       default = {};
@@ -275,19 +267,19 @@ in {
 
       symbol = lib.mkOption {
         type = plainText;
-        default = glyph "F08C0";
+        default = defaults.ssh.symbol;
         description = "The glyph shown first in the ssh segment (a Nerd Font symbol). May not contain any of `[]()$\\\"`.";
       };
 
       text = lib.mkOption {
         type = plainText;
-        default = "ssh";
+        default = defaults.ssh.text;
         description = "The word shown after the symbol on a machine that is not in `hosts`. May not contain any of `[]()$\\\"`.";
       };
 
       color = lib.mkOption {
         type = hexColour;
-        default = "#d3869b";
+        default = defaults.ssh.color;
         description = ''
           The segment's background as `#rrggbb`. It may not be the colour of any layer kind, nor
           the prompt's first segment's (`color_orange`) or the directory's (`color_yellow`): the
@@ -296,7 +288,7 @@ in {
       };
 
       hosts = lib.mkOption {
-        default = {};
+        default = defaults.ssh.hosts;
         example = lib.literalExpression ''
           {
             worklaptop.text = "work";            # "work" in place of "ssh"
