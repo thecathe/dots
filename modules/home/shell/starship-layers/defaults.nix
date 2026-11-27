@@ -28,7 +28,7 @@
     # `nix-shell`, also `nix-shell --pure`.
     nix-shell = {
       symbol = glyph "F120";
-      # text = "shell";
+      text = "";
       colors = ["color_faded_red" "color_red"];
     };
     # `nix develop`.
