@@ -41,7 +41,21 @@
   # Every default is in defaults.nix, for editing.
   defaults = import ./defaults.nix {inherit glyph;};
 
-  hexColour = lib.types.strMatching "#[0-9a-fA-F]{6}";
+  # A colour is a "#rrggbb" or the name of an entry of the prompt's palette
+  # (dots.shell.starship.palette, defaults in ../palette.nix), the one list of colours that
+  # starship's own segments draw from too. A name is turned into its #rrggbb here, wherever a
+  # colour is compared or written, so the rest of the module only ever sees hex.
+  palette = config.dots.shell.starship.palette;
+  isHex = c: builtins.match "#[0-9a-fA-F]{6}" c != null;
+  resolve = c:
+    if isHex c
+    then c
+    else palette.${c} or c;
+  validColour = c: isHex c || palette ? ${c};
+  colourText = ''
+    Either `#rrggbb` or the name of an entry of the prompt's palette (`dots.shell.starship.palette`,
+    for example `color_faded_red`): naming one keeps the segment in step with the rest of the prompt.
+  '';
   # Characters that would end or open something in a starship format string.
   plainText = lib.types.strMatching "[^][()$\\\\\"]*";
 
@@ -64,29 +78,29 @@
             description = "A short word after the symbol; never the derivation's name. May not contain any of `[]()$\\\"`.";
           };
           colors = lib.mkOption {
-            type = lib.types.listOf hexColour;
+            type = lib.types.listOf lib.types.str;
             default = kindDefaults.colors;
             description = ''
-              Background colours as `#rrggbb`, in order of preference. A layer takes the first
-              one that differs from the layer directly outside it, so that a nested layer
-              never looks like its parent and the first one is what the kind looks like on its
-              own. At least two different ones are needed, and none may be the prompt's first
-              segment's colour (`color_orange`) or the directory's (`color_yellow`), which sit
-              either side.
+              Background colours, in order of preference. ${colourText}
+              A layer takes the first one that differs from the layer directly outside it, so
+              that a nested layer never looks like its parent and the first one is what the kind
+              looks like on its own. At least two different ones are needed, and none may be the
+              prompt's first segment's colour (`color_orange`) or the directory's
+              (`color_yellow`), which sit either side.
             '';
           };
         };
       };
     };
 
-  colours = k: map lib.toLower k.colors;
+  colours = k: map (c: lib.toLower (resolve c)) k.colors;
   kinds = cfg.kinds;
 
   # The ssh segment is not a layer of the stack: it is shown whenever the shell is in an ssh
   # session, always first, and does not count towards maxShown. Its colour is the one
   # setting that is not by position, because it never has a layer outside it.
   ssh = cfg.ssh;
-  sshColour = lib.toLower ssh.color;
+  sshColour = lib.toLower (resolve ssh.color);
   # Host names are matched in lower case, short (the part before the first dot).
   sshHosts = lib.mapAttrs' (name: v: lib.nameValuePair (lib.toLower name) v) ssh.hosts;
 
@@ -278,12 +292,13 @@ in {
       };
 
       color = lib.mkOption {
-        type = hexColour;
+        type = lib.types.str;
         default = defaults.ssh.color;
         description = ''
-          The segment's background as `#rrggbb`. It may not be the colour of any layer kind, nor
-          the prompt's first segment's (`color_orange`) or the directory's (`color_yellow`): the
-          segment sits first and the layers follow it, so its arrows would not show.
+          The segment's background. ${colourText}
+          It may not be the colour of any layer kind, nor the prompt's first segment's
+          (`color_orange`) or the directory's (`color_yellow`): the segment sits first and the
+          layers follow it, so its arrows would not show.
         '';
       };
 
@@ -334,11 +349,20 @@ in {
 
     assertions =
       lib.mapAttrsToList (kind: k: {
+        assertion = lib.all validColour k.colors;
+        message = "dots.shell.starship.layers.kinds.${kind}.colors has a colour that is neither #rrggbb nor the name of an entry of dots.shell.starship.palette (${lib.concatStringsSep ", " (lib.filter (c: !(validColour c)) k.colors)}). The palette has: ${lib.concatStringsSep ", " (lib.attrNames palette)}.";
+      })
+      kinds
+      ++ lib.mapAttrsToList (kind: k: {
         assertion = lib.length (lib.unique (colours k)) >= 2;
         message = "dots.shell.starship.layers.kinds.${kind}.colors needs at least two different colours: a nested layer of the same kind takes the next one, so that it does not look like its parent.";
       })
       kinds
       ++ lib.optionals ssh.enable [
+        {
+          assertion = validColour ssh.color;
+          message = "dots.shell.starship.layers.ssh.color (${ssh.color}) is neither #rrggbb nor the name of an entry of dots.shell.starship.palette. The palette has: ${lib.concatStringsSep ", " (lib.attrNames palette)}.";
+        }
         {
           assertion = !(lib.elem sshColour (map (e: e.colour) entries));
           message = "dots.shell.starship.layers.ssh.color (${ssh.color}) is also a colour of a layer kind: the ssh segment comes first and the layers follow it, so the arrow between them would not show. Give it a colour of its own.";
