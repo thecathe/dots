@@ -28,7 +28,7 @@
     # `nix-shell`, also `nix-shell --pure`.
     nix-shell = {
       symbol = glyph "F120";
-      text = "shell";
+      # text = "shell";
       colors = ["color_faded_red" "color_red"];
     };
     # `nix develop`.
@@ -48,7 +48,7 @@
 
   # While the shell is in an ssh session, on the machine you ssh into.
   ssh = {
-    symbol = glyph "F08C0";
+    symbol = glyph "F031A";
     text = "ssh";
     color = "color_faded_orange";
 
@@ -59,6 +59,10 @@
     #   worklaptop.text = "work";
     #   nixos-laptop = {};
     #   cluster1 = {symbol = "C"; text = "cluster";};
-    hosts = {};
+    hosts = {
+      worklaptop.text = "worklaptop";
+      nixos.text = "nixos";
+      nixos-laptop.text = "nixos-laptop";
+    };
   };
 }
