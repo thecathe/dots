@@ -11,6 +11,10 @@
 #   _dots_layers_dir     the directory of the generated configs (NAME.toml)
 #   _dots_layers_max     how many layers are shown (the innermost ones)
 #   _dots_layer_colors   kind -> its colours, a space-separated list (the colour rule below)
+#   _dots_ssh            1 if the ssh segment is on
+#   _dots_ssh_symbol, _dots_ssh_text   its default label
+#   _dots_ssh_hosts, _dots_ssh_host_symbol, _dots_ssh_host_text   the machines (lower case,
+#                        short names) that show something else, and what: see the ssh options
 #
 # State, all exported so that a child shell inherits it and the parent's environment is
 # never touched (so leaving a shell restores the outer prompt with no code at all):
@@ -20,6 +24,10 @@
 #   DOTS_STARSHIP_BASE  the starship config of a shell with no layer. STARSHIP_CONFIG
 #                       itself cannot be the base: a child inherits the parent's choice.
 #   DOTS_DIRENV_TOP     NIX_BUILD_TOP as it was while direnv was loaded (see _record).
+#   DOTS_SSH_LABEL      what the ssh segment shows (a generated config reads it), set while this
+#                       is an ssh session: the segment is not a layer of the stack, it is drawn
+#                       first, does not count towards _dots_layers_max, and is looked at at every
+#                       prompt like direnv.
 
 # Is the layer `$1` (a whole word) in DOTS_LAYERS?
 _dots_layers_has() {
@@ -64,6 +72,24 @@ _dots_layers_precmd() {
     unset DOTS_DIRENV_TOP
   fi
 
+  # ssh: sshd sets SSH_CONNECTION, so this shell was started by someone ssh'ing into this
+  # machine (and its children inherit it). The prompt is drawn here, so the host name to look
+  # up is this machine's own: short, in lower case. A machine in the table shows its host name
+  # unless it gives another string, and the default symbol unless it gives another.
+  local ssh=
+  if (( _dots_ssh )) && [[ -n ${SSH_CONNECTION-} ]]; then
+    local host=${HOST%%.*} symbol=$_dots_ssh_symbol text=$_dots_ssh_text
+    local key=${(L)host}
+    if (( ${+_dots_ssh_hosts[$key]} )); then
+      (( ${+_dots_ssh_host_symbol[$key]} )) && symbol=${_dots_ssh_host_symbol[$key]}
+      text=${_dots_ssh_host_text[$key]-$host}
+    fi
+    export DOTS_SSH_LABEL="${symbol:+$symbol }$text"
+    ssh=ssh
+  else
+    unset DOTS_SSH_LABEL
+  fi
+
   # The layers there are now, outermost first. A recorded direnv layer is there only while
   # direnv is loaded; one loaded since this shell started is the innermost.
   local entry kind
@@ -96,8 +122,8 @@ _dots_layers_precmd() {
     prev=${colors[j]}
   done
 
-  # The innermost `_dots_layers_max` are shown.
-  local first=$(( $#kinds - _dots_layers_max + 1 )) name= i
+  # The innermost `_dots_layers_max` are shown, after the ssh segment if there is one.
+  local first=$(( $#kinds - _dots_layers_max + 1 )) name=$ssh i
   (( first < 1 )) && first=1
   for (( i = first; i <= $#kinds; i++ )); do
     name+="${name:+"+"}${kinds[i]}.${idx[i]}"

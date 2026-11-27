@@ -1,8 +1,9 @@
-# A prompt segment for each layer the shell is in: `nix-shell`, `nix develop` and direnv.
-# The story, the design and what was ruled out are in the devlog (dots/starship-layers.md);
-# in short: each layer is a starship segment of its own between the first (orange) one and
-# the directory, with a symbol, a short text and a colour per kind, and a layer never
-# takes the colour of the one outside it.
+# A prompt segment for each layer the shell is in (`nix-shell`, `nix develop` and direnv) and
+# one while it is in an ssh session. The story, the design and what was ruled out are in the
+# devlog (dots/starship-layers.md); in short: each layer is a starship segment of its own
+# between the first (orange) one and the directory, with a symbol, a short text and a colour
+# per kind, and a layer never takes the colour of the one outside it; the ssh segment comes
+# first of them, says `ssh` unless the machine is in a table, and has a colour of its own.
 #
 # Starship cannot take a segment's colour from a variable, and the arrows either side of a
 # segment carry its colour and its neighbour's, so this module writes one config for every
@@ -22,8 +23,19 @@
   # and not rebuilt from `settings`.
   baseConfig = config.home.file.${starship.configPath}.source;
 
-  # Nix strings have no \u escape, and a private-use glyph is not safe to paste in a chat.
-  glyph = hex: builtins.fromJSON ''"\u${hex}"'';
+  # Nix strings have no \u escape, and a private-use glyph is not safe to paste in a chat. JSON's
+  # \u takes four hex digits, so a codepoint above U+FFFF (the Material icons, U+F0000 and up) is
+  # written as a surrogate pair: `0` would be U+F08C followed by a "0".
+  glyph = hex: let
+    cp = lib.fromHexString hex;
+    four = n: lib.fixedWidthString 4 "0" (lib.toHexString n);
+    off = cp - 65536;
+  in
+    builtins.fromJSON (
+      if cp < 65536
+      then ''"\u${four cp}"''
+      else ''"\u${four (55296 + off / 1024)}\u${four (56320 + lib.mod off 1024)}"''
+    );
 
   hexColour = lib.types.strMatching "#[0-9a-fA-F]{6}";
   # Characters that would end or open something in a starship format string.
@@ -66,6 +78,14 @@
   colours = k: map lib.toLower k.colors;
   kinds = cfg.kinds;
 
+  # The ssh segment is not a layer of the stack: it is shown whenever the shell is in an ssh
+  # session, always first, and does not count towards maxShown. Its colour is the one
+  # setting that is not by position, because it never has a layer outside it.
+  ssh = cfg.ssh;
+  sshColour = lib.toLower ssh.color;
+  # Host names are matched in lower case, short (the part before the first dot).
+  sshHosts = lib.mapAttrs' (name: v: lib.nameValuePair (lib.toLower name) v) ssh.hosts;
+
   # (kind, position in its colour list, colour): the states one segment can be in. The
   # position, not the colour, names a config, so two kinds may share a colour.
   entries = lib.concatLists (lib.mapAttrsToList (kind: k:
@@ -78,7 +98,7 @@
 
   # One config per shown state: a single segment, or (with maxShown 2) two, whose colours
   # differ because the colour rule makes the inner one differ from the one outside it.
-  variants =
+  layerVariants =
     map (e: {
       name = segName e;
       segs = [e];
@@ -93,19 +113,54 @@
       entries)
     entries);
 
-  gen = v: ''gen ${lib.escapeShellArg v.name} ${lib.concatMapStringsSep " " (s: lib.escapeShellArgs [s.colour s.symbol s.text]) v.segs}'';
+  # In an ssh session each of those has the ssh segment before it, and there is one with
+  # nothing after it. (The ssh colour is kept apart from every layer's, so the colour rule
+  # never has to look at it.)
+  variants =
+    map (v: v // {ssh = false;}) layerVariants
+    ++ lib.optionals ssh.enable (map (v: v // {ssh = true;}) ([
+        {
+          name = "";
+          segs = [];
+        }
+      ]
+      ++ layerVariants));
+  variantName = v:
+    if !v.ssh
+    then v.name
+    else if v.name == ""
+    then "ssh"
+    else "ssh+${v.name}";
 
+  gen = v: ''gen ${lib.escapeShellArg (variantName v)} ${
+      if v.ssh
+      then lib.escapeShellArg sshColour
+      else "-"
+    } ${lib.concatMapStringsSep " " (s: lib.escapeShellArgs [s.colour s.symbol s.text]) v.segs}'';
+
+  esc = lib.escapeShellArg;
   data = pkgs.writeText "starship-layers-data.zsh" ''
     _dots_layers_max=${toString cfg.maxShown}
     typeset -gA _dots_layer_colors
     _dots_layer_colors=(
-    ${lib.concatStringsSep "\n" (lib.mapAttrsToList (kind: k: "  ${lib.escapeShellArg kind} ${lib.escapeShellArg (lib.concatStringsSep " " (colours k))}") kinds)}
+    ${lib.concatStringsSep "\n" (lib.mapAttrsToList (kind: k: "  ${esc kind} ${esc (lib.concatStringsSep " " (colours k))}") kinds)}
     )
+    _dots_ssh=${
+      if ssh.enable
+      then "1"
+      else "0"
+    }
+    _dots_ssh_symbol=${esc ssh.symbol}
+    _dots_ssh_text=${esc ssh.text}
+    typeset -gA _dots_ssh_hosts _dots_ssh_host_symbol _dots_ssh_host_text
+    _dots_ssh_hosts=(${lib.concatStringsSep " " (lib.mapAttrsToList (name: _: "${esc name} 1") sshHosts)})
+    _dots_ssh_host_symbol=(${lib.concatStringsSep " " (lib.mapAttrsToList (name: v: "${esc name} ${esc v.symbol}") (lib.filterAttrs (_: v: v.symbol != null) sshHosts))})
+    _dots_ssh_host_text=(${lib.concatStringsSep " " (lib.mapAttrsToList (name: v: "${esc name} ${esc v.text}") (lib.filterAttrs (_: v: v.text != null) sshHosts))})
   '';
 
   package =
     pkgs.runCommand "starship-layers" {
-      allColours = lib.unique (map (e: e.colour) entries);
+      allColours = lib.unique (map (e: e.colour) entries ++ lib.optional ssh.enable sshColour);
     } ''
       # bash 5.2 reads `&` in a replacement as the matched text
       shopt -u patsub_replacement 2>/dev/null || true
@@ -138,18 +193,29 @@
 
       mkdir -p $out/variants
 
-      # gen NAME (COLOUR SYMBOL TEXT)...: the config with those segments, outermost first,
-      # between the first segment and the directory.
+      # gen NAME SSH (COLOUR SYMBOL TEXT)...: the config with those segments, outermost
+      # first, between the first segment and the directory. SSH is the colour of the ssh
+      # segment, which comes before them and shows what $DOTS_SSH_LABEL holds (the hook
+      # sets it), or `-` for none.
       gen() {
-        local name=$1; shift
+        local name=$1 ssh=$2; shift 2
         local new="\$os\$username" prev=color_orange
+        if [[ $ssh != - ]]; then
+          new+="[$arrow](bg:$ssh fg:$prev)\''${env_var.DOTS_SSH_LABEL}"
+          prev=$ssh
+        fi
         while (( $# )); do
           new+="[$arrow](bg:$1 fg:$prev)[ $2 $3 ](bg:$1 fg:color_fg0)"
           prev=$1
           shift 3
         done
         new+="[$arrow](bg:color_yellow fg:$prev)\$directory"
-        printf '%s\n' "''${content/"$old"/"$new"}" > "$out/variants/$name.toml"
+        {
+          printf '%s\n' "''${content/"$old"/"$new"}"
+          if [[ $ssh != - ]]; then
+            printf '\n[env_var.DOTS_SSH_LABEL]\nvariable = "DOTS_SSH_LABEL"\nformat = "[ $env_value ](bg:%s fg:color_fg0)"\n' "$ssh"
+          fi
+        } > "$out/variants/$name.toml"
       }
 
       ${lib.concatMapStringsSep "\n" gen variants}
@@ -202,6 +268,67 @@ in {
       '';
     };
 
+    ssh = {
+      enable =
+        lib.mkEnableOption "a prompt segment while the shell is in an ssh session (SSH_CONNECTION is set): this machine's prompt, drawn when you ssh into it"
+        // {default = true;};
+
+      symbol = lib.mkOption {
+        type = plainText;
+        default = glyph "F08C0";
+        description = "The glyph shown first in the ssh segment (a Nerd Font symbol). May not contain any of `[]()$\\\"`.";
+      };
+
+      text = lib.mkOption {
+        type = plainText;
+        default = "ssh";
+        description = "The word shown after the symbol on a machine that is not in `hosts`. May not contain any of `[]()$\\\"`.";
+      };
+
+      color = lib.mkOption {
+        type = hexColour;
+        default = "#d3869b";
+        description = ''
+          The segment's background as `#rrggbb`. It may not be the colour of any layer kind, nor
+          the prompt's first segment's (`color_orange`) or the directory's (`color_yellow`): the
+          segment sits first and the layers follow it, so its arrows would not show.
+        '';
+      };
+
+      hosts = lib.mkOption {
+        default = {};
+        example = lib.literalExpression ''
+          {
+            worklaptop.text = "work";            # "work" in place of "ssh"
+            nixos-laptop = {};                   # the host name, "nixos-laptop"
+            cluster1 = {symbol = "C"; text = "cluster";};
+          }
+        '';
+        description = ''
+          Machines that show something other than `text`. The prompt is drawn by the machine
+          you ssh into, so this is looked up against that machine's own host name (short, so
+          `worklaptop` for `worklaptop.example.net`, in lower case): one table in shared
+          configuration serves every machine. A machine that is listed shows its host name
+          after the symbol, unless `text` gives another string, and the default `symbol`
+          unless it gives another. A machine that is not listed shows `text`.
+        '';
+        type = lib.types.attrsOf (lib.types.submodule {
+          options = {
+            symbol = lib.mkOption {
+              type = lib.types.nullOr plainText;
+              default = null;
+              description = "A glyph in place of the default symbol (an empty string for none). May not contain any of `[]()$\\\"`.";
+            };
+            text = lib.mkOption {
+              type = lib.types.nullOr plainText;
+              default = null;
+              description = "A string in place of the host name. May not contain any of `[]()$\\\"`.";
+            };
+          };
+        });
+      };
+    };
+
     package = lib.mkOption {
       type = lib.types.package;
       internal = true;
@@ -218,7 +345,21 @@ in {
         assertion = lib.length (lib.unique (colours k)) >= 2;
         message = "dots.shell.starship.layers.kinds.${kind}.colors needs at least two different colours: a nested layer of the same kind takes the next one, so that it does not look like its parent.";
       })
-      kinds;
+      kinds
+      ++ lib.optionals ssh.enable [
+        {
+          assertion = !(lib.elem sshColour (map (e: e.colour) entries));
+          message = "dots.shell.starship.layers.ssh.color (${ssh.color}) is also a colour of a layer kind: the ssh segment comes first and the layers follow it, so the arrow between them would not show. Give it a colour of its own.";
+        }
+        {
+          assertion = lib.length (lib.attrNames sshHosts) == lib.length (lib.attrNames ssh.hosts);
+          message = "dots.shell.starship.layers.ssh.hosts has two names that differ only in case: host names are matched in lower case.";
+        }
+        {
+          assertion = lib.all (name: builtins.match "[^.]+" name != null) (lib.attrNames sshHosts);
+          message = "dots.shell.starship.layers.ssh.hosts takes short host names (`worklaptop`, not `worklaptop.example.net`): the prompt looks up the part before the first dot.";
+        }
+      ];
 
     # After the starship and direnv hooks (both at the default order), so that direnv has
     # loaded or unloaded by the time the prompt's config is chosen.
