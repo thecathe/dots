@@ -3,6 +3,7 @@
     ./zsh
     ./direnv.nix
     ./starship.nix
+    ./starship-layers
     ./tmux.nix
     ./kitty.nix
     ./zoxide.nix

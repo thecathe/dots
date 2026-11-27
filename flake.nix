@@ -205,6 +205,7 @@
       // import ./checks/orient.nix {inherit inputs;}
       // import ./checks/repos.nix {inherit inputs;}
       // import ./checks/services.nix {inherit inputs;}
+      // import ./checks/starship-layers.nix {inherit inputs;}
       // import ./checks/niri-dms-outputs.nix {inherit inputs;}
       // import ./checks/flameshot-screen.nix {inherit inputs;}
       // import ./checks/check-each.nix {inherit inputs;}
